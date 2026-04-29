@@ -1,104 +1,61 @@
 # FlipSite
 
-FlipSite is a resale inventory and profit-tracking app for tracking buys, listings, sold items, profit, ROI, and resale performance over time.
+FlipSite is a personal inventory and resale dashboard I built from a very familiar habit: keeping Google Sheets for budgeting, purchases, and flips. I wanted something that felt more intentional than a spreadsheet, but still kept the practical workflow that makes spreadsheets useful: write down what I bought, what I paid, where it came from, whether I am keeping it, listing it, or selling it, and what the final result was.
 
-## Tech Stack
+The project started as a flipping tracker, but it has grown into a broader inventory tool for everything I buy. Some things are bought to resell quickly. Some become long-term keepers. Some are part of bundles where one purchase contains several separate items. FlipSite is meant to handle that messier real-life version of buying and selling, not only the clean version where every item is a neat one-line flip.
 
-- React + TypeScript + Vite
-- Tailwind CSS with class-based dark mode
-- Supabase Auth and Postgres
-- TanStack Query
-- React Router
-- Recharts
-- Sonner toasts
-- Lucide React icons
-- date-fns
+## What It Does
 
-## Local Setup
+- Tracks items from purchase through inventory, listing, sale, or keeping
+- Supports bundles, where one purchase price can cover several child items
+- Calculates profit and ROI, including bundle parent profit from child sales
+- Shows dashboard KPIs for invested money, revenue, profit, keepers, inventory, and active bundles
+- Visualizes sales and profit over time with charts
+- Filters inventory by status, platform, category, bundles, and dashboard drilldowns
+- Uses Euro formatting and inventory language that fits my own workflow
+- Stores data per user with Supabase Auth and Row Level Security
 
-Install dependencies:
+## Why I Built It
+
+My budgeting and flipping spreadsheets worked, but they were starting to stretch beyond what a sheet is best at. I wanted a project that could keep the speed of entering purchases while adding a better interface for reviewing inventory, seeing profit, and understanding what is still sitting around waiting for a decision.
+
+FlipSite is also a portfolio piece: a practical app built around a real personal workflow, with authentication, database rules, data tables, charts, responsive UI, dark mode, and the kind of edge cases that only show up when a tool is actually used.
+
+## Tech
+
+Built with React, TypeScript, Vite, Tailwind CSS, Supabase, TanStack Query, React Router, Recharts, Sonner, and Lucide icons.
+
+## Running Locally
 
 ```bash
 npm install
-```
-
-Create a local environment file:
-
-```bash
 cp .env.example .env
-```
-
-Add your Supabase project values:
-
-```bash
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-or-publishable-key
-```
-
-Run the app:
-
-```bash
 npm run dev
 ```
 
-Build for production:
+Add Supabase values to `.env`:
 
 ```bash
-npm run build
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
 ```
 
-Lint:
+To set up the database, create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the Supabase SQL editor. The schema includes RLS so users only access their own inventory.
+
+Useful checks:
 
 ```bash
 npm run lint
+npm run build
 ```
 
-## Supabase Setup
+## Deployment
 
-1. Create a Supabase project.
-2. Open the SQL editor in the Supabase dashboard.
-3. Run the SQL in `supabase/schema.sql`.
-4. In Authentication settings, enable Email/Password signups.
-5. Copy your project URL and anon/publishable key into `.env`.
-6. Restart the dev server after changing environment variables.
+The app is ready for Vercel. `vercel.json` includes the SPA rewrite needed for React Router refreshes.
 
-The `items` table uses Row Level Security. Authenticated users can only select, insert, update, and delete rows where `user_id` matches their Supabase user id.
-
-## Vercel Deployment
-
-The project includes `vercel.json` with an SPA rewrite so React Router routes work on refresh:
-
-```json
-{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
-```
-
-Set these environment variables in Vercel:
+Set these Vercel environment variables:
 
 ```bash
 VITE_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY
 ```
-
-Use the default Vite build command:
-
-```bash
-npm run build
-```
-
-Output directory:
-
-```bash
-dist
-```
-
-## Project Structure
-
-- `src/components/ui`: shared UI primitives
-- `src/components/charts`: KPI and chart components
-- `src/components/items`: item drawer and item-specific UI
-- `src/components/layout`: app shell navigation
-- `src/pages`: route-level pages
-- `src/hooks`: auth and item data hooks
-- `src/lib`: Supabase client and utilities
-- `src/types`: shared TypeScript types
-- `supabase/schema.sql`: database schema and RLS policies
