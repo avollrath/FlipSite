@@ -11,6 +11,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
 import { useItems } from '@/hooks/useItems'
 import {
@@ -48,6 +49,8 @@ type SortState = {
   direction: 'asc' | 'desc'
 }
 
+type BundleFilter = 'none' | 'only' | 'active'
+
 const allStatuses = ['all', 'holding', 'listed', 'sold', 'keeper'] as const
 const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
   { key: 'name', label: 'Name' },
@@ -66,13 +69,24 @@ const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
 
 export function Items() {
   const { data: items = [], isLoading } = useItems()
+  const [searchParams] = useSearchParams()
+  const queryStatus = getQueryStatus(searchParams.get('status'))
+  const queryBundleFilter = getQueryBundleFilter(searchParams.get('bundles'))
+  const queryInventoryOnly = searchParams.get('inventory') === '1'
+  const queryItemId = searchParams.get('item') ?? ''
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<(typeof allStatuses)[number]>(
-    'all',
+  const [statusFilter, setStatusFilter] = useState<
+    (typeof allStatuses)[number]
+  >(
+    queryStatus ?? 'all',
   )
   const [platformFilter, setPlatformFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [bundlesOnly, setBundlesOnly] = useState(false)
+  const [bundleFilter, setBundleFilter] = useState<BundleFilter>(
+    queryBundleFilter,
+  )
+  const [inventoryOnly, setInventoryOnly] = useState(queryInventoryOnly)
+  const [focusedItemId] = useState(queryItemId)
   const [expandedBundles, setExpandedBundles] = useState<Set<string>>(
     () => new Set(),
   )
@@ -106,12 +120,30 @@ export function Items() {
       return map
     }, new Map<string, Item[]>())
   }, [items])
+  const activeBundleIds = useMemo(() => {
+    const activeIds = new Set<string>()
+
+    for (const [bundleId, children] of childrenByBundle) {
+      if (
+        children.some((child) => getEffectiveItemStatus(child, items) !== 'sold')
+      ) {
+        activeIds.add(bundleId)
+      }
+    }
+
+    return activeIds
+  }, [childrenByBundle, items])
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
 
     return items
       .filter((item) => {
+        if (focusedItemId) {
+          return item.tsid === focusedItemId
+        }
+
+        const effectiveStatus = getEffectiveItemStatus(item, items)
         const matchesSearch =
           !normalizedSearch ||
           [
@@ -119,7 +151,7 @@ export function Items() {
             item.category,
             item.condition,
             item.platform,
-            getEffectiveItemStatus(item, items),
+            effectiveStatus,
             item.notes ?? '',
           ]
             .join(' ')
@@ -128,17 +160,26 @@ export function Items() {
 
         const matchesStatus =
           statusFilter === 'all' ||
-          getEffectiveItemStatus(item, items) === statusFilter
+          effectiveStatus === statusFilter
+        const matchesInventory =
+          !inventoryOnly ||
+          ['holding', 'keeper', 'listed'].includes(effectiveStatus)
         const matchesPlatform =
           platformFilter === 'all' || item.platform === platformFilter
         const matchesCategory =
           categoryFilter === 'all' || item.category === categoryFilter
 
-        const matchesBundleFilter = !bundlesOnly || item.is_bundle_parent
+        const matchesBundleFilter =
+          bundleFilter === 'none' ||
+          (bundleFilter === 'only' && item.is_bundle_parent) ||
+          (bundleFilter === 'active' &&
+            item.is_bundle_parent &&
+            activeBundleIds.has(item.tsid))
 
         return (
           matchesSearch &&
           matchesStatus &&
+          matchesInventory &&
           matchesPlatform &&
           matchesCategory &&
           matchesBundleFilter
@@ -146,8 +187,11 @@ export function Items() {
       })
       .sort((a, b) => compareItems(a, b, sort, items))
   }, [
-    bundlesOnly,
+    activeBundleIds,
+    bundleFilter,
     categoryFilter,
+    focusedItemId,
+    inventoryOnly,
     items,
     platformFilter,
     search,
@@ -157,6 +201,26 @@ export function Items() {
 
   const visibleRows = useMemo(() => {
     const rows: Array<{ item: Item; isChild: boolean }> = []
+
+    if (focusedItemId) {
+      return visibleItems.map((item) => ({
+        item,
+        isChild: Boolean(item.bundle_id),
+      }))
+    }
+
+    if (
+      statusFilter !== 'all' ||
+      inventoryOnly ||
+      platformFilter !== 'all' ||
+      categoryFilter !== 'all' ||
+      search.trim()
+    ) {
+      return visibleItems.map((item) => ({
+        item,
+        isChild: Boolean(item.bundle_id),
+      }))
+    }
 
     visibleItems
       .filter((item) => !item.bundle_id)
@@ -171,7 +235,17 @@ export function Items() {
       })
 
     return rows
-  }, [childrenByBundle, expandedBundles, visibleItems])
+  }, [
+    categoryFilter,
+    childrenByBundle,
+    expandedBundles,
+    focusedItemId,
+    inventoryOnly,
+    platformFilter,
+    search,
+    statusFilter,
+    visibleItems,
+  ])
 
   function openAddDrawer() {
     setDrawer({ open: true, mode: 'add', item: null })
@@ -322,10 +396,21 @@ export function Items() {
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
-              checked={bundlesOnly}
-              onChange={(event) => setBundlesOnly(event.target.checked)}
+              checked={bundleFilter !== 'none'}
+              onChange={(event) =>
+                setBundleFilter(event.target.checked ? 'only' : 'none')
+              }
             />
             Bundles only
+          </label>
+          <label className="flex h-11 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-200">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+              checked={inventoryOnly}
+              onChange={(event) => setInventoryOnly(event.target.checked)}
+            />
+            Inventory
           </label>
         </div>
       </div>
@@ -781,6 +866,22 @@ function uniqueValues(values: string[]) {
   return Array.from(new Set(values.filter(Boolean))).sort((a, b) =>
     a.localeCompare(b),
   )
+}
+
+function getQueryStatus(value: string | null) {
+  return allStatuses.find((status) => status === value && status !== 'all')
+}
+
+function getQueryBundleFilter(value: string | null): BundleFilter {
+  if (value === 'active') {
+    return 'active'
+  }
+
+  if (value === 'only') {
+    return 'only'
+  }
+
+  return 'none'
 }
 
 function downloadCsv(rows: Array<Record<string, string | number>>, fileName: string) {

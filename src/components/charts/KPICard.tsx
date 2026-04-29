@@ -4,7 +4,7 @@ import {
   ArrowUpRight,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 
 type KPICardProps = {
   title: string
@@ -14,6 +14,7 @@ type KPICardProps = {
   trend: 'up' | 'down' | 'neutral'
   color: 'violet' | 'indigo' | 'blue' | 'green' | 'amber' | 'rose'
   formatter?: (value: number) => string
+  onClick?: () => void
 }
 
 const colorStyles = {
@@ -33,6 +34,7 @@ export function KPICard({
   color,
   formatter,
   icon: Icon,
+  onClick,
   subtitle,
   title,
   trend,
@@ -45,8 +47,27 @@ export function KPICard({
   const TrendIcon =
     trend === 'up' ? ArrowUpRight : trend === 'down' ? ArrowDownRight : ArrowRight
 
+  const interactiveProps = onClick
+    ? {
+        onClick,
+        onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onClick()
+          }
+        },
+        role: 'button',
+        tabIndex: 0,
+      }
+    : {}
+
   return (
-    <article className="relative overflow-hidden rounded-lg border border-zinc-200/80 bg-white/70 p-5 shadow-xl shadow-zinc-200/60 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-2xl dark:border-white/10 dark:bg-[#13131a]/75 dark:shadow-black/30">
+    <article
+      className={`relative overflow-hidden rounded-lg border border-zinc-200/80 bg-white/70 p-5 shadow-xl shadow-zinc-200/60 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-2xl dark:border-white/10 dark:bg-[#13131a]/75 dark:shadow-black/30 ${
+        onClick ? 'cursor-pointer focus-visible:ring-4 focus-visible:ring-violet-500/20' : ''
+      }`}
+      {...interactiveProps}
+    >
       <div
         className={`absolute inset-x-8 -top-16 h-28 rounded-full bg-gradient-to-b blur-3xl ${colorStyles[color]}`}
       />

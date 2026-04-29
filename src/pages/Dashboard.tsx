@@ -8,7 +8,8 @@ import {
   Percent,
   TrendingUp,
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Area,
   AreaChart,
@@ -52,27 +53,35 @@ const chartColors = ['#8b5cf6', '#6366f1', '#22c55e', '#f59e0b', '#06b6d4', '#f4
 
 export function Dashboard() {
   const { data: items = [], isLoading } = useItems()
+  const navigate = useNavigate()
+  const [selectedYear, setSelectedYear] = useState('all')
+
+  const years = useMemo(() => getAvailableYears(items), [items])
+  const dashboardItems = useMemo(
+    () => getItemsForYear(items, selectedYear),
+    [items, selectedYear],
+  )
 
   const kpis = useMemo(() => {
-    const aggregateItems = items.filter(isAggregateItem)
+    const aggregateItems = dashboardItems.filter(isAggregateItem)
     const soldItems = aggregateItems.filter(
-      (item) => calculateItemSellValue(item, items) > 0,
+      (item) => calculateItemSellValue(item, dashboardItems) > 0,
     )
-    const childrenByBundle = getChildrenByBundle(items)
+    const childrenByBundle = getChildrenByBundle(dashboardItems)
     const totalInvested = aggregateItems.reduce(
       (sum, item) => sum + item.buy_price,
       0,
     )
     const totalRevenue = aggregateItems.reduce(
-      (sum, item) => sum + calculateItemSellValue(item, items),
+      (sum, item) => sum + calculateItemSellValue(item, dashboardItems),
       0,
     )
     const totalProfit = aggregateItems.reduce(
-      (sum, item) => sum + calculateItemProfit(item, items),
+      (sum, item) => sum + calculateItemProfit(item, dashboardItems),
       0,
     )
     const soldRois = soldItems
-      .map((item) => calculateItemROI(item, items))
+      .map((item) => calculateItemROI(item, dashboardItems))
       .filter((roi): roi is number => roi !== null)
     const avgRoi =
       soldRois.length > 0
@@ -82,35 +91,36 @@ export function Dashboard() {
       name: string
       roi: number
       profit: number
+      tsid: string
     } | null>((best, item) => {
-      const roi = calculateItemROI(item, items)
-      const profit = calculateItemProfit(item, items)
+      const roi = calculateItemROI(item, dashboardItems)
+      const profit = calculateItemProfit(item, dashboardItems)
 
       if (roi === null || profit === null) {
         return best
       }
 
       if (!best || roi > best.roi) {
-        return { name: item.name, roi, profit }
+        return { name: item.name, profit, roi, tsid: item.tsid }
       }
 
       return best
     }, null)
-    const inventoryCount = items.filter((item) =>
+    const inventoryCount = dashboardItems.filter((item) =>
       ['holding', 'keeper', 'listed'].includes(
-        getEffectiveItemStatus(item, items),
+        getEffectiveItemStatus(item, dashboardItems),
       ),
     ).length
-    const keeperCount = items.filter(
-      (item) => getEffectiveItemStatus(item, items) === 'keeper',
+    const keeperCount = dashboardItems.filter(
+      (item) => getEffectiveItemStatus(item, dashboardItems) === 'keeper',
     ).length
-    const activeBundles = items.filter((item) => {
+    const activeBundles = dashboardItems.filter((item) => {
       if (!item.is_bundle_parent) {
         return false
       }
 
       return (childrenByBundle.get(item.tsid) ?? []).some(
-        (child) => getEffectiveItemStatus(child, items) !== 'sold',
+        (child) => getEffectiveItemStatus(child, dashboardItems) !== 'sold',
       )
     }).length
 
@@ -124,20 +134,37 @@ export function Dashboard() {
       totalProfit,
       totalRevenue,
     }
-  }, [items])
+  }, [dashboardItems])
 
-  const chartData = useMemo(() => buildChartData(items), [items])
+  const chartData = useMemo(() => buildChartData(dashboardItems), [dashboardItems])
   const hasChartData = chartData.soldItems.length >= 2
 
   return (
     <section>
-      <div>
-        <p className="text-sm font-medium text-violet-600 dark:text-violet-400">
-          Dashboard
-        </p>
-        <h2 className="mt-2 text-4xl font-semibold tracking-tight">
-          Inventory at a glance
-        </h2>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-sm font-medium text-violet-600 dark:text-violet-400">
+            Dashboard
+          </p>
+          <h2 className="mt-2 text-4xl font-semibold tracking-tight">
+            Inventory at a glance
+          </h2>
+        </div>
+        <label className="w-full sm:w-44">
+          <span className="sr-only">Filter dashboard by year</span>
+          <select
+            className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#13131a] dark:text-zinc-50"
+            value={selectedYear}
+            onChange={(event) => setSelectedYear(event.target.value)}
+          >
+            <option value="all">All years</option>
+            {years.map((year) => (
+              <option key={year} value={String(year)}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {isLoading ? (
@@ -193,6 +220,11 @@ export function Dashboard() {
             icon={Package}
             trend={kpis.bestFlip ? 'up' : 'neutral'}
             color="amber"
+            onClick={
+              kpis.bestFlip
+                ? () => navigate(`/items?item=${kpis.bestFlip?.tsid}`)
+                : undefined
+            }
           />
           <KPICard
             title="In Inventory"
@@ -201,6 +233,7 @@ export function Dashboard() {
             icon={Boxes}
             trend="neutral"
             color="violet"
+            onClick={() => navigate('/items?inventory=1')}
           />
           <KPICard
             title="Keepers"
@@ -209,6 +242,7 @@ export function Dashboard() {
             icon={Heart}
             trend="neutral"
             color="indigo"
+            onClick={() => navigate('/items?status=keeper')}
           />
           <KPICard
             title="Active Bundles"
@@ -217,6 +251,7 @@ export function Dashboard() {
             icon={Layers3}
             trend="neutral"
             color="amber"
+            onClick={() => navigate('/items?bundles=active')}
           />
         </div>
       )}
@@ -518,6 +553,65 @@ function buildChartData(items: Item[]) {
     salesByPlatform,
     soldItems,
   }
+}
+
+function getAvailableYears(items: Item[]) {
+  return Array.from(
+    items.reduce((years, item) => {
+      addYear(years, item.bought_at)
+      addYear(years, item.sold_at)
+      return years
+    }, new Set<number>()),
+  ).sort((a, b) => b - a)
+}
+
+function getItemsForYear(items: Item[], selectedYear: string) {
+  if (selectedYear === 'all') {
+    return items
+  }
+
+  const year = Number(selectedYear)
+  const parentIdsToInclude = new Set<string>()
+  const matchingIds = new Set<string>()
+
+  for (const item of items) {
+    if (itemMatchesYear(item, year)) {
+      matchingIds.add(item.tsid)
+
+      if (item.bundle_id) {
+        parentIdsToInclude.add(item.bundle_id)
+      }
+    }
+  }
+
+  return items.filter((item) => {
+    if (matchingIds.has(item.tsid) || parentIdsToInclude.has(item.tsid)) {
+      return true
+    }
+
+    return Boolean(item.bundle_id && parentIdsToInclude.has(item.bundle_id))
+  })
+}
+
+function itemMatchesYear(item: Item, year: number) {
+  return dateYear(item.bought_at) === year || dateYear(item.sold_at) === year
+}
+
+function addYear(years: Set<number>, value: string | null | undefined) {
+  const year = dateYear(value)
+
+  if (year) {
+    years.add(year)
+  }
+}
+
+function dateYear(value: string | null | undefined) {
+  if (!value) {
+    return null
+  }
+
+  const year = new Date(value).getFullYear()
+  return Number.isNaN(year) ? null : year
 }
 
 function getChildrenByBundle(items: Item[]) {
