@@ -9,11 +9,12 @@ import {
   PackageOpen,
   Plus,
   Search,
+  Trash2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
-import { useItems } from '@/hooks/useItems'
+import { useDeleteItem, useItems } from '@/hooks/useItems'
 import {
   calculateItemProfit,
   calculateItemROI,
@@ -69,6 +70,7 @@ const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
 
 export function Items() {
   const { data: items = [], isLoading } = useItems()
+  const deleteItem = useDeleteItem()
   const [searchParams] = useSearchParams()
   const queryStatus = getQueryStatus(searchParams.get('status'))
   const queryBundleFilter = getQueryBundleFilter(searchParams.get('bundles'))
@@ -99,6 +101,7 @@ export function Items() {
     mode: 'add',
     item: null,
   })
+  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null)
 
   const platforms = useMemo(
     () => uniqueValues(items.map((item) => item.platform)),
@@ -285,6 +288,15 @@ export function Items() {
     })
   }
 
+  async function confirmDelete() {
+    if (!deleteTarget) {
+      return
+    }
+
+    await deleteItem.mutateAsync(deleteTarget.tsid)
+    setDeleteTarget(null)
+  }
+
   function exportVisibleItems() {
     const rows = visibleItems.map((item) => {
       const profit = calculateItemProfit(item, items)
@@ -456,6 +468,7 @@ export function Items() {
                       isChild={isChild}
                       isExpanded={expandedBundles.has(item.tsid)}
                       onEdit={() => openEditDrawer(item)}
+                      onDelete={() => setDeleteTarget(item)}
                       onToggleBundle={() => toggleBundle(item.tsid)}
                       allItems={items}
                     />
@@ -490,6 +503,12 @@ export function Items() {
         item={drawer.item}
         onOpenChange={closeDrawer}
       />
+      <DeleteConfirmDialog
+        item={deleteTarget}
+        isDeleting={deleteItem.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </section>
   )
 }
@@ -499,6 +518,7 @@ function ItemRow({
   isChild,
   isExpanded,
   item,
+  onDelete,
   onEdit,
   onToggleBundle,
   allItems,
@@ -507,6 +527,7 @@ function ItemRow({
   isChild: boolean
   isExpanded: boolean
   item: Item
+  onDelete: () => void
   onEdit: () => void
   onToggleBundle: () => void
   allItems: Item[]
@@ -577,6 +598,7 @@ function ItemRow({
         {formatDate(item.sold_at) || '--'}
       </td>
       <td className="px-4 py-4">
+        <div className="flex items-center gap-1">
         <button
           type="button"
           className="rounded-lg p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-violet-600 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-violet-300"
@@ -588,8 +610,82 @@ function ItemRow({
         >
           <Edit3 className="h-4 w-4" aria-hidden="true" />
         </button>
+        <button
+          type="button"
+          className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 dark:text-zinc-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+          onClick={(event) => {
+            event.stopPropagation()
+            onDelete()
+          }}
+          aria-label={`Delete ${item.name}`}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+        </button>
+        </div>
       </td>
     </tr>
+  )
+}
+
+function DeleteConfirmDialog({
+  isDeleting,
+  item,
+  onCancel,
+  onConfirm,
+}: {
+  isDeleting: boolean
+  item: Item | null
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  if (!item) {
+    return null
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4 backdrop-blur-sm">
+      <div
+        className="w-full max-w-md animate-soft-pop rounded-lg border border-zinc-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#13131a]"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-item-title"
+      >
+        <div className="flex items-start gap-4">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-300">
+            <Trash2 className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <h3
+              id="delete-item-title"
+              className="text-lg font-semibold text-zinc-950 dark:text-white"
+            >
+              Delete item?
+            </h3>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              This will delete "{item.name}". This action cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10"
+            onClick={onCancel}
+            disabled={isDeleting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
