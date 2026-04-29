@@ -70,7 +70,9 @@ export function Layout() {
           </div>
         </header>
         <main className="px-5 py-8 pb-28 md:px-8 md:pb-8">
-          <Outlet />
+          <div key={location.pathname} className="animate-page-transition">
+            <Outlet />
+          </div>
         </main>
       </div>
       <MobileNav />

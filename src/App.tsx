@@ -21,11 +21,7 @@ function ProtectedRoute() {
   const location = useLocation()
 
   if (loading) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-zinc-50 text-zinc-600 dark:bg-[#0a0a0f] dark:text-zinc-300">
-        <p className="text-sm font-medium">Loading FlipSite...</p>
-      </main>
-    )
+    return <StartupLoader />
   }
 
   if (!user) {
@@ -35,12 +31,31 @@ function ProtectedRoute() {
   return <Outlet />
 }
 
+function StartupLoader() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-zinc-50 text-zinc-950 dark:bg-[#0a0a0f] dark:text-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative grid h-16 w-16 place-items-center rounded-xl bg-violet-600 text-white shadow-2xl shadow-violet-950/30">
+          <div className="absolute inset-0 rounded-xl border border-white/20" />
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold">FlipSite</p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Checking your session
+          </p>
+        </div>
+      </div>
+    </main>
+  )
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right" theme="system" />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route element={<ProtectedRoute />}>

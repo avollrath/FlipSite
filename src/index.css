@@ -44,6 +44,71 @@ body {
   }
 }
 
+@keyframes page-transition {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-zinc-200 dark:border-white/10;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply outline-none transition duration-200 ease-out;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply ring-4 ring-violet-500/20 ring-offset-2 ring-offset-white dark:ring-violet-400/20 dark:ring-offset-[#0a0a0f];
+  }
+
+  button:not(:disabled):active,
+  a:active {
+    transform: translateY(1px) scale(0.99);
+  }
+
+  tr,
+  article,
+  [role='button'] {
+    @apply transition duration-200 ease-out;
+  }
+
+  article:hover {
+    transform: translateY(-1px);
+  }
+
+  tr:hover {
+    @apply shadow-sm;
+  }
+}
+
 @layer utilities {
   .animate-auth-card {
     animation: auth-card 420ms ease-out both;
@@ -51,5 +116,13 @@ body {
 
   .animate-auth-form {
     animation: auth-form 260ms ease-out both;
+  }
+
+  .animate-page-transition {
+    animation: page-transition 240ms ease-out both;
+  }
+
+  .animate-soft-pop {
+    animation: soft-pop 240ms ease-out both;
   }
 }

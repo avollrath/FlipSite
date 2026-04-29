@@ -19,9 +19,9 @@ const SheetOverlay = forwardRef<
   ElementRef<typeof SheetPrimitive.Overlay>,
   ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <SheetPrimitive.Overlay
+    <SheetPrimitive.Overlay
     className={cn(
-      'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=closed]:animate-out data-[state=open]:animate-in',
+      'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-200 data-[state=closed]:opacity-0 data-[state=open]:opacity-100',
       className,
     )}
     {...props}
@@ -39,7 +39,7 @@ const SheetContent = forwardRef<
     <SheetPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-xl flex-col border-l border-zinc-200 bg-white shadow-2xl outline-none transition ease-in-out data-[state=closed]:translate-x-full data-[state=open]:translate-x-0 dark:border-white/10 dark:bg-[#13131a]',
+        'fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-xl flex-col border-l border-zinc-200 bg-white shadow-2xl outline-none transition duration-300 ease-out data-[state=closed]:translate-x-full data-[state=open]:translate-x-0 dark:border-white/10 dark:bg-[#13131a]',
         className,
       )}
       {...props}
@@ -59,7 +59,10 @@ const SheetHeader = ({
   ...props
 }: ComponentPropsWithoutRef<'div'>) => (
   <div
-    className={cn('space-y-1.5 border-b border-zinc-200 p-6 pr-14 dark:border-white/10', className)}
+    className={cn(
+      'space-y-1.5 border-b border-zinc-200 p-6 pr-14 dark:border-white/10',
+      className,
+    )}
     {...props}
   />
 )
@@ -85,7 +88,10 @@ const SheetTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
-    className={cn('text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white', className)}
+    className={cn(
+      'text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white',
+      className,
+    )}
     {...props}
   />
 ))
