@@ -1,13 +1,17 @@
 import { format } from 'date-fns'
+import type { ItemStatus } from '@/types'
 
 export function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return '$0.00'
+    return new Intl.NumberFormat('fi-FI', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(0)
   }
 
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat('fi-FI', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'EUR',
   }).format(value)
 }
 
@@ -51,4 +55,15 @@ export function formatDate(dateString: string | null | undefined) {
   }
 
   return format(date, 'MMM d, yyyy')
+}
+
+export function getStatusLabel(status: ItemStatus) {
+  const labels: Record<ItemStatus, string> = {
+    holding: 'In Inventory',
+    keeper: 'Keeping',
+    listed: 'Listed for Sale',
+    sold: 'Sold',
+  }
+
+  return labels[status]
 }

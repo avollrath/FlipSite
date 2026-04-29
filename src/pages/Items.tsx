@@ -15,6 +15,7 @@ import {
   calcROI,
   formatCurrency,
   formatDate,
+  getStatusLabel,
 } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
@@ -42,7 +43,7 @@ type SortState = {
   direction: 'asc' | 'desc'
 }
 
-const allStatuses = ['all', 'holding', 'listed', 'sold'] as const
+const allStatuses = ['all', 'holding', 'listed', 'sold', 'keeper'] as const
 const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
   { key: 'name', label: 'Name' },
   { key: 'category', label: 'Category' },
@@ -156,7 +157,7 @@ export function Items() {
         Profit: profit ?? '',
         'ROI %': roi === null ? '' : roi.toFixed(2),
         Platform: item.platform,
-        Status: item.status,
+        Status: getStatusLabel(item.status),
         'Date Bought': formatDate(item.bought_at),
         'Date Sold': formatDate(item.sold_at),
         Notes: item.notes ?? '',
@@ -221,7 +222,8 @@ export function Items() {
             }
             options={allStatuses.map((status) => ({
               value: status,
-              label: status === 'all' ? 'All Statuses' : titleCase(status),
+              label:
+                status === 'all' ? 'All Statuses' : getStatusLabel(status),
             }))}
           />
           <FilterSelect
@@ -471,13 +473,15 @@ function StatusBadge({ status }: { status: ItemStatus }) {
     listed:
       'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
     sold: 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300',
+    keeper:
+      'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
   }[status]
 
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}
     >
-      {status}
+      {getStatusLabel(status)}
     </span>
   )
 }
@@ -591,10 +595,6 @@ function metricTextClassName(value: number | null) {
   return value > 0
     ? 'font-semibold text-green-600 dark:text-green-400'
     : 'font-semibold text-red-600 dark:text-red-400'
-}
-
-function titleCase(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function uniqueValues(values: string[]) {

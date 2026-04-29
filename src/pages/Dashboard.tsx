@@ -2,6 +2,7 @@ import {
   Banknote,
   Boxes,
   Crown,
+  Heart,
   Package,
   Percent,
   TrendingUp,
@@ -78,12 +79,16 @@ export function Dashboard() {
 
       return best
     }, null)
-    const holdingCount = items.filter((item) => item.status === 'holding').length
+    const inventoryCount = items.filter((item) =>
+      ['holding', 'keeper', 'listed'].includes(item.status),
+    ).length
+    const keeperCount = items.filter((item) => item.status === 'keeper').length
 
     return {
       avgRoi,
       bestFlip,
-      holdingCount,
+      inventoryCount,
+      keeperCount,
       totalInvested,
       totalProfit,
       totalRevenue,
@@ -159,12 +164,20 @@ export function Dashboard() {
             color="amber"
           />
           <KPICard
-            title="Holding"
-            value={kpis.holdingCount}
-            subtitle="Items waiting to be listed or sold"
+            title="In Inventory"
+            value={kpis.inventoryCount}
+            subtitle="Items held, listed, or kept"
             icon={Boxes}
             trend="neutral"
             color="violet"
+          />
+          <KPICard
+            title="Keepers"
+            value={kpis.keeperCount}
+            subtitle="Items bought to keep"
+            icon={Heart}
+            trend="neutral"
+            color="indigo"
           />
         </div>
       )}
@@ -487,8 +500,8 @@ function dateValue(value: string | null) {
 }
 
 function compactCurrency(value: number) {
-  return new Intl.NumberFormat(undefined, {
-    currency: 'USD',
+  return new Intl.NumberFormat('fi-FI', {
+    currency: 'EUR',
     notation: 'compact',
     style: 'currency',
   }).format(value)

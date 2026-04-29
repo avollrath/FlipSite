@@ -1,4 +1,4 @@
-export type ItemStatus = 'holding' | 'listed' | 'sold'
+export type ItemStatus = 'holding' | 'listed' | 'sold' | 'keeper'
 
 export type Item = {
   tsid: string

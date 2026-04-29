@@ -9,7 +9,9 @@ create table if not exists public.items (
   buy_price numeric(12, 2) not null check (buy_price >= 0),
   sell_price numeric(12, 2) check (sell_price is null or sell_price >= 0),
   platform text not null,
-  status text not null default 'holding' check (status in ('holding', 'listed', 'sold')),
+  -- Status values: holding, listed, sold, keeper.
+  -- Existing Supabase databases need the manual constraint update block at the bottom of this file.
+  status text not null default 'holding' check (status in ('holding', 'listed', 'sold', 'keeper')),
   bought_at timestamptz not null,
   sold_at timestamptz,
   notes text,
@@ -50,3 +52,8 @@ to authenticated
 using ((select auth.uid()) = user_id);
 
 grant select, insert, update, delete on public.items to authenticated;
+
+-- Run this in Supabase SQL Editor to add keeper status support:
+-- ALTER TABLE items DROP CONSTRAINT IF EXISTS items_status_check;
+-- ALTER TABLE items ADD CONSTRAINT items_status_check
+--   CHECK (status IN ('holding', 'listed', 'sold', 'keeper'));
