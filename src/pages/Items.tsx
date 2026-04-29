@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
 import { useDeleteItem, useItems } from '@/hooks/useItems'
@@ -642,7 +643,7 @@ function DeleteConfirmDialog({
     return null
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4 backdrop-blur-sm">
       <div
         className="w-full max-w-md animate-soft-pop rounded-lg border border-zinc-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#13131a]"
@@ -685,7 +686,8 @@ function DeleteConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
