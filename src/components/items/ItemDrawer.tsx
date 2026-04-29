@@ -132,6 +132,16 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
     const usedPlatforms = uniqueValues(items.map((existingItem) => existingItem.platform))
     return usedPlatforms.length > 0 ? usedPlatforms : defaultPlatforms
   }, [items])
+  const conditionOptions = useMemo(
+    () =>
+      uniqueValues([
+        ...conditions,
+        form.condition,
+        ...bundleChildren.map((child) => child.condition),
+        ...items.map((existingItem) => existingItem.condition),
+      ]),
+    [bundleChildren, form.condition, items],
+  )
 
   const showSellFields = form.status === 'sold' || form.status === 'listed'
 
@@ -397,7 +407,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
                   updateField('condition', event.target.value)
                 }
               >
-                {conditions.map((condition) => (
+                {conditionOptions.map((condition) => (
                   <option key={condition} value={condition}>
                     {condition}
                   </option>
@@ -522,6 +532,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
           {isBundle ? (
             <BundleItemsSection
               childrenForms={bundleChildren}
+              conditionOptions={conditionOptions}
               onAdd={addBundleChild}
               onRemove={removeBundleChild}
               onUpdate={updateBundleChild}
@@ -598,11 +609,13 @@ function getPreviewProfit({
 
 function BundleItemsSection({
   childrenForms,
+  conditionOptions,
   onAdd,
   onRemove,
   onUpdate,
 }: {
   childrenForms: BundleChildForm[]
+  conditionOptions: string[]
   onAdd: () => void
   onRemove: (id: string) => void
   onUpdate: <K extends keyof BundleChildForm>(
@@ -678,7 +691,7 @@ function BundleItemsSection({
                   onUpdate(child.id, 'condition', event.target.value)
                 }
               >
-                {conditions.map((condition) => (
+                {conditionOptions.map((condition) => (
                   <option key={condition} value={condition}>
                     {condition}
                   </option>
