@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BarChart3, Plus } from 'lucide-react'
 import {
   BrowserRouter,
@@ -13,6 +14,8 @@ import { Layout } from '@/components/layout/Layout'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { Login } from '@/pages/Login'
 import type { Item } from '@/types'
+
+const queryClient = new QueryClient()
 
 const exampleItem: Item = {
   tsid: '3f8c8c89-7f22-4f7f-86ff-058ed85876ec',
@@ -134,21 +137,23 @@ function ItemsPage() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Toaster richColors position="top-right" />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/items" element={<ItemsPage />} />
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Toaster richColors position="top-right" />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/items" element={<ItemsPage />} />
+              </Route>
             </Route>
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }
 
