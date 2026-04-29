@@ -1,8 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
 import {
   BrowserRouter,
-  Link,
   Navigate,
   Outlet,
   Route,
@@ -12,6 +10,7 @@ import {
 import { Toaster } from 'sonner'
 import { Layout } from '@/components/layout/Layout'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
+import { Dashboard } from '@/pages/Dashboard'
 import { Items } from '@/pages/Items'
 import { Login } from '@/pages/Login'
 
@@ -34,46 +33,6 @@ function ProtectedRoute() {
   }
 
   return <Outlet />
-}
-
-function Dashboard() {
-  return (
-    <section>
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm font-medium text-violet-600 dark:text-violet-400">
-            Dashboard
-          </p>
-          <h2 className="mt-2 text-4xl font-semibold tracking-tight">
-            Inventory at a glance
-          </h2>
-        </div>
-        <Link
-          to="/items"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-950/20 transition hover:bg-violet-700"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          View Items
-        </Link>
-      </div>
-
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
-        {[
-          ['Holding', '12'],
-          ['Listed', '8'],
-          ['Sold', '24'],
-        ].map(([label, value]) => (
-          <div
-            key={label}
-            className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#13131a]"
-          >
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{label}</p>
-            <p className="mt-3 text-3xl font-semibold">{value}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
 }
 
 function App() {
