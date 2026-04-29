@@ -1,4 +1,11 @@
-import { Check, ChevronsUpDown, Loader2, Trash2 } from 'lucide-react'
+import {
+  Check,
+  ChevronsUpDown,
+  Link2,
+  Loader2,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import {
   useMemo,
   useState,
@@ -29,9 +36,12 @@ import {
 } from '@/components/ui/sheet'
 import {
   useAddItem,
+  useAddBundle,
   useDeleteItem,
   useItems,
   useUpdateItem,
+  type ItemUpdate,
+  type NewBundleChild,
   type NewItem,
 } from '@/hooks/useItems'
 import { calcProfit, calcROI, formatCurrency, getStatusLabel } from '@/lib/utils'
@@ -59,6 +69,22 @@ type FormState = {
   notes: string
 }
 
+type BundleChildForm = {
+  id: string
+  tsid?: string
+  name: string
+  condition: string
+  category: string
+  status: ItemStatus
+  buy_price: string
+}
+
+type NormalizedBundleChild = Omit<NewBundleChild, 'buy_price'> & {
+  buy_price: number
+  localId: string
+  tsid?: string
+}
+
 const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor']
 const defaultPlatforms = ['Tori.fi', 'Amazon.de', 'Verkkokauppa.fi']
 const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
@@ -79,11 +105,16 @@ export function ItemDrawer(props: ItemDrawerProps) {
 function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   const { data: items = [] } = useItems()
   const addItem = useAddItem()
+  const addBundle = useAddBundle()
   const updateItem = useUpdateItem()
   const deleteItem = useDeleteItem()
   const [form, setForm] = useState<FormState>(() => getInitialState(item))
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [platformOpen, setPlatformOpen] = useState(false)
+  const [isBundle, setIsBundle] = useState(Boolean(item?.is_bundle_parent))
+  const [bundleChildren, setBundleChildren] = useState<BundleChildForm[]>(() =>
+    getInitialBundleChildren(item, items),
+  )
 
   const categories = useMemo(
     () =>
@@ -110,7 +141,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   const normalizedSellPrice = Number.isFinite(sellPrice) ? sellPrice : null
   const profit = calcProfit(normalizedBuyPrice, normalizedSellPrice)
   const roi = calcROI(normalizedBuyPrice, normalizedSellPrice)
-  const isSubmitting = addItem.isPending || updateItem.isPending
+  const isSubmitting =
+    addItem.isPending || addBundle.isPending || updateItem.isPending
   const isDeleting = deleteItem.isPending
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -121,6 +153,26 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
         ? { sell_price: '', sold_at: '' }
         : {}),
     }))
+  }
+
+  function updateBundleChild<K extends keyof BundleChildForm>(
+    id: string,
+    key: K,
+    value: BundleChildForm[K],
+  ) {
+    setBundleChildren((children) =>
+      children.map((child) =>
+        child.id === id ? { ...child, [key]: value } : child,
+      ),
+    )
+  }
+
+  function addBundleChild() {
+    setBundleChildren((children) => [...children, createEmptyBundleChild()])
+  }
+
+  function removeBundleChild(id: string) {
+    setBundleChildren((children) => children.filter((child) => child.id !== id))
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -167,9 +219,24 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
     try {
       if (mode === 'edit' && item) {
+        const updates: ItemUpdate = { ...payload }
+
+        if (isBundle || item.is_bundle_parent) {
+          updates.is_bundle_parent = isBundle
+        }
+
         await updateItem.mutateAsync({
           tsid: item.tsid,
-          updates: payload,
+          updates,
+        })
+
+        if (isBundle) {
+          await saveEditedBundleChildren(item.tsid, payload)
+        }
+      } else if (isBundle) {
+        await addBundle.mutateAsync({
+          parent: payload,
+          children: normalizeBundleChildren(),
         })
       } else {
         await addItem.mutateAsync(payload)
@@ -178,6 +245,69 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
       onOpenChange(false)
     } catch {
       return
+    }
+  }
+
+  async function saveEditedBundleChildren(parentTsid: string, parent: NewItem) {
+    const children = bundleChildren
+      .map((child) => normalizeBundleChild(child))
+      .filter((child): child is NormalizedBundleChild => child !== null)
+
+    for (const child of children) {
+      const updates: ItemUpdate = {
+        buy_price: child.buy_price ?? 0,
+        category: child.category,
+        condition: child.condition,
+        name: child.name,
+        status: child.status,
+      }
+
+      if (child.tsid) {
+        await updateItem.mutateAsync({ tsid: child.tsid, updates })
+      } else {
+        const newChild = toNewBundleChild(child)
+        await addItem.mutateAsync({
+          ...newChild,
+          buy_price: newChild.buy_price ?? 0,
+          bundle_id: parentTsid,
+          bought_at: parent.bought_at,
+          is_bundle_parent: false,
+          platform: parent.platform,
+          sell_price: null,
+          sold_at: null,
+          notes: null,
+        })
+      }
+    }
+  }
+
+  function normalizeBundleChildren() {
+    return bundleChildren
+      .map((child) => normalizeBundleChild(child))
+      .filter((child): child is NormalizedBundleChild => child !== null)
+      .map(toNewBundleChild)
+  }
+
+  function normalizeBundleChild(
+    child: BundleChildForm,
+  ): NormalizedBundleChild | null {
+    const name = child.name.trim()
+
+    if (!name) {
+      return null
+    }
+
+    const splitCost = Number.parseFloat(child.buy_price)
+
+    return {
+      localId: child.id,
+      tsid: child.tsid,
+      name,
+      category: child.category.trim(),
+      condition: child.condition,
+      status: child.status,
+      buy_price: Number.isFinite(splitCost) ? splitCost : 0,
+      notes: null,
     }
   }
 
@@ -353,6 +483,37 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
             />
           </Field>
 
+          <label className="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+            <span>
+              <span className="block text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                This is a bundle
+              </span>
+              <span className="mt-1 block text-sm text-zinc-500 dark:text-zinc-400">
+                Track multiple items bought together under one total price.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              className="h-5 w-5 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+              checked={isBundle}
+              onChange={(event) => {
+                setIsBundle(event.target.checked)
+                if (event.target.checked && bundleChildren.length === 0) {
+                  setBundleChildren([createEmptyBundleChild()])
+                }
+              }}
+            />
+          </label>
+
+          {isBundle ? (
+            <BundleItemsSection
+              childrenForms={bundleChildren}
+              onAdd={addBundleChild}
+              onRemove={removeBundleChild}
+              onUpdate={updateBundleChild}
+            />
+          ) : null}
+
           {mode === 'edit' ? (
             <DeletePanel
               confirming={confirmDelete}
@@ -394,6 +555,126 @@ function SummaryValue({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-zinc-500 dark:text-zinc-400">{label}</p>
       <p className="text-xl font-semibold">{value}</p>
     </div>
+  )
+}
+
+function BundleItemsSection({
+  childrenForms,
+  onAdd,
+  onRemove,
+  onUpdate,
+}: {
+  childrenForms: BundleChildForm[]
+  onAdd: () => void
+  onRemove: (id: string) => void
+  onUpdate: <K extends keyof BundleChildForm>(
+    id: string,
+    key: K,
+    value: BundleChildForm[K],
+  ) => void
+}) {
+  return (
+    <section className="rounded-lg border border-violet-200 bg-violet-50/70 p-4 dark:border-violet-500/30 dark:bg-violet-500/10">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
+            Bundle Items
+          </h3>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Child items inherit platform and date bought from the parent.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
+          onClick={onAdd}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Add
+        </button>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {childrenForms.map((child) => (
+          <div
+            key={child.id}
+            className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-[#0a0a0f]"
+          >
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                <Link2 className="h-4 w-4 text-violet-500" aria-hidden="true" />
+                {child.tsid ? 'Bundle child' : 'New child item'}
+              </div>
+              {!child.tsid ? (
+                <button
+                  type="button"
+                  className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+                  onClick={() => onRemove(child.id)}
+                  aria-label="Remove child item"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input
+                className={inputClassName}
+                value={child.name}
+                onChange={(event) =>
+                  onUpdate(child.id, 'name', event.target.value)
+                }
+                placeholder="Name"
+              />
+              <input
+                className={inputClassName}
+                value={child.category}
+                onChange={(event) =>
+                  onUpdate(child.id, 'category', event.target.value)
+                }
+                placeholder="Category"
+              />
+              <select
+                className={inputClassName}
+                value={child.condition}
+                onChange={(event) =>
+                  onUpdate(child.id, 'condition', event.target.value)
+                }
+              >
+                {conditions.map((condition) => (
+                  <option key={condition} value={condition}>
+                    {condition}
+                  </option>
+                ))}
+              </select>
+              <select
+                className={inputClassName}
+                value={child.status}
+                onChange={(event) =>
+                  onUpdate(child.id, 'status', event.target.value as ItemStatus)
+                }
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {getStatusLabel(status)}
+                  </option>
+                ))}
+              </select>
+              <input
+                className={inputClassName}
+                type="number"
+                min="0"
+                step="0.01"
+                value={child.buy_price}
+                onChange={(event) =>
+                  onUpdate(child.id, 'buy_price', event.target.value)
+                }
+                placeholder="Split cost, optional"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -573,6 +854,49 @@ function getInitialState(item?: Item | null): FormState {
     bought_at: toDateInputValue(item?.bought_at) || todayInputValue(),
     sold_at: toDateInputValue(item?.sold_at),
     notes: item?.notes ?? '',
+  }
+}
+
+function getInitialBundleChildren(
+  item: Item | null | undefined,
+  items: Item[],
+): BundleChildForm[] {
+  if (!item?.is_bundle_parent) {
+    return []
+  }
+
+  return items
+    .filter((child) => child.bundle_id === item.tsid)
+    .map((child) => ({
+      id: child.tsid,
+      tsid: child.tsid,
+      name: child.name,
+      category: child.category,
+      condition: child.condition,
+      status: child.status,
+      buy_price: child.buy_price > 0 ? String(child.buy_price) : '',
+    }))
+}
+
+function createEmptyBundleChild(): BundleChildForm {
+  return {
+    id: crypto.randomUUID(),
+    name: '',
+    category: '',
+    condition: 'Good',
+    status: 'holding',
+    buy_price: '',
+  }
+}
+
+function toNewBundleChild(child: NormalizedBundleChild): NewBundleChild {
+  return {
+    buy_price: child.buy_price,
+    category: child.category,
+    condition: child.condition,
+    name: child.name,
+    notes: child.notes,
+    status: child.status,
   }
 }
 

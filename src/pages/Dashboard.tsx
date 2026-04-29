@@ -2,6 +2,7 @@ import {
   Banknote,
   Boxes,
   Crown,
+  Layers3,
   Heart,
   Package,
   Percent,
@@ -47,12 +48,19 @@ export function Dashboard() {
 
   const kpis = useMemo(() => {
     const soldItems = items.filter((item) => item.status === 'sold')
-    const totalInvested = items.reduce((sum, item) => sum + item.buy_price, 0)
+    const childrenByBundle = getChildrenByBundle(items)
+    const totalInvested = items.reduce(
+      (sum, item) => sum + getInvestedCost(item),
+      0,
+    )
     const totalRevenue = soldItems.reduce(
       (sum, item) => sum + (item.sell_price ?? 0),
       0,
     )
-    const soldCost = soldItems.reduce((sum, item) => sum + item.buy_price, 0)
+    const soldCost = soldItems.reduce(
+      (sum, item) => sum + getInvestedCost(item),
+      0,
+    )
     const totalProfit = totalRevenue - soldCost
     const soldRois = soldItems
       .map((item) => calcROI(item.buy_price, item.sell_price))
@@ -66,8 +74,9 @@ export function Dashboard() {
       roi: number
       profit: number
     } | null>((best, item) => {
-      const roi = calcROI(item.buy_price, item.sell_price)
-      const profit = calcProfit(item.buy_price, item.sell_price)
+      const cost = getInvestedCost(item)
+      const roi = calcROI(cost, item.sell_price)
+      const profit = calcProfit(cost, item.sell_price)
 
       if (roi === null || profit === null) {
         return best
@@ -83,8 +92,18 @@ export function Dashboard() {
       ['holding', 'keeper', 'listed'].includes(item.status),
     ).length
     const keeperCount = items.filter((item) => item.status === 'keeper').length
+    const activeBundles = items.filter((item) => {
+      if (!item.is_bundle_parent) {
+        return false
+      }
+
+      return (childrenByBundle.get(item.tsid) ?? []).some(
+        (child) => child.status !== 'sold',
+      )
+    }).length
 
     return {
+      activeBundles,
       avgRoi,
       bestFlip,
       inventoryCount,
@@ -178,6 +197,14 @@ export function Dashboard() {
             icon={Heart}
             trend="neutral"
             color="indigo"
+          />
+          <KPICard
+            title="Active Bundles"
+            value={kpis.activeBundles}
+            subtitle="Bundles with unsold child items"
+            icon={Layers3}
+            trend="neutral"
+            color="amber"
           />
         </div>
       )}
@@ -417,7 +444,7 @@ function buildChartData(items: Item[]) {
 
   let runningProfit = 0
   const cumulativeProfit = soldItems.map((item) => {
-    runningProfit += calcProfit(item.buy_price, item.sell_price) ?? 0
+    runningProfit += calcProfit(getInvestedCost(item), item.sell_price) ?? 0
 
     return {
       date: shortDate(item.sold_at),
@@ -429,7 +456,10 @@ function buildChartData(items: Item[]) {
     soldItems.reduce((map, item) => {
       const category = item.category || 'Uncategorized'
       const current = map.get(category) ?? 0
-      map.set(category, current + (calcProfit(item.buy_price, item.sell_price) ?? 0))
+      map.set(
+        category,
+        current + (calcProfit(getInvestedCost(item), item.sell_price) ?? 0),
+      )
       return map
     }, new Map<string, number>()),
     ([category, profit]) => ({ category, profit }),
@@ -449,7 +479,7 @@ function buildChartData(items: Item[]) {
     items.reduce((map, item) => {
       const boughtMonth = monthLabel(item.bought_at)
       const buyBucket = map.get(boughtMonth) ?? { month: boughtMonth, buy: 0, sell: 0 }
-      buyBucket.buy += item.buy_price
+      buyBucket.buy += getInvestedCost(item)
       map.set(boughtMonth, buyBucket)
 
       if (item.status === 'sold' && item.sold_at && item.sell_price !== null) {
@@ -475,6 +505,27 @@ function buildChartData(items: Item[]) {
     salesByPlatform,
     soldItems,
   }
+}
+
+function getInvestedCost(item: Item) {
+  if (item.bundle_id && item.buy_price === 0) {
+    return 0
+  }
+
+  return item.buy_price
+}
+
+function getChildrenByBundle(items: Item[]) {
+  return items.reduce((map, item) => {
+    if (!item.bundle_id) {
+      return map
+    }
+
+    const children = map.get(item.bundle_id) ?? []
+    children.push(item)
+    map.set(item.bundle_id, children)
+    return map
+  }, new Map<string, Item[]>())
 }
 
 function shortDate(value: string | null) {

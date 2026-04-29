@@ -14,6 +14,14 @@ export type NewItem = Omit<Item, 'tsid' | 'created_at' | 'user_id'> & {
 }
 
 export type ItemUpdate = Partial<Omit<Item, 'tsid' | 'user_id' | 'created_at'>>
+export type NewBundleChild = {
+  name: string
+  category: string
+  condition: string
+  status: Item['status']
+  buy_price?: number
+  notes?: string | null
+}
 
 export function useItems() {
   const { user } = useAuth()
@@ -69,6 +77,65 @@ export function useAddItem() {
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Unable to add item'))
+    },
+  })
+}
+
+export function useAddBundle() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      children,
+      parent,
+    }: {
+      children: NewBundleChild[]
+      parent: NewItem
+    }) => {
+      if (!user?.id) {
+        throw new Error('You must be signed in to add bundles')
+      }
+
+      const { data: parentItem, error: parentError } = await supabase
+        .from('items')
+        .insert({ ...parent, user_id: user.id, is_bundle_parent: true })
+        .select()
+        .single()
+
+      if (parentError) {
+        throw parentError
+      }
+
+      const typedParent = parentItem as Item
+
+      if (children.length > 0) {
+        const childRows = children.map((child) => ({
+          ...child,
+          buy_price: child.buy_price ?? 0,
+          bundle_id: typedParent.tsid,
+          bought_at: parent.bought_at,
+          is_bundle_parent: false,
+          platform: parent.platform,
+          sell_price: null,
+          sold_at: null,
+          user_id: user.id,
+        }))
+        const { error: childError } = await supabase.from('items').insert(childRows)
+
+        if (childError) {
+          throw childError
+        }
+      }
+
+      return typedParent
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: itemsQueryKey(user?.id) })
+      toast.success('Bundle added')
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Unable to add bundle'))
     },
   })
 }

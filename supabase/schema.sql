@@ -57,3 +57,7 @@ grant select, insert, update, delete on public.items to authenticated;
 -- ALTER TABLE items DROP CONSTRAINT IF EXISTS items_status_check;
 -- ALTER TABLE items ADD CONSTRAINT items_status_check
 --   CHECK (status IN ('holding', 'listed', 'sold', 'keeper'));
+
+-- Bundle support migration - run in Supabase SQL Editor:
+-- ALTER TABLE items ADD COLUMN IF NOT EXISTS bundle_id uuid REFERENCES items(tsid) ON DELETE SET NULL;
+-- ALTER TABLE items ADD COLUMN IF NOT EXISTS is_bundle_parent boolean DEFAULT false;

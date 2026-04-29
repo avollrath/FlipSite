@@ -14,4 +14,6 @@ export type Item = {
   sold_at: string | null
   notes: string | null
   created_at: string
+  bundle_id?: string | null
+  is_bundle_parent?: boolean
 }

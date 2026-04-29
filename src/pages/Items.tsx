@@ -1,8 +1,11 @@
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
+  ChevronRight,
   Download,
   Edit3,
+  Link2,
   PackageOpen,
   Plus,
   Search,
@@ -67,6 +70,10 @@ export function Items() {
   )
   const [platformFilter, setPlatformFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [bundlesOnly, setBundlesOnly] = useState(false)
+  const [expandedBundles, setExpandedBundles] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [sort, setSort] = useState<SortState>({
     key: 'created_at' as SortKey,
     direction: 'desc',
@@ -85,6 +92,18 @@ export function Items() {
     () => uniqueValues(items.map((item) => item.category)),
     [items],
   )
+  const childrenByBundle = useMemo(() => {
+    return items.reduce((map, item) => {
+      if (!item.bundle_id) {
+        return map
+      }
+
+      const children = map.get(item.bundle_id) ?? []
+      children.push(item)
+      map.set(item.bundle_id, children)
+      return map
+    }, new Map<string, Item[]>())
+  }, [items])
 
   const visibleItems = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
@@ -112,12 +131,44 @@ export function Items() {
         const matchesCategory =
           categoryFilter === 'all' || item.category === categoryFilter
 
+        const matchesBundleFilter = !bundlesOnly || item.is_bundle_parent
+
         return (
-          matchesSearch && matchesStatus && matchesPlatform && matchesCategory
+          matchesSearch &&
+          matchesStatus &&
+          matchesPlatform &&
+          matchesCategory &&
+          matchesBundleFilter
         )
       })
       .sort((a, b) => compareItems(a, b, sort))
-  }, [categoryFilter, items, platformFilter, search, sort, statusFilter])
+  }, [
+    bundlesOnly,
+    categoryFilter,
+    items,
+    platformFilter,
+    search,
+    sort,
+    statusFilter,
+  ])
+
+  const visibleRows = useMemo(() => {
+    const rows: Array<{ item: Item; isChild: boolean }> = []
+
+    visibleItems
+      .filter((item) => !item.bundle_id)
+      .forEach((item) => {
+        rows.push({ item, isChild: false })
+
+        if (item.is_bundle_parent && expandedBundles.has(item.tsid)) {
+          for (const child of childrenByBundle.get(item.tsid) ?? []) {
+            rows.push({ item: child, isChild: true })
+          }
+        }
+      })
+
+    return rows
+  }, [childrenByBundle, expandedBundles, visibleItems])
 
   function openAddDrawer() {
     setDrawer({ open: true, mode: 'add', item: null })
@@ -141,6 +192,20 @@ export function Items() {
           ? 'desc'
           : 'asc',
     }))
+  }
+
+  function toggleBundle(tsid: string) {
+    setExpandedBundles((current) => {
+      const next = new Set(current)
+
+      if (next.has(tsid)) {
+        next.delete(tsid)
+      } else {
+        next.add(tsid)
+      }
+
+      return next
+    })
   }
 
   function exportVisibleItems() {
@@ -250,6 +315,15 @@ export function Items() {
               })),
             ]}
           />
+          <label className="flex h-11 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-200">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+              checked={bundlesOnly}
+              onChange={(event) => setBundlesOnly(event.target.checked)}
+            />
+            Bundles only
+          </label>
         </div>
       </div>
 
@@ -286,11 +360,15 @@ export function Items() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200 dark:divide-white/10">
-                  {visibleItems.map((item) => (
+                  {visibleRows.map(({ item, isChild }) => (
                     <ItemRow
                       key={item.tsid}
                       item={item}
+                      childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
+                      isChild={isChild}
+                      isExpanded={expandedBundles.has(item.tsid)}
                       onEdit={() => openEditDrawer(item)}
+                      onToggleBundle={() => toggleBundle(item.tsid)}
                     />
                   ))}
                 </tbody>
@@ -299,11 +377,15 @@ export function Items() {
           </div>
 
           <div className="mt-6 grid gap-4 md:hidden">
-            {visibleItems.map((item) => (
+            {visibleRows.map(({ item, isChild }) => (
               <ItemCard
                 key={item.tsid}
                 item={item}
+                childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
+                isChild={isChild}
+                isExpanded={expandedBundles.has(item.tsid)}
                 onEdit={() => openEditDrawer(item)}
+                onToggleBundle={() => toggleBundle(item.tsid)}
               />
             ))}
           </div>
@@ -322,17 +404,58 @@ export function Items() {
   )
 }
 
-function ItemRow({ item, onEdit }: { item: Item; onEdit: () => void }) {
+function ItemRow({
+  childCount,
+  isChild,
+  isExpanded,
+  item,
+  onEdit,
+  onToggleBundle,
+}: {
+  childCount: number
+  isChild: boolean
+  isExpanded: boolean
+  item: Item
+  onEdit: () => void
+  onToggleBundle: () => void
+}) {
   const profit = calcProfit(item.buy_price, item.sell_price)
   const roi = calcROI(item.buy_price, item.sell_price)
 
   return (
     <tr
-      className="cursor-pointer transition hover:bg-violet-50/70 dark:hover:bg-white/[0.04]"
+      className={`cursor-pointer transition hover:bg-violet-50/70 dark:hover:bg-white/[0.04] ${
+        isChild ? 'bg-zinc-50/70 dark:bg-white/[0.02]' : ''
+      }`}
       onClick={onEdit}
     >
       <td className="px-4 py-4 font-medium text-zinc-950 dark:text-zinc-50">
-        {item.name}
+        <div className={`flex items-center gap-2 ${isChild ? 'pl-8' : ''}`}>
+          {item.is_bundle_parent ? (
+            <button
+              type="button"
+              className="rounded p-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-violet-600 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-violet-300"
+              onClick={(event) => {
+                event.stopPropagation()
+                onToggleBundle()
+              }}
+              aria-label={isExpanded ? 'Collapse bundle' : 'Expand bundle'}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          ) : null}
+          {isChild ? (
+            <Link2 className="h-4 w-4 text-violet-400" aria-hidden="true" />
+          ) : null}
+          <span>{item.name}</span>
+          {item.is_bundle_parent ? (
+            <BundleBadge count={childCount} />
+          ) : null}
+        </div>
       </td>
       <td className="px-4 py-4 text-zinc-600 dark:text-zinc-300">
         {item.category || '--'}
@@ -377,20 +500,42 @@ function ItemRow({ item, onEdit }: { item: Item; onEdit: () => void }) {
   )
 }
 
-function ItemCard({ item, onEdit }: { item: Item; onEdit: () => void }) {
+function ItemCard({
+  childCount,
+  isChild,
+  isExpanded,
+  item,
+  onEdit,
+  onToggleBundle,
+}: {
+  childCount: number
+  isChild: boolean
+  isExpanded: boolean
+  item: Item
+  onEdit: () => void
+  onToggleBundle: () => void
+}) {
   const profit = calcProfit(item.buy_price, item.sell_price)
   const roi = calcROI(item.buy_price, item.sell_price)
 
   return (
     <button
       type="button"
-      className="rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-sm transition hover:border-violet-300 dark:border-white/10 dark:bg-[#13131a] dark:hover:border-violet-500"
+      className={`rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-sm transition hover:border-violet-300 dark:border-white/10 dark:bg-[#13131a] dark:hover:border-violet-500 ${
+        isChild ? 'ml-5 border-violet-200 dark:border-violet-500/30' : ''
+      }`}
       onClick={onEdit}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold text-zinc-950 dark:text-zinc-50">
-            {item.name}
+            <span className="inline-flex items-center gap-2">
+              {isChild ? (
+                <Link2 className="h-4 w-4 text-violet-400" aria-hidden="true" />
+              ) : null}
+              {item.name}
+              {item.is_bundle_parent ? <BundleBadge count={childCount} /> : null}
+            </span>
           </h3>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {item.category || 'Uncategorized'} - {item.platform}
@@ -398,6 +543,18 @@ function ItemCard({ item, onEdit }: { item: Item; onEdit: () => void }) {
         </div>
         <StatusBadge status={item.status} />
       </div>
+      {item.is_bundle_parent ? (
+        <button
+          type="button"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-violet-600 transition hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-500/10"
+          onClick={(event) => {
+            event.stopPropagation()
+            onToggleBundle()
+          }}
+        >
+          {isExpanded ? 'Hide bundle items' : 'Show bundle items'}
+        </button>
+      ) : null}
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <MobileMetric label="Buy" value={formatCurrency(item.buy_price)} />
         <MobileMetric label="Sell" value={formatCurrency(item.sell_price)} />
@@ -415,6 +572,14 @@ function ItemCard({ item, onEdit }: { item: Item; onEdit: () => void }) {
         <MobileMetric label="Sold" value={formatDate(item.sold_at) || '--'} />
       </div>
     </button>
+  )
+}
+
+function BundleBadge({ count }: { count: number }) {
+  return (
+    <span className="inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+      Bundle ({count})
+    </span>
   )
 }
 
