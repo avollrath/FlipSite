@@ -85,6 +85,20 @@ export function isAggregateItem(item: Item) {
   return !item.bundle_id || Boolean(item.is_bundle_parent)
 }
 
+export function getEffectiveItemStatus(item: Item, allItems: Item[]) {
+  if (!item.is_bundle_parent) {
+    return item.status
+  }
+
+  const children = allItems.filter((child) => child.bundle_id === item.tsid)
+
+  if (children.length > 0 && children.every((child) => child.status === 'sold')) {
+    return 'sold'
+  }
+
+  return item.status
+}
+
 export function formatDate(dateString: string | null | undefined) {
   if (!dateString) {
     return ''

@@ -31,6 +31,7 @@ import {
   calculateItemROI,
   calculateItemSellValue,
   formatCurrency,
+  getEffectiveItemStatus,
   isAggregateItem,
 } from '@/lib/utils'
 import type { Item } from '@/types'
@@ -96,16 +97,20 @@ export function Dashboard() {
       return best
     }, null)
     const inventoryCount = items.filter((item) =>
-      ['holding', 'keeper', 'listed'].includes(item.status),
+      ['holding', 'keeper', 'listed'].includes(
+        getEffectiveItemStatus(item, items),
+      ),
     ).length
-    const keeperCount = items.filter((item) => item.status === 'keeper').length
+    const keeperCount = items.filter(
+      (item) => getEffectiveItemStatus(item, items) === 'keeper',
+    ).length
     const activeBundles = items.filter((item) => {
       if (!item.is_bundle_parent) {
         return false
       }
 
       return (childrenByBundle.get(item.tsid) ?? []).some(
-        (child) => child.status !== 'sold',
+        (child) => getEffectiveItemStatus(child, items) !== 'sold',
       )
     }).length
 

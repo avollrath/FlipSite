@@ -19,6 +19,7 @@ import {
   calculateItemSellValue,
   formatCurrency,
   formatDate,
+  getEffectiveItemStatus,
   getStatusLabel,
 } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
@@ -118,7 +119,7 @@ export function Items() {
             item.category,
             item.condition,
             item.platform,
-            item.status,
+            getEffectiveItemStatus(item, items),
             item.notes ?? '',
           ]
             .join(' ')
@@ -126,7 +127,8 @@ export function Items() {
             .includes(normalizedSearch)
 
         const matchesStatus =
-          statusFilter === 'all' || item.status === statusFilter
+          statusFilter === 'all' ||
+          getEffectiveItemStatus(item, items) === statusFilter
         const matchesPlatform =
           platformFilter === 'all' || item.platform === platformFilter
         const matchesCategory =
@@ -223,7 +225,7 @@ export function Items() {
         Profit: profit ?? '',
         'ROI %': roi === null ? '' : roi.toFixed(2),
         Platform: item.platform,
-        Status: getStatusLabel(item.status),
+        Status: getStatusLabel(getEffectiveItemStatus(item, items)),
         'Date Bought': formatDate(item.bought_at),
         'Date Sold': formatDate(item.sold_at),
         Notes: item.notes ?? '',
@@ -481,7 +483,7 @@ function ItemRow({
         {item.platform}
       </td>
       <td className="px-4 py-4">
-        <StatusBadge status={item.status} />
+        <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
       </td>
       <td className="px-4 py-4 text-zinc-600 dark:text-zinc-300">
         {formatDate(item.bought_at)}
@@ -550,7 +552,7 @@ function ItemCard({
             {item.category || 'Uncategorized'} - {item.platform}
           </p>
         </div>
-        <StatusBadge status={item.status} />
+        <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
       </div>
       {item.is_bundle_parent ? (
         <button

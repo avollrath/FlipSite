@@ -69,7 +69,13 @@ export function useAddItem() {
         throw error
       }
 
-      return data as Item
+      const createdItem = data as Item
+
+      if (createdItem.bundle_id) {
+        await markBundleParentSoldIfComplete(createdItem.bundle_id, user.id)
+      }
+
+      return createdItem
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: itemsQueryKey(user?.id) })
@@ -168,7 +174,13 @@ export function useUpdateItem() {
         throw error
       }
 
-      return data as Item
+      const updatedItem = data as Item
+
+      if (updatedItem.bundle_id) {
+        await markBundleParentSoldIfComplete(updatedItem.bundle_id, user.id)
+      }
+
+      return updatedItem
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: itemsQueryKey(user?.id) })
@@ -214,4 +226,41 @@ export function useDeleteItem() {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback
+}
+
+async function markBundleParentSoldIfComplete(
+  bundleParentTsid: string,
+  userId: string,
+) {
+  const { data: children, error: childrenError } = await supabase
+    .from('items')
+    .select('tsid,status,sold_at')
+    .eq('bundle_id', bundleParentTsid)
+    .eq('user_id', userId)
+
+  if (childrenError) {
+    throw childrenError
+  }
+
+  if (!children?.length || children.some((child) => child.status !== 'sold')) {
+    return
+  }
+
+  const latestSoldAt =
+    children
+      .map((child) => child.sold_at)
+      .filter((value): value is string => Boolean(value))
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ??
+    new Date().toISOString()
+
+  const { error: parentError } = await supabase
+    .from('items')
+    .update({ sold_at: latestSoldAt, status: 'sold' })
+    .eq('tsid', bundleParentTsid)
+    .eq('user_id', userId)
+    .eq('is_bundle_parent', true)
+
+  if (parentError) {
+    throw parentError
+  }
 }
