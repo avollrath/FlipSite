@@ -90,6 +90,10 @@ export function getEffectiveItemStatus(item: Item, allItems: Item[]) {
     return item.status
   }
 
+  if (item.status === 'keeper') {
+    return item.status
+  }
+
   const children = allItems.filter((child) => child.bundle_id === item.tsid)
 
   if (children.length > 0 && children.every((child) => child.status === 'sold')) {

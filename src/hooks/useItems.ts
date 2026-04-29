@@ -232,6 +232,22 @@ async function markBundleParentSoldIfComplete(
   bundleParentTsid: string,
   userId: string,
 ) {
+  const { data: parent, error: parentLookupError } = await supabase
+    .from('items')
+    .select('status')
+    .eq('tsid', bundleParentTsid)
+    .eq('user_id', userId)
+    .eq('is_bundle_parent', true)
+    .single()
+
+  if (parentLookupError) {
+    throw parentLookupError
+  }
+
+  if (parent?.status === 'keeper') {
+    return
+  }
+
   const { data: children, error: childrenError } = await supabase
     .from('items')
     .select('tsid,status,sold_at')
