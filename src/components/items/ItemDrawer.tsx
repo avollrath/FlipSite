@@ -44,7 +44,7 @@ import {
   type NewBundleChild,
   type NewItem,
 } from '@/hooks/useItems'
-import { calcProfit, calcROI, formatCurrency, getStatusLabel } from '@/lib/utils'
+import { calcProfit, formatCurrency, getStatusLabel } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
 type ItemDrawerProps = {
@@ -139,8 +139,22 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   const sellPrice = Number.parseFloat(form.sell_price)
   const normalizedBuyPrice = Number.isFinite(buyPrice) ? buyPrice : null
   const normalizedSellPrice = Number.isFinite(sellPrice) ? sellPrice : null
-  const profit = calcProfit(normalizedBuyPrice, normalizedSellPrice)
-  const roi = calcROI(normalizedBuyPrice, normalizedSellPrice)
+  const existingBundleChildSell = item?.tsid
+    ? items
+        .filter((child) => child.bundle_id === item.tsid)
+        .reduce((sum, child) => sum + (child.sell_price ?? 0), 0)
+    : 0
+  const profit = getPreviewProfit({
+    bundleChildSell: existingBundleChildSell,
+    buyPrice: normalizedBuyPrice,
+    isBundle,
+    isBundleChild: Boolean(item?.bundle_id),
+    sellPrice: normalizedSellPrice,
+  })
+  const roi =
+    profit === null || !normalizedBuyPrice
+      ? null
+      : (profit / normalizedBuyPrice) * 100
   const isSubmitting =
     addItem.isPending || addBundle.isPending || updateItem.isPending
   const isDeleting = deleteItem.isPending
@@ -556,6 +570,30 @@ function SummaryValue({ label, value }: { label: string; value: string }) {
       <p className="text-xl font-semibold">{value}</p>
     </div>
   )
+}
+
+function getPreviewProfit({
+  bundleChildSell,
+  buyPrice,
+  isBundle,
+  isBundleChild,
+  sellPrice,
+}: {
+  bundleChildSell: number
+  buyPrice: number | null
+  isBundle: boolean
+  isBundleChild: boolean
+  sellPrice: number | null
+}) {
+  if (isBundle) {
+    return (sellPrice ?? 0) + bundleChildSell - (buyPrice ?? 0)
+  }
+
+  if (isBundleChild) {
+    return sellPrice ?? 0
+  }
+
+  return calcProfit(buyPrice, sellPrice)
 }
 
 function BundleItemsSection({

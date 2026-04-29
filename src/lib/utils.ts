@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import type { ItemStatus } from '@/types'
+import type { Item, ItemStatus } from '@/types'
 
 export function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -41,6 +41,48 @@ export function calcROI(
   }
 
   return (profit / buyPrice) * 100
+}
+
+export function calculateItemSellValue(item: Item, allItems: Item[]) {
+  if (item.is_bundle_parent) {
+    const childrenSell = allItems
+      .filter((child) => child.bundle_id === item.tsid)
+      .reduce((sum, child) => sum + (child.sell_price ?? 0), 0)
+
+    return (item.sell_price ?? 0) + childrenSell
+  }
+
+  return item.sell_price ?? 0
+}
+
+export function calculateItemProfit(item: Item, allItems: Item[]) {
+  if (item.is_bundle_parent) {
+    return calculateItemSellValue(item, allItems) - (item.buy_price ?? 0)
+  }
+
+  if (item.bundle_id) {
+    return item.sell_price ?? 0
+  }
+
+  return (item.sell_price ?? 0) - (item.buy_price ?? 0)
+}
+
+export function calculateItemROI(item: Item, allItems: Item[]) {
+  if (item.bundle_id && !item.is_bundle_parent) {
+    return item.buy_price > 0
+      ? ((item.sell_price ?? 0) - item.buy_price) / item.buy_price * 100
+      : null
+  }
+
+  if (!item.buy_price) {
+    return null
+  }
+
+  return (calculateItemProfit(item, allItems) / item.buy_price) * 100
+}
+
+export function isAggregateItem(item: Item) {
+  return !item.bundle_id || Boolean(item.is_bundle_parent)
 }
 
 export function formatDate(dateString: string | null | undefined) {

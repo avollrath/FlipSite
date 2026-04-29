@@ -14,8 +14,9 @@ import { useMemo, useState } from 'react'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
 import { useItems } from '@/hooks/useItems'
 import {
-  calcProfit,
-  calcROI,
+  calculateItemProfit,
+  calculateItemROI,
+  calculateItemSellValue,
   formatCurrency,
   formatDate,
   getStatusLabel,
@@ -141,7 +142,7 @@ export function Items() {
           matchesBundleFilter
         )
       })
-      .sort((a, b) => compareItems(a, b, sort))
+      .sort((a, b) => compareItems(a, b, sort, items))
   }, [
     bundlesOnly,
     categoryFilter,
@@ -210,15 +211,15 @@ export function Items() {
 
   function exportVisibleItems() {
     const rows = visibleItems.map((item) => {
-      const profit = calcProfit(item.buy_price, item.sell_price)
-      const roi = calcROI(item.buy_price, item.sell_price)
+      const profit = calculateItemProfit(item, items)
+      const roi = calculateItemROI(item, items)
 
       return {
         Name: item.name,
         Category: item.category,
         Condition: item.condition,
         'Buy Price': item.buy_price,
-        'Sell Price': item.sell_price ?? '',
+        'Sell Price': calculateItemSellValue(item, items),
         Profit: profit ?? '',
         'ROI %': roi === null ? '' : roi.toFixed(2),
         Platform: item.platform,
@@ -369,6 +370,7 @@ export function Items() {
                       isExpanded={expandedBundles.has(item.tsid)}
                       onEdit={() => openEditDrawer(item)}
                       onToggleBundle={() => toggleBundle(item.tsid)}
+                      allItems={items}
                     />
                   ))}
                 </tbody>
@@ -386,6 +388,7 @@ export function Items() {
                 isExpanded={expandedBundles.has(item.tsid)}
                 onEdit={() => openEditDrawer(item)}
                 onToggleBundle={() => toggleBundle(item.tsid)}
+                allItems={items}
               />
             ))}
           </div>
@@ -411,6 +414,7 @@ function ItemRow({
   item,
   onEdit,
   onToggleBundle,
+  allItems,
 }: {
   childCount: number
   isChild: boolean
@@ -418,9 +422,11 @@ function ItemRow({
   item: Item
   onEdit: () => void
   onToggleBundle: () => void
+  allItems: Item[]
 }) {
-  const profit = calcProfit(item.buy_price, item.sell_price)
-  const roi = calcROI(item.buy_price, item.sell_price)
+  const sellValue = calculateItemSellValue(item, allItems)
+  const profit = calculateItemProfit(item, allItems)
+  const roi = calculateItemROI(item, allItems)
 
   return (
     <tr
@@ -464,7 +470,7 @@ function ItemRow({
         {item.condition}
       </td>
       <td className="px-4 py-4">{formatCurrency(item.buy_price)}</td>
-      <td className="px-4 py-4">{formatCurrency(item.sell_price)}</td>
+      <td className="px-4 py-4">{formatCurrency(sellValue)}</td>
       <td className={metricCellClassName(profit)}>
         {profit === null ? '--' : formatCurrency(profit)}
       </td>
@@ -507,6 +513,7 @@ function ItemCard({
   item,
   onEdit,
   onToggleBundle,
+  allItems,
 }: {
   childCount: number
   isChild: boolean
@@ -514,9 +521,11 @@ function ItemCard({
   item: Item
   onEdit: () => void
   onToggleBundle: () => void
+  allItems: Item[]
 }) {
-  const profit = calcProfit(item.buy_price, item.sell_price)
-  const roi = calcROI(item.buy_price, item.sell_price)
+  const sellValue = calculateItemSellValue(item, allItems)
+  const profit = calculateItemProfit(item, allItems)
+  const roi = calculateItemROI(item, allItems)
 
   return (
     <button
@@ -557,7 +566,7 @@ function ItemCard({
       ) : null}
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <MobileMetric label="Buy" value={formatCurrency(item.buy_price)} />
-        <MobileMetric label="Sell" value={formatCurrency(item.sell_price)} />
+        <MobileMetric label="Sell" value={formatCurrency(sellValue)} />
         <MobileMetric
           label="Profit"
           value={profit === null ? '--' : formatCurrency(profit)}
@@ -720,9 +729,9 @@ function NoResults() {
   )
 }
 
-function compareItems(a: Item, b: Item, sort: SortState) {
-  const aValue = getSortValue(a, sort.key)
-  const bValue = getSortValue(b, sort.key)
+function compareItems(a: Item, b: Item, sort: SortState, allItems: Item[]) {
+  const aValue = getSortValue(a, sort.key, allItems)
+  const bValue = getSortValue(b, sort.key, allItems)
   const direction = sort.direction === 'asc' ? 1 : -1
 
   if (typeof aValue === 'number' && typeof bValue === 'number') {
@@ -732,13 +741,17 @@ function compareItems(a: Item, b: Item, sort: SortState) {
   return String(aValue).localeCompare(String(bValue)) * direction
 }
 
-function getSortValue(item: Item, key: SortKey) {
+function getSortValue(item: Item, key: SortKey, allItems: Item[]) {
   if (key === 'profit') {
-    return calcProfit(item.buy_price, item.sell_price) ?? Number.NEGATIVE_INFINITY
+    return calculateItemProfit(item, allItems)
   }
 
   if (key === 'roi') {
-    return calcROI(item.buy_price, item.sell_price) ?? Number.NEGATIVE_INFINITY
+    return calculateItemROI(item, allItems) ?? Number.NEGATIVE_INFINITY
+  }
+
+  if (key === 'sell_price') {
+    return calculateItemSellValue(item, allItems)
   }
 
   if (key === 'bought_at' || key === 'sold_at') {

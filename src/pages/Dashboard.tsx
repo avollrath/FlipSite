@@ -26,7 +26,13 @@ import {
 } from 'recharts'
 import { KPICard } from '@/components/charts/KPICard'
 import { useItems } from '@/hooks/useItems'
-import { calcProfit, calcROI, formatCurrency } from '@/lib/utils'
+import {
+  calculateItemProfit,
+  calculateItemROI,
+  calculateItemSellValue,
+  formatCurrency,
+  isAggregateItem,
+} from '@/lib/utils'
 import type { Item } from '@/types'
 
 type ChartTooltipPayload = {
@@ -47,23 +53,25 @@ export function Dashboard() {
   const { data: items = [], isLoading } = useItems()
 
   const kpis = useMemo(() => {
-    const soldItems = items.filter((item) => item.status === 'sold')
+    const aggregateItems = items.filter(isAggregateItem)
+    const soldItems = aggregateItems.filter(
+      (item) => calculateItemSellValue(item, items) > 0,
+    )
     const childrenByBundle = getChildrenByBundle(items)
-    const totalInvested = items.reduce(
-      (sum, item) => sum + getInvestedCost(item),
+    const totalInvested = aggregateItems.reduce(
+      (sum, item) => sum + item.buy_price,
       0,
     )
-    const totalRevenue = soldItems.reduce(
-      (sum, item) => sum + (item.sell_price ?? 0),
+    const totalRevenue = aggregateItems.reduce(
+      (sum, item) => sum + calculateItemSellValue(item, items),
       0,
     )
-    const soldCost = soldItems.reduce(
-      (sum, item) => sum + getInvestedCost(item),
+    const totalProfit = aggregateItems.reduce(
+      (sum, item) => sum + calculateItemProfit(item, items),
       0,
     )
-    const totalProfit = totalRevenue - soldCost
     const soldRois = soldItems
-      .map((item) => calcROI(item.buy_price, item.sell_price))
+      .map((item) => calculateItemROI(item, items))
       .filter((roi): roi is number => roi !== null)
     const avgRoi =
       soldRois.length > 0
@@ -74,9 +82,8 @@ export function Dashboard() {
       roi: number
       profit: number
     } | null>((best, item) => {
-      const cost = getInvestedCost(item)
-      const roi = calcROI(cost, item.sell_price)
-      const profit = calcProfit(cost, item.sell_price)
+      const roi = calculateItemROI(item, items)
+      const profit = calculateItemProfit(item, items)
 
       if (roi === null || profit === null) {
         return best
@@ -438,16 +445,17 @@ function CurrencyTooltip({ active, label, payload }: ChartTooltipProps) {
 }
 
 function buildChartData(items: Item[]) {
-  const soldItems = items
-    .filter((item) => item.status === 'sold' && item.sell_price !== null)
-    .sort((a, b) => dateValue(a.sold_at) - dateValue(b.sold_at))
+  const aggregateItems = items.filter(isAggregateItem)
+  const soldItems = aggregateItems
+    .filter((item) => calculateItemSellValue(item, items) > 0)
+    .sort((a, b) => dateValue(getEffectiveSoldAt(a, items)) - dateValue(getEffectiveSoldAt(b, items)))
 
   let runningProfit = 0
   const cumulativeProfit = soldItems.map((item) => {
-    runningProfit += calcProfit(getInvestedCost(item), item.sell_price) ?? 0
+    runningProfit += calculateItemProfit(item, items)
 
     return {
-      date: shortDate(item.sold_at),
+      date: shortDate(getEffectiveSoldAt(item, items)),
       profit: runningProfit,
     }
   })
@@ -456,10 +464,7 @@ function buildChartData(items: Item[]) {
     soldItems.reduce((map, item) => {
       const category = item.category || 'Uncategorized'
       const current = map.get(category) ?? 0
-      map.set(
-        category,
-        current + (calcProfit(getInvestedCost(item), item.sell_price) ?? 0),
-      )
+      map.set(category, current + calculateItemProfit(item, items))
       return map
     }, new Map<string, number>()),
     ([category, profit]) => ({ category, profit }),
@@ -469,27 +474,30 @@ function buildChartData(items: Item[]) {
     soldItems.reduce((map, item) => {
       const platform = item.platform || 'Other'
       const current = map.get(platform) ?? 0
-      map.set(platform, current + (item.sell_price ?? 0))
+      map.set(platform, current + calculateItemSellValue(item, items))
       return map
     }, new Map<string, number>()),
     ([platform, revenue]) => ({ platform, revenue }),
   ).sort((a, b) => b.revenue - a.revenue)
 
   const monthlyVolume = Array.from(
-    items.reduce((map, item) => {
+    aggregateItems.reduce((map, item) => {
       const boughtMonth = monthLabel(item.bought_at)
       const buyBucket = map.get(boughtMonth) ?? { month: boughtMonth, buy: 0, sell: 0 }
-      buyBucket.buy += getInvestedCost(item)
+      buyBucket.buy += item.buy_price
       map.set(boughtMonth, buyBucket)
 
-      if (item.status === 'sold' && item.sold_at && item.sell_price !== null) {
-        const soldMonth = monthLabel(item.sold_at)
+      const sellValue = calculateItemSellValue(item, items)
+      const soldAt = getEffectiveSoldAt(item, items)
+
+      if (sellValue > 0 && soldAt) {
+        const soldMonth = monthLabel(soldAt)
         const sellBucket = map.get(soldMonth) ?? {
           month: soldMonth,
           buy: 0,
           sell: 0,
         }
-        sellBucket.sell += item.sell_price
+        sellBucket.sell += sellValue
         map.set(soldMonth, sellBucket)
       }
 
@@ -507,14 +515,6 @@ function buildChartData(items: Item[]) {
   }
 }
 
-function getInvestedCost(item: Item) {
-  if (item.bundle_id && item.buy_price === 0) {
-    return 0
-  }
-
-  return item.buy_price
-}
-
 function getChildrenByBundle(items: Item[]) {
   return items.reduce((map, item) => {
     if (!item.bundle_id) {
@@ -526,6 +526,23 @@ function getChildrenByBundle(items: Item[]) {
     map.set(item.bundle_id, children)
     return map
   }, new Map<string, Item[]>())
+}
+
+function getEffectiveSoldAt(item: Item, items: Item[]) {
+  if (!item.is_bundle_parent) {
+    return item.sold_at
+  }
+
+  const childSoldDates = items
+    .filter((child) => child.bundle_id === item.tsid && child.sell_price)
+    .map((child) => child.sold_at)
+    .filter((value): value is string => Boolean(value))
+
+  if (item.sold_at) {
+    childSoldDates.push(item.sold_at)
+  }
+
+  return childSoldDates.sort((a, b) => dateValue(b) - dateValue(a))[0] ?? null
 }
 
 function shortDate(value: string | null) {
