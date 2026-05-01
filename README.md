@@ -1,29 +1,77 @@
 # FlipSite
 
-FlipSite is a personal inventory and resale dashboard I built from a very familiar habit: keeping Google Sheets for budgeting, purchases, and flips. I wanted something that felt more intentional than a spreadsheet, but still kept the practical workflow that makes spreadsheets useful: write down what I bought, what I paid, where it came from, whether I am keeping it, listing it, or selling it, and what the final result was.
+Real-world flipping and inventory tracking, built for the messy middle between a spreadsheet and a full accounting system.
 
-The project started as a flipping tracker, but it has grown into a broader inventory tool for everything I buy. Some things are bought to resell quickly. Some become long-term keepers. Some are part of bundles where one purchase contains several separate items. FlipSite is meant to handle that messier real-life version of buying and selling, not only the clean version where every item is a neat one-line flip.
+**Live app:** https://flipsite-three.vercel.app/
 
-## What It Does
+![FlipSite preview](src/assets/preview.jpg)
 
-- Tracks items from purchase through inventory, listing, sale, or keeping
-- Supports bundles, where one purchase price can cover several child items
-- Calculates profit and ROI, including bundle parent profit from child sales
-- Shows dashboard KPIs for invested money, revenue, profit, keepers, inventory, and active bundles
-- Visualizes sales and profit over time with charts
-- Filters inventory by status, platform, category, bundles, and dashboard drilldowns
-- Uses Euro formatting and inventory language that fits my own workflow
-- Stores data per user with Supabase Auth and Row Level Security
+## Overview
 
-## Why I Built It
+FlipSite is a personal resale and inventory tracker built from an actual buying, bundling, listing, and selling workflow. It replaces the fragile spreadsheet version of that process with authenticated data, image-backed item records, bundle-aware calculations, fast filtering, and dashboard analytics.
 
-My budgeting and flipping spreadsheets worked, but they were starting to stretch beyond what a sheet is best at. I wanted a project that could keep the speed of entering purchases while adding a better interface for reviewing inventory, seeing profit, and understanding what is still sitting around waiting for a decision.
+What makes it interesting is the shape of the data: not every purchase is a clean one-item flip. Some purchases become bundles, some items are kept, some are listed later, and profit only makes sense if the app understands those relationships.
 
-FlipSite is also a portfolio piece: a practical app built around a real personal workflow, with authentication, database rules, data tables, charts, responsive UI, dark mode, and the kind of edge cases that only show up when a tool is actually used.
+## Key Features
 
-## Tech
+- **Bundle-aware inventory system**  
+  Track parent purchases with child items split out underneath them.
 
-Built with React, TypeScript, Vite, Tailwind CSS, Supabase, TanStack Query, React Router, Recharts, Sonner, and Lucide icons.
+- **Correct profit calculation**  
+  Bundle parents include child sales so totals do not undercount or double count.
+
+- **Image uploads with compression and paste support**  
+  Upload files normally or paste screenshots/images directly into an item drawer.
+
+- **Dual item views**  
+  Switch between a compact table view and a gallery view with signed thumbnails.
+
+- **Advanced filtering and sorting**  
+  Filter by status, seller/platform, category, bundles, inventory state, and search.
+
+- **Dashboard insights**  
+  See profit, revenue, invested capital, keeping value, inventory count, ROI, and bundle state.
+
+- **Private per-user data**  
+  Supabase Auth, Postgres, Storage, and RLS keep each user's inventory isolated.
+
+## Interesting Implementation Details
+
+### Bundle Logic
+
+Bundles are modeled as parent items with child rows. The parent keeps the original purchase cost, while children can be sold individually. Profit and ROI calculations account for that relationship, so selling child items contributes back to the bundle parent without duplicating purchase cost.
+
+### Image Pipeline
+
+Images are compressed before upload to keep storage and page weight under control:
+
+- max long edge: `1600px`
+- target size: about `200 KB`
+- JPEG output for compressed images
+
+Files are stored in a private Supabase Storage bucket and served through signed URLs. List and gallery thumbnails use transformed image URLs so the app does not load full-size images unnecessarily.
+
+### Clipboard Paste Uploads
+
+The item drawer supports a Telegram-style image workflow: paste a screenshot or copied image, convert clipboard blobs into real `File` objects, then send them through the same upload pipeline as selected files. That keeps compression, storage paths, metadata inserts, and error states consistent.
+
+### Dashboard Accuracy
+
+Dashboard metrics avoid common inventory mistakes:
+
+- keeping items are tracked separately from active investment inventory
+- bundle children do not double count purchase cost
+- sold bundle children contribute to parent profit
+- active inventory, invested value, ROI, and profit use purpose-specific calculations
+
+## Tech Stack
+
+- React, TypeScript, Vite
+- Tailwind CSS
+- Supabase Auth, Postgres, Storage, RLS
+- TanStack Query
+- Recharts
+- Vercel
 
 ## Running Locally
 
@@ -40,34 +88,15 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
 
-To set up the database, create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the Supabase SQL editor. The schema includes RLS so users only access their own inventory.
-
-## Supabase Storage
-
-The schema creates a private Storage bucket named `item-files` and adds Storage RLS policies so authenticated users can read, upload, and delete objects only when the first path segment matches their own user id.
-
-Use this object path convention for uploads:
-
-```text
-{user_id}/{item_id}/{filename}
-```
-
-Keep the database `item_files.file_path` value in sync with the uploaded Storage object path, for example `user-uuid/item-uuid/photo.jpg`.
-
-Useful checks:
-
-```bash
-npm run lint
-npm run build
-```
+Create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the Supabase SQL editor. The schema includes Row Level Security policies so users only access their own inventory.
 
 ## Deployment
 
-The app is ready for Vercel. `vercel.json` includes the SPA rewrite needed for React Router refreshes.
-
-Set these Vercel environment variables:
+FlipSite is deployed on Vercel. Set these environment variables in the Vercel project:
 
 ```bash
 VITE_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY
 ```
+
+`vercel.json` includes the SPA rewrite needed for React Router refreshes.
