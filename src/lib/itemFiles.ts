@@ -1,4 +1,5 @@
 import { compressImage } from '@/lib/compressImage'
+import { getFirstImagePathByItemId, getItemFilePath } from '@/lib/itemFilePaths'
 import { supabase } from '@/lib/supabase'
 
 const ITEM_FILES_BUCKET = 'item-files'
@@ -27,17 +28,6 @@ function isImageFile(file: File) {
   return file.type.startsWith('image/')
 }
 
-function getSafeFileName(fileName: string) {
-  const extensionMatch = fileName.match(/\.[^/.]+$/)
-  const extension = extensionMatch?.[0].toLowerCase() ?? ''
-  const baseName = fileName.replace(/\.[^/.]+$/, '').trim()
-  const safeBaseName = baseName
-    .replace(/[^a-zA-Z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-  return `${safeBaseName || 'file'}${extension}`
-}
-
 async function getAuthenticatedUser() {
   const { data, error } = await supabase.auth.getUser()
 
@@ -58,8 +48,12 @@ export async function uploadItemFile(itemId: string, file: File) {
   const uploadFile = shouldCompress ? await compressImage(file) : file
   const fileType: ItemFile['file_type'] = shouldCompress ? 'image' : 'file'
   const timestamp = Date.now()
-  const safeFileName = getSafeFileName(uploadFile.name)
-  const filePath = `${user.id}/${itemId}/${timestamp}-${safeFileName}`
+  const filePath = getItemFilePath({
+    fileName: uploadFile.name,
+    itemId,
+    timestamp,
+    userId: user.id,
+  })
 
   const { error: uploadError } = await supabase.storage
     .from(ITEM_FILES_BUCKET)
@@ -158,13 +152,7 @@ export async function getFirstItemImageThumbnails(itemIds: string[]) {
     throw error
   }
 
-  const firstImageByItemId = new Map<string, string>()
-
-  for (const imageFile of imageFiles ?? []) {
-    if (!firstImageByItemId.has(imageFile.item_id)) {
-      firstImageByItemId.set(imageFile.item_id, imageFile.file_path)
-    }
-  }
+  const firstImageByItemId = getFirstImagePathByItemId(imageFiles ?? [])
 
   const thumbnails = await Promise.all(
     Array.from(firstImageByItemId.entries()).map(async ([itemId, filePath]) => {

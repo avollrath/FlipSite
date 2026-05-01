@@ -1,10 +1,10 @@
 const JPEG_MIME_TYPE = 'image/jpeg'
 
 // Max long edge: 1600px keeps uploads detailed enough without storing huge originals.
-const MAX_LONG_EDGE_PX = 1600
+export const MAX_LONG_EDGE_PX = 1600
 
 // Max target size: 200 KB keeps item photos lightweight for storage and loading.
-const MAX_TARGET_SIZE_BYTES = 200 * 1024
+export const MAX_TARGET_SIZE_BYTES = 200 * 1024
 
 const INITIAL_QUALITY = 0.82
 const MIN_QUALITY = 0.35
@@ -19,7 +19,10 @@ function isImageFile(file: File) {
   return file.type.startsWith('image/')
 }
 
-function getResizedDimensions(width: number, height: number): ImageDimensions {
+export function getCompressedImageDimensions(
+  width: number,
+  height: number,
+): ImageDimensions {
   const longEdge = Math.max(width, height)
 
   if (longEdge <= MAX_LONG_EDGE_PX) {
@@ -34,7 +37,7 @@ function getResizedDimensions(width: number, height: number): ImageDimensions {
   }
 }
 
-function getSafeJpegName(fileName: string) {
+export function getSafeJpegName(fileName: string) {
   const baseName = fileName.replace(/\.[^/.]+$/, '').trim()
   const safeBaseName = baseName
     .replace(/[^a-zA-Z0-9._-]+/g, '-')
@@ -86,7 +89,7 @@ export async function compressImage(file: File) {
 
   try {
     const image = await loadImage(file)
-    const { width, height } = getResizedDimensions(image.naturalWidth, image.naturalHeight)
+    const { width, height } = getCompressedImageDimensions(image.naturalWidth, image.naturalHeight)
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d')
 
