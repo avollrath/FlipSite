@@ -29,6 +29,10 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import {
+  ImageLightbox,
+  type LightboxImage,
+} from '@/components/ImageLightbox'
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -596,8 +600,14 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
   const [files, setFiles] = useState<ItemFile[]>([])
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [lightboxImages, setLightboxImages] = useState<LightboxImage[]>([])
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
+  const imageFiles = useMemo(
+    () => files.filter((file) => file.file_type === 'image'),
+    [files],
+  )
 
   useEffect(() => {
     let mounted = true
@@ -684,8 +694,40 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
     }
   }
 
+  async function handleOpenLightbox(file: ItemFile) {
+    const imageIndex = imageFiles.findIndex((imageFile) => imageFile.id === file.id)
+
+    if (imageIndex === -1) {
+      return
+    }
+
+    setSelectedImageIndex(imageIndex)
+    setError('')
+
+    try {
+      const signedImages = await Promise.all(
+        imageFiles.map(async (imageFile) => ({
+          alt: imageFile.original_name || getFileNameFromPath(imageFile.file_path),
+          src: await getSignedItemFileUrl(imageFile.file_path),
+        })),
+      )
+
+      setLightboxImages(signedImages)
+    } catch (lightboxError) {
+      setSelectedImageIndex(null)
+      setLightboxImages([])
+      setError(getErrorMessage(lightboxError, 'Unable to open image preview'))
+    }
+  }
+
+  function handleCloseLightbox() {
+    setSelectedImageIndex(null)
+    setLightboxImages([])
+  }
+
   return (
-    <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+    <>
+      <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
@@ -740,12 +782,21 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
               key={file.id}
               file={file}
               isDeleting={deletingFileId === file.id}
+              onOpen={() => handleOpenLightbox(file)}
               onDelete={() => handleDelete(file)}
             />
           ))
         )}
       </div>
-    </section>
+      </section>
+      <ImageLightbox
+        key={selectedImageIndex ?? 'closed'}
+        images={lightboxImages}
+        initialIndex={selectedImageIndex ?? 0}
+        open={selectedImageIndex !== null}
+        onClose={handleCloseLightbox}
+      />
+    </>
   )
 }
 
@@ -753,10 +804,12 @@ function ItemFileRow({
   file,
   isDeleting,
   onDelete,
+  onOpen,
 }: {
   file: ItemFile
   isDeleting: boolean
   onDelete: () => void
+  onOpen: () => void
 }) {
   const isImage = file.file_type === 'image'
   const displayName = file.original_name || getFileNameFromPath(file.file_path)
@@ -764,7 +817,14 @@ function ItemFileRow({
   return (
     <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-[#0a0a0f]">
       {isImage ? (
-        <SignedImageThumbnail filePath={file.file_path} alt={displayName} />
+        <button
+          type="button"
+          className="rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#0a0a0f]"
+          onClick={onOpen}
+          aria-label={`Open ${displayName}`}
+        >
+          <SignedImageThumbnail filePath={file.file_path} alt={displayName} />
+        </button>
       ) : (
         <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
           <FileText className="h-6 w-6" aria-hidden="true" />
