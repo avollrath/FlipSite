@@ -1,4 +1,5 @@
 import {
+  Calendar,
   Check,
   ChevronsUpDown,
   FileText,
@@ -64,6 +65,13 @@ import {
   type ItemFile,
 } from '@/lib/itemFiles'
 import { getImageFilesFromClipboard } from '@/lib/clipboardImages'
+import {
+  formatDateInputFromNativeValue,
+  formatDateInputValue,
+  formatNativeDateValue,
+  formatTodayDateInputValue,
+  toSupabaseTimestamp,
+} from '@/lib/dateInput'
 import { calcProfit, formatCurrency, getStatusLabel } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
@@ -123,6 +131,7 @@ export function ItemDrawer(props: ItemDrawerProps) {
 }
 
 function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
+  const queryClient = useQueryClient()
   const { data: items = [] } = useItems()
   const addItem = useAddItem()
   const addBundle = useAddBundle()
@@ -132,6 +141,9 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [platformOpen, setPlatformOpen] = useState(false)
   const [isBundle, setIsBundle] = useState(Boolean(item?.is_bundle_parent))
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [pendingFileError, setPendingFileError] = useState('')
+  const [isUploadingPendingFiles, setIsUploadingPendingFiles] = useState(false)
   const [bundleChildren, setBundleChildren] = useState<BundleChildForm[]>(() =>
     getInitialBundleChildren(item, items),
   )
@@ -186,7 +198,10 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
       ? null
       : (profit / normalizedBuyPrice) * 100
   const isSubmitting =
-    addItem.isPending || addBundle.isPending || updateItem.isPending
+    addItem.isPending ||
+    addBundle.isPending ||
+    updateItem.isPending ||
+    isUploadingPendingFiles
   const isDeleting = deleteItem.isPending
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -242,6 +257,20 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
       return
     }
 
+    const boughtAt = toSupabaseTimestamp(form.bought_at)
+    const soldAt =
+      showSellFields && form.sold_at ? toSupabaseTimestamp(form.sold_at) : null
+
+    if (!boughtAt) {
+      toast.error('Use date format dd/MM/yyyy for date bought')
+      return
+    }
+
+    if (showSellFields && form.sold_at && !soldAt) {
+      toast.error('Use date format dd/MM/yyyy for date sold')
+      return
+    }
+
     if (form.status === 'sold' && !Number.isFinite(sellPriceValue)) {
       toast.error('Sell price is required when an item is sold')
       return
@@ -256,8 +285,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
         showSellFields && Number.isFinite(sellPriceValue) ? sellPriceValue : null,
       platform: form.platform,
       status: form.status,
-      bought_at: toIsoDate(form.bought_at),
-      sold_at: showSellFields && form.sold_at ? toIsoDate(form.sold_at) : null,
+      bought_at: boughtAt,
+      sold_at: soldAt,
       notes: form.notes.trim() || null,
     }
 
@@ -278,17 +307,44 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
           await saveEditedBundleChildren(item.tsid, payload)
         }
       } else if (isBundle) {
-        await addBundle.mutateAsync({
+        const createdItem = await addBundle.mutateAsync({
           parent: payload,
           children: normalizeBundleChildren(),
         })
+        await uploadPendingFiles(createdItem.tsid)
       } else {
-        await addItem.mutateAsync(payload)
+        const createdItem = await addItem.mutateAsync(payload)
+        await uploadPendingFiles(createdItem.tsid)
       }
 
       onOpenChange(false)
     } catch {
       return
+    }
+  }
+
+  async function uploadPendingFiles(itemId: string) {
+    if (pendingFiles.length === 0) {
+      return
+    }
+
+    setIsUploadingPendingFiles(true)
+    setPendingFileError('')
+
+    try {
+      for (const pendingFile of pendingFiles) {
+        await uploadItemFile(itemId, pendingFile)
+      }
+
+      setPendingFiles([])
+      void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
+      toast.success(pendingFiles.length === 1 ? 'File uploaded' : 'Files uploaded')
+    } catch (uploadError) {
+      const message = getErrorMessage(uploadError, 'Unable to upload files')
+      setPendingFileError(`Item was created, but files could not upload: ${message}`)
+      toast.warning('Item was created, but files could not upload')
+    } finally {
+      setIsUploadingPendingFiles(false)
     }
   }
 
@@ -496,13 +552,9 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
             </Field>
 
             <Field label="Date Bought" required>
-              <input
-                className={inputClassName}
-                type="date"
+              <DatePickerInput
                 value={form.bought_at}
-                onChange={(event) =>
-                  updateField('bought_at', event.target.value)
-                }
+                onChange={(value) => updateField('bought_at', value)}
                 required
               />
             </Field>
@@ -510,11 +562,9 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
           {showSellFields ? (
             <Field label="Date Sold">
-              <input
-                className={inputClassName}
-                type="date"
+              <DatePickerInput
                 value={form.sold_at}
-                onChange={(event) => updateField('sold_at', event.target.value)}
+                onChange={(value) => updateField('sold_at', value)}
               />
             </Field>
           ) : null}
@@ -559,7 +609,17 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
             />
           ) : null}
 
-          {mode === 'edit' && item ? <ItemFilesSection itemId={item.tsid} /> : null}
+          {mode === 'edit' && item ? (
+            <ItemFilesSection itemId={item.tsid} />
+          ) : (
+            <PendingItemFilesSection
+              disabled={isSubmitting}
+              error={pendingFileError}
+              files={pendingFiles}
+              isUploading={isUploadingPendingFiles}
+              onFilesChange={setPendingFiles}
+            />
+          )}
 
           {mode === 'edit' ? (
             <DeletePanel
@@ -593,6 +653,236 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
         </SheetFooter>
       </form>
     </>
+  )
+}
+
+function DatePickerInput({
+  onChange,
+  required,
+  value,
+}: {
+  onChange: (value: string) => void
+  required?: boolean
+  value: string
+}) {
+  const nativeInputRef = useRef<HTMLInputElement | null>(null)
+  const nativeValue = formatNativeDateValue(value)
+
+  function openDatePicker() {
+    const nativeInput = nativeInputRef.current
+
+    if (!nativeInput) {
+      return
+    }
+
+    try {
+      if (typeof nativeInput.showPicker === 'function') {
+        nativeInput.showPicker()
+        return
+      }
+
+      nativeInput.click()
+      nativeInput.focus()
+    } catch {
+      nativeInput.click()
+      nativeInput.focus()
+    }
+  }
+
+  function normalizeValue() {
+    const normalizedValue = formatDateInputValue(toSupabaseTimestamp(value))
+
+    if (normalizedValue) {
+      onChange(normalizedValue)
+    }
+  }
+
+  return (
+    <div className="relative flex gap-2">
+      <input
+        className={inputClassName}
+        inputMode="numeric"
+        onBlur={normalizeValue}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="dd/MM/yyyy"
+        required={required}
+        value={value}
+      />
+      <button
+        type="button"
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-500 transition hover:bg-zinc-100 hover:text-violet-600 focus:outline-none focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-violet-300"
+        onClick={openDatePicker}
+        aria-label="Open date picker"
+      >
+        <Calendar className="h-4 w-4" aria-hidden="true" />
+      </button>
+      <input
+        ref={nativeInputRef}
+        className="absolute right-0 top-0 h-11 w-11 cursor-pointer opacity-0"
+        type="date"
+        tabIndex={-1}
+        value={nativeValue}
+        onChange={(event) => {
+          const nextValue = formatDateInputFromNativeValue(event.target.value)
+
+          if (nextValue) {
+            onChange(nextValue)
+          }
+        }}
+        aria-hidden="true"
+      />
+    </div>
+  )
+}
+
+function PendingItemFilesSection({
+  disabled,
+  error,
+  files,
+  isUploading,
+  onFilesChange,
+}: {
+  disabled: boolean
+  error: string
+  files: File[]
+  isUploading: boolean
+  onFilesChange: (files: File[]) => void
+}) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  function addFiles(nextFiles: File[]) {
+    if (nextFiles.length === 0) {
+      return
+    }
+
+    onFilesChange([...files, ...nextFiles])
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    addFiles(Array.from(event.target.files ?? []))
+    event.target.value = ''
+  }
+
+  function handlePaste(event: ClipboardEvent<HTMLElement>) {
+    const pastedFiles = getImageFilesFromClipboard(event.nativeEvent)
+
+    if (pastedFiles.length === 0) {
+      return
+    }
+
+    event.preventDefault()
+    addFiles(pastedFiles)
+  }
+
+  function removeFile(index: number) {
+    onFilesChange(files.filter((_, fileIndex) => fileIndex !== index))
+  }
+
+  return (
+    <section
+      className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 outline-none transition focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-500/10 focus:border-violet-300 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-white/[0.03]"
+      onPaste={handlePaste}
+      tabIndex={0}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
+            Files
+          </h3>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Files will upload after the item is created.
+          </p>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+            You can also paste screenshots or copied images here.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled}
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Upload className="h-4 w-4" aria-hidden="true" />
+          )}
+          {isUploading ? 'Uploading...' : 'Add Files'}
+        </button>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        className="sr-only"
+        type="file"
+        multiple
+        onChange={handleFileChange}
+      />
+
+      {error ? (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="mt-4 space-y-3">
+        {files.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-6 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-400">
+            No files selected yet.
+          </div>
+        ) : (
+          files.map((file, index) => (
+            <PendingItemFileRow
+              key={`${file.name}-${file.lastModified}-${index}`}
+              file={file}
+              disabled={disabled}
+              onRemove={() => removeFile(index)}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  )
+}
+
+function PendingItemFileRow({
+  disabled,
+  file,
+  onRemove,
+}: {
+  disabled: boolean
+  file: File
+  onRemove: () => void
+}) {
+  const isImage = file.type.startsWith('image/')
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-[#0a0a0f]">
+      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
+        {isImage ? (
+          <ImageIcon className="h-6 w-6" aria-hidden="true" />
+        ) : (
+          <FileText className="h-6 w-6" aria-hidden="true" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-zinc-950 dark:text-white">
+          {file.name}
+        </p>
+        <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+          {isImage ? 'image' : file.type || 'file'} - {formatFileSize(file.size)}
+        </p>
+      </div>
+      <button
+        type="button"
+        className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+        onClick={onRemove}
+        disabled={disabled}
+        aria-label={`Remove ${file.name}`}
+      >
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </div>
   )
 }
 
@@ -1239,18 +1529,6 @@ function Field({
   )
 }
 
-function todayInputValue() {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function toDateInputValue(value: string | null | undefined) {
-  return value ? value.slice(0, 10) : ''
-}
-
-function toIsoDate(value: string) {
-  return new Date(`${value}T00:00:00`).toISOString()
-}
-
 function getInitialState(item?: Item | null): FormState {
   return {
     name: item?.name ?? '',
@@ -1263,8 +1541,8 @@ function getInitialState(item?: Item | null): FormState {
         : String(item.sell_price),
     platform: item?.platform ?? defaultPlatforms[0],
     status: item?.status ?? 'holding',
-    bought_at: toDateInputValue(item?.bought_at) || todayInputValue(),
-    sold_at: toDateInputValue(item?.sold_at),
+    bought_at: formatDateInputValue(item?.bought_at) || formatTodayDateInputValue(),
+    sold_at: formatDateInputValue(item?.sold_at),
     notes: item?.notes ?? '',
   }
 }
