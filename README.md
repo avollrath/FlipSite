@@ -44,7 +44,7 @@ To set up the database, create a Supabase project, enable Email/Password auth, a
 
 ## Supabase Storage
 
-Create a private Storage bucket named `item-files` in the Supabase dashboard with the public bucket toggle off.
+The schema creates a private Storage bucket named `item-files` and adds Storage RLS policies so authenticated users can read, upload, and delete objects only when the first path segment matches their own user id.
 
 Use this object path convention for uploads:
 
@@ -53,8 +53,6 @@ Use this object path convention for uploads:
 ```
 
 Keep the database `item_files.file_path` value in sync with the uploaded Storage object path, for example `user-uuid/item-uuid/photo.jpg`.
-
-If uploads happen directly from the browser, add Storage RLS policies on `storage.objects` for the `item-files` bucket so authenticated users can read, upload, and delete objects only when the first path segment matches their own user id.
 
 Useful checks:
 

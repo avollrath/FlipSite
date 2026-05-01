@@ -1,14 +1,20 @@
 import {
   Check,
   ChevronsUpDown,
+  FileText,
+  Image as ImageIcon,
   Link2,
   Loader2,
   Plus,
   Trash2,
+  Upload,
 } from 'lucide-react'
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
+  type ChangeEvent,
   type FormEvent,
   type ReactNode,
 } from 'react'
@@ -44,6 +50,13 @@ import {
   type NewBundleChild,
   type NewItem,
 } from '@/hooks/useItems'
+import {
+  deleteItemFile,
+  getItemFiles,
+  getSignedItemFileUrl,
+  uploadItemFile,
+  type ItemFile,
+} from '@/lib/itemFiles'
 import { calcProfit, formatCurrency, getStatusLabel } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
@@ -539,6 +552,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
             />
           ) : null}
 
+          {mode === 'edit' && item ? <ItemFilesSection itemId={item.tsid} /> : null}
+
           {mode === 'edit' ? (
             <DeletePanel
               confirming={confirmDelete}
@@ -571,6 +586,262 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
         </SheetFooter>
       </form>
     </>
+  )
+}
+
+function ItemFilesSection({ itemId }: { itemId: string }) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [files, setFiles] = useState<ItemFile[]>([])
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isUploading, setIsUploading] = useState(false)
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadFiles() {
+      setIsLoading(true)
+      setError('')
+
+      try {
+        const itemFiles = await getItemFiles(itemId)
+
+        if (mounted) {
+          setFiles(itemFiles)
+        }
+      } catch (loadError) {
+        if (mounted) {
+          setError(getErrorMessage(loadError, 'Unable to load item files'))
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void loadFiles()
+
+    return () => {
+      mounted = false
+    }
+  }, [itemId])
+
+  async function refreshFiles() {
+    const itemFiles = await getItemFiles(itemId)
+    setFiles(itemFiles)
+  }
+
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files ?? [])
+    let uploadedAny = false
+
+    if (selectedFiles.length === 0) {
+      return
+    }
+
+    setIsUploading(true)
+    setError('')
+
+    try {
+      for (const selectedFile of selectedFiles) {
+        await uploadItemFile(itemId, selectedFile)
+        uploadedAny = true
+      }
+
+      await refreshFiles()
+      toast.success(selectedFiles.length === 1 ? 'File uploaded' : 'Files uploaded')
+    } catch (uploadError) {
+      if (uploadedAny) {
+        await refreshFiles()
+      }
+
+      setError(getErrorMessage(uploadError, 'Unable to upload files'))
+    } finally {
+      setIsUploading(false)
+      event.target.value = ''
+    }
+  }
+
+  async function handleDelete(file: ItemFile) {
+    setDeletingFileId(file.id)
+    setError('')
+
+    try {
+      await deleteItemFile(file.id, file.file_path)
+      await refreshFiles()
+      toast.success('File deleted')
+    } catch (deleteError) {
+      setError(getErrorMessage(deleteError, 'Unable to delete file'))
+    } finally {
+      setDeletingFileId(null)
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
+            Files
+          </h3>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Photos, receipts, and reference documents for this item.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Upload className="h-4 w-4" aria-hidden="true" />
+          )}
+          {isUploading ? 'Uploading...' : 'Upload Files'}
+        </button>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        className="sr-only"
+        type="file"
+        multiple
+        onChange={handleFileChange}
+      />
+
+      {error ? (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="mt-4 space-y-3">
+        {isLoading ? (
+          <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-3 text-sm text-zinc-500 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-400">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Loading files...
+          </div>
+        ) : files.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-6 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-400">
+            No files uploaded yet.
+          </div>
+        ) : (
+          files.map((file) => (
+            <ItemFileRow
+              key={file.id}
+              file={file}
+              isDeleting={deletingFileId === file.id}
+              onDelete={() => handleDelete(file)}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  )
+}
+
+function ItemFileRow({
+  file,
+  isDeleting,
+  onDelete,
+}: {
+  file: ItemFile
+  isDeleting: boolean
+  onDelete: () => void
+}) {
+  const isImage = file.file_type === 'image'
+  const displayName = file.original_name || getFileNameFromPath(file.file_path)
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-[#0a0a0f]">
+      {isImage ? (
+        <SignedImageThumbnail filePath={file.file_path} alt={displayName} />
+      ) : (
+        <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
+          <FileText className="h-6 w-6" aria-hidden="true" />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-zinc-950 dark:text-white">
+          {displayName}
+        </p>
+        <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+          {isImage ? 'image' : file.mime_type || file.file_type}
+          {file.size_bytes ? ` - ${formatFileSize(file.size_bytes)}` : ''}
+        </p>
+      </div>
+      <button
+        type="button"
+        className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+        onClick={onDelete}
+        disabled={isDeleting}
+        aria-label={`Delete ${displayName}`}
+      >
+        {isDeleting ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+        )}
+      </button>
+    </div>
+  )
+}
+
+function SignedImageThumbnail({
+  alt,
+  filePath,
+}: {
+  alt: string
+  filePath: string
+}) {
+  const [signedUrl, setSignedUrl] = useState('')
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadSignedUrl() {
+      setFailed(false)
+      setSignedUrl('')
+
+      try {
+        const url = await getSignedItemFileUrl(filePath)
+
+        if (mounted) {
+          setSignedUrl(url)
+        }
+      } catch {
+        if (mounted) {
+          setFailed(true)
+        }
+      }
+    }
+
+    void loadSignedUrl()
+
+    return () => {
+      mounted = false
+    }
+  }, [filePath])
+
+  if (failed || !signedUrl) {
+    return (
+      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
+        <ImageIcon className="h-6 w-6" aria-hidden="true" />
+      </div>
+    )
+  }
+
+  return (
+    <img
+      className="h-14 w-14 shrink-0 rounded-lg object-cover"
+      src={signedUrl}
+      alt={alt}
+    />
   )
 }
 
@@ -978,6 +1249,22 @@ function fuzzyMatch(option: string, query: string) {
   }
 
   return false
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
+}
+
+function getFileNameFromPath(filePath: string) {
+  return filePath.split('/').pop() || 'File'
+}
+
+function formatFileSize(sizeBytes: number) {
+  if (sizeBytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(sizeBytes / 1024))} KB`
+  }
+
+  return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 const inputClassName =
