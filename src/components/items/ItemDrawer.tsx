@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type ClipboardEvent,
   type FormEvent,
   type ReactNode,
 } from 'react'
@@ -62,6 +63,7 @@ import {
   uploadItemFile,
   type ItemFile,
 } from '@/lib/itemFiles'
+import { getImageFilesFromClipboard } from '@/lib/clipboardImages'
 import { calcProfit, formatCurrency, getStatusLabel } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
@@ -647,11 +649,28 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(event.target.files ?? [])
-    let uploadedAny = false
 
     if (selectedFiles.length === 0) {
       return
     }
+
+    await uploadFiles(selectedFiles)
+    event.target.value = ''
+  }
+
+  async function handlePaste(event: ClipboardEvent<HTMLElement>) {
+    const pastedFiles = getImageFilesFromClipboard(event.nativeEvent)
+
+    if (pastedFiles.length === 0) {
+      return
+    }
+
+    event.preventDefault()
+    await uploadFiles(pastedFiles)
+  }
+
+  async function uploadFiles(selectedFiles: File[]) {
+    let uploadedAny = false
 
     setIsUploading(true)
     setError('')
@@ -674,7 +693,6 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
       setError(getErrorMessage(uploadError, 'Unable to upload files'))
     } finally {
       setIsUploading(false)
-      event.target.value = ''
     }
   }
 
@@ -727,7 +745,11 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
 
   return (
     <>
-      <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+      <section
+        className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 outline-none transition focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-500/10 focus:border-violet-300 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-white/[0.03]"
+        onPaste={handlePaste}
+        tabIndex={0}
+      >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
@@ -735,6 +757,9 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
           </h3>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Photos, receipts, and reference documents for this item.
+          </p>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+            You can also paste screenshots or copied images here.
           </p>
         </div>
         <button
