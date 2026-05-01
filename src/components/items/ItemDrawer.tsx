@@ -1,5 +1,4 @@
 import {
-  Calendar,
   Check,
   ChevronsUpDown,
   FileText,
@@ -704,21 +703,15 @@ function DatePickerInput({
         inputMode="numeric"
         onBlur={normalizeValue}
         onChange={(event) => onChange(event.target.value)}
+        onClick={openDatePicker}
+        onFocus={openDatePicker}
         placeholder="dd/MM/yyyy"
         required={required}
         value={value}
       />
-      <button
-        type="button"
-        className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-500 transition hover:bg-zinc-100 hover:text-violet-600 focus:outline-none focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-violet-300"
-        onClick={openDatePicker}
-        aria-label="Open date picker"
-      >
-        <Calendar className="h-4 w-4" aria-hidden="true" />
-      </button>
       <input
         ref={nativeInputRef}
-        className="absolute right-0 top-0 h-11 w-11 cursor-pointer opacity-0"
+        className="pointer-events-none absolute bottom-0 right-0 h-px w-px opacity-0"
         type="date"
         tabIndex={-1}
         value={nativeValue}

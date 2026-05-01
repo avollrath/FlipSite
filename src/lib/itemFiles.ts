@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 
 const ITEM_FILES_BUCKET = 'item-files'
 const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 60
-const THUMBNAIL_SIZE_PX = 80
+const DEFAULT_THUMBNAIL_SIZE_PX = 80
 
 export type ItemFile = {
   id: string
@@ -134,8 +134,12 @@ export async function getSignedItemFileUrl(filePath: string) {
   return data.signedUrl
 }
 
-export async function getFirstItemImageThumbnails(itemIds: string[]) {
+export async function getFirstItemImageThumbnails(
+  itemIds: string[],
+  options: { size?: number } = {},
+) {
   const uniqueItemIds = Array.from(new Set(itemIds)).filter(Boolean)
+  const size = options.size ?? DEFAULT_THUMBNAIL_SIZE_PX
 
   if (uniqueItemIds.length === 0) {
     return []
@@ -160,10 +164,10 @@ export async function getFirstItemImageThumbnails(itemIds: string[]) {
         .from(ITEM_FILES_BUCKET)
         .createSignedUrl(filePath, SIGNED_URL_EXPIRES_IN_SECONDS, {
           transform: {
-            height: THUMBNAIL_SIZE_PX,
+            height: size,
             quality: 70,
             resize: 'cover',
-            width: THUMBNAIL_SIZE_PX,
+            width: size,
           },
         })
 

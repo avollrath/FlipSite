@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
@@ -58,8 +58,11 @@ type SortState = {
 }
 
 type BundleFilter = 'none' | 'only' | 'active'
+type ViewMode = 'list' | 'gallery'
 
 const allStatuses = ['all', 'holding', 'listed', 'sold', 'keeper'] as const
+const galleryThumbnailSize = 420
+const listThumbnailSize = 80
 const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
   { key: 'name', label: 'Name' },
   { key: 'category', label: 'Category' },
@@ -84,6 +87,7 @@ export function Items() {
   const queryInventoryOnly = searchParams.get('inventory') === '1'
   const queryItemId = searchParams.get('item') ?? ''
   const [search, setSearch] = useState('')
+  const [viewMode, setViewMode] = useState<ViewMode>(() => getInitialViewMode())
   const [statusFilter, setStatusFilter] = useState<
     (typeof allStatuses)[number]
   >(
@@ -260,19 +264,34 @@ export function Items() {
     () => visibleRows.map(({ item }) => item.tsid),
     [visibleRows],
   )
+  const thumbnailItemIds = useMemo(
+    () =>
+      viewMode === 'gallery'
+        ? visibleItems.map((item) => item.tsid)
+        : visibleRowItemIds,
+    [viewMode, visibleItems, visibleRowItemIds],
+  )
+  const thumbnailSize =
+    viewMode === 'gallery' ? galleryThumbnailSize : listThumbnailSize
   const { data: thumbnailByItemId = new Map<string, ItemImageThumbnail>() } =
     useQuery({
-      queryKey: ['item-image-thumbnails', visibleRowItemIds],
-      enabled: visibleRowItemIds.length > 0,
+      queryKey: ['item-image-thumbnails', thumbnailSize, thumbnailItemIds],
+      enabled: thumbnailItemIds.length > 0,
       staleTime: 1000 * 60 * 30,
       queryFn: async () => {
-        const thumbnails = await getFirstItemImageThumbnails(visibleRowItemIds)
+        const thumbnails = await getFirstItemImageThumbnails(thumbnailItemIds, {
+          size: thumbnailSize,
+        })
 
         return new Map(
           thumbnails.map((thumbnail) => [thumbnail.item_id, thumbnail]),
         )
       },
     })
+
+  useEffect(() => {
+    localStorage.setItem('flipsite-items-view', viewMode)
+  }, [viewMode])
 
   function openAddDrawer() {
     setDrawer({ open: true, mode: 'add', item: null })
@@ -378,7 +397,7 @@ export function Items() {
           </div>
         </div>
 
-        <div className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#13131a] lg:grid-cols-[minmax(220px,1fr)_repeat(3,180px)]">
+        <div className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#13131a] lg:grid-cols-[minmax(220px,1fr)_repeat(4,180px)]">
           <label className="relative block">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
@@ -391,6 +410,7 @@ export function Items() {
               placeholder="Search items"
             />
           </label>
+          <ViewToggle value={viewMode} onChange={setViewMode} />
 
           <FilterSelect
             label="Status"
@@ -457,67 +477,78 @@ export function Items() {
         <EmptyState onAdd={openAddDrawer} />
       ) : (
         <>
-          <div className="mt-6 hidden overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#13131a] md:block">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1160px] text-left text-sm">
-                <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
-                  <tr>
-                    {tableColumns.map((column) => (
-                      <th key={column.key} className="px-4 py-3 font-semibold">
-                        {column.key === 'actions' ? (
-                          column.label
-                        ) : (
-                          <button
-                            type="button"
-                            className="flex items-center gap-1 transition hover:text-violet-600 dark:hover:text-violet-300"
-                            onClick={() => updateSort(column.key as SortKey)}
-                          >
-                            {column.label}
-                            <SortIcon
-                              active={sort.key === column.key}
-                              direction={sort.direction}
-                            />
-                          </button>
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-white/10">
-                  {visibleRows.map(({ item, isChild }) => (
-                    <ItemRow
-                      key={item.tsid}
-                      item={item}
-                      childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
-                      isChild={isChild}
-                      isExpanded={expandedBundles.has(item.tsid)}
-                      onEdit={() => openEditDrawer(item)}
-                      onDelete={() => setDeleteTarget(item)}
-                      onToggleBundle={() => toggleBundle(item.tsid)}
-                      thumbnail={thumbnailByItemId.get(item.tsid)}
-                      allItems={items}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {viewMode === 'gallery' ? (
+            <GalleryView
+              allItems={items}
+              items={visibleItems}
+              onEdit={openEditDrawer}
+              thumbnailByItemId={thumbnailByItemId}
+            />
+          ) : (
+            <>
+              <div className="mt-6 hidden overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#13131a] md:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1160px] text-left text-sm">
+                    <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
+                      <tr>
+                        {tableColumns.map((column) => (
+                          <th key={column.key} className="px-4 py-3 font-semibold">
+                            {column.key === 'actions' ? (
+                              column.label
+                            ) : (
+                              <button
+                                type="button"
+                                className="flex items-center gap-1 transition hover:text-violet-600 dark:hover:text-violet-300"
+                                onClick={() => updateSort(column.key as SortKey)}
+                              >
+                                {column.label}
+                                <SortIcon
+                                  active={sort.key === column.key}
+                                  direction={sort.direction}
+                                />
+                              </button>
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-200 dark:divide-white/10">
+                      {visibleRows.map(({ item, isChild }) => (
+                        <ItemRow
+                          key={item.tsid}
+                          item={item}
+                          childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
+                          isChild={isChild}
+                          isExpanded={expandedBundles.has(item.tsid)}
+                          onEdit={() => openEditDrawer(item)}
+                          onDelete={() => setDeleteTarget(item)}
+                          onToggleBundle={() => toggleBundle(item.tsid)}
+                          thumbnail={thumbnailByItemId.get(item.tsid)}
+                          allItems={items}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-          <div className="mt-6 grid gap-4 md:hidden">
-            {visibleRows.map(({ item, isChild }) => (
-              <ItemCard
-                key={item.tsid}
-                item={item}
-                childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
-                isChild={isChild}
-                isExpanded={expandedBundles.has(item.tsid)}
-                onEdit={() => openEditDrawer(item)}
-                onToggleBundle={() => toggleBundle(item.tsid)}
-                thumbnail={thumbnailByItemId.get(item.tsid)}
-                allItems={items}
-              />
-            ))}
-          </div>
+              <div className="mt-6 grid gap-4 md:hidden">
+                {visibleRows.map(({ item, isChild }) => (
+                  <ItemCard
+                    key={item.tsid}
+                    item={item}
+                    childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
+                    isChild={isChild}
+                    isExpanded={expandedBundles.has(item.tsid)}
+                    onEdit={() => openEditDrawer(item)}
+                    onToggleBundle={() => toggleBundle(item.tsid)}
+                    thumbnail={thumbnailByItemId.get(item.tsid)}
+                    allItems={items}
+                  />
+                ))}
+              </div>
+            </>
+          )}
 
           {visibleItems.length === 0 ? <NoResults /> : null}
         </>
@@ -802,6 +833,106 @@ function ItemCard({
   )
 }
 
+function ViewToggle({
+  onChange,
+  value,
+}: {
+  onChange: (value: ViewMode) => void
+  value: ViewMode
+}) {
+  return (
+    <div className="grid h-11 grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-[#0a0a0f]">
+      {(['list', 'gallery'] as const).map((option) => (
+        <button
+          key={option}
+          type="button"
+          className={`rounded-md px-3 text-sm font-semibold capitalize transition ${
+            value === option
+              ? 'bg-white text-violet-700 shadow-sm dark:bg-white/10 dark:text-violet-200'
+              : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100'
+          }`}
+          onClick={() => onChange(option)}
+        >
+          {option === 'list' ? 'List' : 'Gallery'}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function GalleryView({
+  allItems,
+  items,
+  onEdit,
+  thumbnailByItemId,
+}: {
+  allItems: Item[]
+  items: Item[]
+  onEdit: (item: Item) => void
+  thumbnailByItemId: Map<string, ItemImageThumbnail>
+}) {
+  return (
+    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+      {items.map((item) => (
+        <GalleryCard
+          key={item.tsid}
+          allItems={allItems}
+          item={item}
+          onEdit={() => onEdit(item)}
+          thumbnail={thumbnailByItemId.get(item.tsid)}
+        />
+      ))}
+    </div>
+  )
+}
+
+function GalleryCard({
+  allItems,
+  item,
+  onEdit,
+  thumbnail,
+}: {
+  allItems: Item[]
+  item: Item
+  onEdit: () => void
+  thumbnail: ItemImageThumbnail | undefined
+}) {
+  const effectiveStatus = getEffectiveItemStatus(item, allItems)
+  const price =
+    effectiveStatus === 'sold'
+      ? calculateItemSellValue(item, allItems)
+      : item.buy_price
+
+  return (
+    <button
+      type="button"
+      className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-violet-500"
+      onClick={onEdit}
+    >
+      {thumbnail ? (
+        <img
+          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          src={thumbnail.signed_url}
+          alt=""
+          loading="lazy"
+        />
+      ) : (
+        <div className="absolute inset-0 grid place-items-center text-zinc-300 dark:text-zinc-600">
+          <ImageIcon className="h-10 w-10" aria-hidden="true" />
+        </div>
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-3">
+        <p className="line-clamp-2 text-sm font-semibold text-white">
+          {item.name}
+        </p>
+        <p className="mt-1 text-xs font-medium text-white/85">
+          {formatCurrency(price)}
+        </p>
+      </div>
+    </button>
+  )
+}
+
 function ItemThumbnail({
   name,
   thumbnail,
@@ -1041,6 +1172,16 @@ function getQueryBundleFilter(value: string | null): BundleFilter {
   }
 
   return 'none'
+}
+
+function getInitialViewMode(): ViewMode {
+  if (typeof localStorage === 'undefined') {
+    return 'list'
+  }
+
+  return localStorage.getItem('flipsite-items-view') === 'gallery'
+    ? 'gallery'
+    : 'list'
 }
 
 function downloadCsv(rows: Array<Record<string, string | number>>, fileName: string) {
