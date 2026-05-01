@@ -425,14 +425,14 @@ export function Items() {
           </div>
         </div>
 
-        <div className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#13131a] lg:grid-cols-[minmax(220px,1fr)_repeat(4,180px)]">
-          <label className="relative block">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#13131a]">
+          <label className="relative block min-w-[180px] max-w-[320px] flex-[1_1_220px]">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
               aria-hidden="true"
             />
             <input
-              className={controlClassName + ' pl-9'}
+              className={controlClassName + ' min-w-0 truncate pl-9'}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search items"
@@ -458,6 +458,7 @@ export function Items() {
               label:
                 status === 'all' ? 'All Statuses' : getStatusLabel(status),
             }))}
+            className="min-w-[150px] flex-[0_1_180px]"
           />
           <FilterSelect
             label="Platform"
@@ -470,6 +471,7 @@ export function Items() {
                 label: platform,
               })),
             ]}
+            className="min-w-[150px] flex-[0_1_180px]"
           />
           <FilterSelect
             label="Category"
@@ -482,8 +484,9 @@ export function Items() {
                 label: category,
               })),
             ]}
+            className="min-w-[160px] max-w-[240px] flex-[0_1_220px]"
           />
-          <label className="flex h-11 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-200">
+          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-200">
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
@@ -494,7 +497,7 @@ export function Items() {
             />
             Bundles only
           </label>
-          <label className="flex h-11 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-200">
+          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-200">
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
@@ -876,7 +879,7 @@ function ViewToggle({
   value: ViewMode
 }) {
   return (
-    <div className="grid h-11 grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-[#0a0a0f]">
+    <div className="grid h-11 flex-[0_0_auto] grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-[#0a0a0f]">
       {(['list', 'gallery'] as const).map((option) => (
         <button
           key={option}
@@ -905,11 +908,11 @@ function GallerySortControl({
   sort: SortState
 }) {
   return (
-    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_112px]">
-      <label className="block">
+    <div className="flex min-w-[260px] flex-[0_0_auto] gap-2">
+      <label className="block min-w-0 flex-1">
         <span className="sr-only">Gallery sort field</span>
         <select
-          className={controlClassName}
+          className={selectControlClassName}
           value={sort.key}
           onChange={(event) => onKeyChange(event.target.value as SortKey)}
         >
@@ -920,7 +923,7 @@ function GallerySortControl({
           ))}
         </select>
       </label>
-      <div className="grid h-11 grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-[#0a0a0f]">
+      <div className="grid h-11 w-28 shrink-0 grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-[#0a0a0f]">
         {(['asc', 'desc'] as const).map((direction) => (
           <button
             key={direction}
@@ -1069,21 +1072,23 @@ function MobileMetric({
 }
 
 function FilterSelect({
+  className = 'min-w-[150px] flex-[0_1_180px]',
   label,
   onChange,
   options,
   value,
 }: {
+  className?: string
   label: string
   onChange: (value: string) => void
   options: Array<{ value: string; label: string }>
   value: string
 }) {
   return (
-    <label className="block">
+    <label className={`block ${className}`}>
       <span className="sr-only">{label}</span>
       <select
-        className={controlClassName}
+        className={selectControlClassName}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -1297,4 +1302,6 @@ function csvEscape(value: string | number) {
 }
 
 const controlClassName =
-  'h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-50'
+  'h-11 w-full min-w-0 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-50'
+const selectControlClassName =
+  controlClassName + ' truncate whitespace-nowrap pr-9'
