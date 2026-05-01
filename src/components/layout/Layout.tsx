@@ -8,7 +8,11 @@ type Theme = 'light' | 'dark'
 
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
+  '/analytics': 'Analytics',
+  '/categories': 'Categories',
+  '/import-export': 'Import / Export',
   '/items': 'Items',
+  '/settings': 'Settings',
 }
 
 function getInitialTheme(): Theme {

@@ -10,9 +10,13 @@ import {
 import { Toaster } from 'sonner'
 import { Layout } from '@/components/layout/Layout'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
+import { Analytics } from '@/pages/Analytics'
+import { Categories } from '@/pages/Categories'
 import { Dashboard } from '@/pages/Dashboard'
+import { ImportExport } from '@/pages/ImportExport'
 import { Items } from '@/pages/Items'
 import { Login } from '@/pages/Login'
+import { Settings } from '@/pages/Settings'
 
 const queryClient = new QueryClient()
 
@@ -62,6 +66,10 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/items" element={<Items />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/import-export" element={<ImportExport />} />
+                <Route path="/settings" element={<Settings />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,4 +1,13 @@
-import { Gauge, LogOut, Package, Repeat2 } from 'lucide-react'
+import {
+  ArrowRightLeft,
+  BarChart3,
+  Gauge,
+  LogOut,
+  Package,
+  Repeat2,
+  Settings,
+  Tags,
+} from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
@@ -6,6 +15,10 @@ import { useAuth } from '@/hooks/useAuth'
 const navItems = [
   { label: 'Dashboard', href: '/', icon: Gauge },
   { label: 'Items', href: '/items', icon: Package },
+  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Categories', href: '/categories', icon: Tags },
+  { label: 'Import / Export', href: '/import-export', icon: ArrowRightLeft },
+  { label: 'Settings', href: '/settings', icon: Settings },
 ]
 
 export function Sidebar() {
