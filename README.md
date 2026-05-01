@@ -42,6 +42,20 @@ VITE_SUPABASE_ANON_KEY=
 
 To set up the database, create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the Supabase SQL editor. The schema includes RLS so users only access their own inventory.
 
+## Supabase Storage
+
+Create a private Storage bucket named `item-files` in the Supabase dashboard with the public bucket toggle off.
+
+Use this object path convention for uploads:
+
+```text
+{user_id}/{item_id}/{filename}
+```
+
+Keep the database `item_files.file_path` value in sync with the uploaded Storage object path, for example `user-uuid/item-uuid/photo.jpg`.
+
+If uploads happen directly from the browser, add Storage RLS policies on `storage.objects` for the `item-files` bucket so authenticated users can read, upload, and delete objects only when the first path segment matches their own user id.
+
 Useful checks:
 
 ```bash
