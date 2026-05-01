@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getEffectiveItemStatus, isKeepingItem } from '@/lib/utils'
+import { getEffectiveItemStatus, isKeepingItem, parseMoneyInput } from '@/lib/utils'
 import type { Item } from '@/types'
 
 const baseItem: Item = {
@@ -23,6 +23,14 @@ function item(overrides: Partial<Item>): Item {
 }
 
 describe('item utility helpers', () => {
+  it('parses money values with comma, dot, and euro suffixes', () => {
+    expect(parseMoneyInput('3.85')).toBe(3.85)
+    expect(parseMoneyInput('3,85')).toBe(3.85)
+    expect(parseMoneyInput('3.85€')).toBe(3.85)
+    expect(parseMoneyInput('3,85€')).toBe(3.85)
+    expect(parseMoneyInput('nope')).toBeNull()
+  })
+
   it('detects keeping items by status or category case-insensitively', () => {
     expect(isKeepingItem(item({ status: 'keeper' }))).toBe(true)
     expect(isKeepingItem(item({ status: 'Keeping' as Item['status'] }))).toBe(

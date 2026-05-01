@@ -43,6 +43,26 @@ export function calcROI(
   return (profit / buyPrice) * 100
 }
 
+export function parseMoneyInput(value: string) {
+  const normalized = value
+    .trim()
+    .replace(/\s/g, '')
+    .replace(/€/g, '')
+    .replace(',', '.')
+
+  if (!normalized) {
+    return null
+  }
+
+  if (!/^\d+(?:\.\d+)?$/.test(normalized)) {
+    return null
+  }
+
+  const parsed = Number.parseFloat(normalized)
+
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export function calculateItemSellValue(item: Item, allItems: Item[]) {
   if (item.is_bundle_parent) {
     const childrenSell = allItems

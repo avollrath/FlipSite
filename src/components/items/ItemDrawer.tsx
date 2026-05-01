@@ -1,6 +1,4 @@
 import {
-  Check,
-  ChevronsUpDown,
   FileText,
   Image as ImageIcon,
   Link2,
@@ -18,26 +16,14 @@ import {
   type ChangeEvent,
   type ClipboardEvent,
   type FormEvent,
+  type KeyboardEvent,
   type ReactNode,
 } from 'react'
 import { toast } from 'sonner'
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
-import {
   ImageLightbox,
   type LightboxImage,
 } from '@/components/ImageLightbox'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import {
   Sheet,
   SheetContent,
@@ -71,7 +57,12 @@ import {
   formatTodayDateInputValue,
   toSupabaseTimestamp,
 } from '@/lib/dateInput'
-import { calcProfit, formatCurrency, getStatusLabel } from '@/lib/utils'
+import {
+  calcProfit,
+  formatCurrency,
+  getStatusLabel,
+  parseMoneyInput,
+} from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
 type ItemDrawerProps = {
@@ -113,7 +104,6 @@ type NormalizedBundleChild = Omit<NewBundleChild, 'buy_price'> & {
 }
 
 const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor']
-const defaultPlatforms = ['Tori.fi', 'Amazon.de', 'Verkkokauppa.fi']
 const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 
 export function ItemDrawer(props: ItemDrawerProps) {
@@ -138,7 +128,6 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   const deleteItem = useDeleteItem()
   const [form, setForm] = useState<FormState>(() => getInitialState(item))
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [platformOpen, setPlatformOpen] = useState(false)
   const [isBundle, setIsBundle] = useState(Boolean(item?.is_bundle_parent))
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [pendingFileError, setPendingFileError] = useState('')
@@ -148,21 +137,13 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   )
 
   const categories = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          items
-            .map((existingItem) => existingItem.category)
-            .filter(Boolean)
-            .sort((a, b) => a.localeCompare(b)),
-        ),
-      ),
+    () => uniqueValues(items.map((existingItem) => existingItem.category)),
     [items],
   )
-  const platforms = useMemo(() => {
-    const usedPlatforms = uniqueValues(items.map((existingItem) => existingItem.platform))
-    return usedPlatforms.length > 0 ? usedPlatforms : defaultPlatforms
-  }, [items])
+  const platforms = useMemo(
+    () => uniqueValues(items.map((existingItem) => existingItem.platform)),
+    [items],
+  )
   const conditionOptions = useMemo(
     () =>
       uniqueValues([
@@ -176,10 +157,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
   const showSellFields = form.status === 'sold' || form.status === 'listed'
 
-  const buyPrice = Number.parseFloat(form.buy_price)
-  const sellPrice = Number.parseFloat(form.sell_price)
-  const normalizedBuyPrice = Number.isFinite(buyPrice) ? buyPrice : null
-  const normalizedSellPrice = Number.isFinite(sellPrice) ? sellPrice : null
+  const normalizedBuyPrice = parseMoneyInput(form.buy_price)
+  const normalizedSellPrice = parseMoneyInput(form.sell_price)
   const existingBundleChildSell = item?.tsid
     ? items
         .filter((child) => child.bundle_id === item.tsid)
@@ -238,16 +217,16 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
     const name = form.name.trim()
     const category = form.category.trim()
-    const buyPriceValue = Number.parseFloat(form.buy_price)
-    const sellPriceValue = Number.parseFloat(form.sell_price)
+    const buyPriceValue = parseMoneyInput(form.buy_price)
+    const sellPriceValue = parseMoneyInput(form.sell_price)
 
     if (!name) {
       toast.error('Name is required')
       return
     }
 
-    if (!Number.isFinite(buyPriceValue)) {
-      toast.error('Buy price is required')
+    if (buyPriceValue === null) {
+      toast.error('Enter a valid buy price')
       return
     }
 
@@ -270,8 +249,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
       return
     }
 
-    if (form.status === 'sold' && !Number.isFinite(sellPriceValue)) {
-      toast.error('Sell price is required when an item is sold')
+    if (form.status === 'sold' && sellPriceValue === null) {
+      toast.error('Enter a valid sell price when an item is sold')
       return
     }
 
@@ -280,9 +259,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
       category,
       condition: form.condition,
       buy_price: buyPriceValue,
-      sell_price:
-        showSellFields && Number.isFinite(sellPriceValue) ? sellPriceValue : null,
-      platform: form.platform,
+      sell_price: showSellFields ? sellPriceValue : null,
+      platform: form.platform.trim(),
       status: form.status,
       bought_at: boughtAt,
       sold_at: soldAt,
@@ -396,7 +374,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
       return null
     }
 
-    const splitCost = Number.parseFloat(child.buy_price)
+    const splitCost = parseMoneyInput(child.buy_price)
 
     return {
       localId: child.id,
@@ -405,7 +383,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
       category: child.category.trim(),
       condition: child.condition,
       status: child.status,
-      buy_price: Number.isFinite(splitCost) ? splitCost : 0,
+      buy_price: splitCost ?? 0,
       notes: null,
     }
   }
@@ -460,17 +438,13 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
           </Field>
 
           <Field label="Category">
-            <input
-              className={inputClassName}
+            <SuggestionCombobox
+              label="Category"
+              options={categories}
               value={form.category}
-              list="item-categories"
-              onChange={(event) => updateField('category', event.target.value)}
+              onChange={(value) => updateField('category', value)}
+              placeholder="Type or select a category"
             />
-            <datalist id="item-categories">
-              {categories.map((category) => (
-                <option key={category} value={category} />
-              ))}
-            </datalist>
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -490,13 +464,13 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
               </select>
             </Field>
 
-            <Field label="Platform">
-              <PlatformCombobox
-                open={platformOpen}
-                onOpenChange={setPlatformOpen}
+            <Field label="Seller">
+              <SuggestionCombobox
+                label="Seller"
                 options={platforms}
                 value={form.platform}
                 onChange={(value) => updateField('platform', value)}
+                placeholder="Type or select a seller"
               />
             </Field>
           </div>
@@ -505,9 +479,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
             <Field label="Buy Price" required>
               <input
                 className={inputClassName}
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 value={form.buy_price}
                 onChange={(event) =>
                   updateField('buy_price', event.target.value)
@@ -520,9 +493,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
               <Field label="Sell Price" required={form.status === 'sold'}>
                 <input
                   className={inputClassName}
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={form.sell_price}
                   onChange={(event) =>
                     updateField('sell_price', event.target.value)
@@ -600,6 +572,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
           {isBundle ? (
             <BundleItemsSection
+              categoryOptions={categories}
               childrenForms={bundleChildren}
               conditionOptions={conditionOptions}
               onAdd={addBundleChild}
@@ -1252,12 +1225,14 @@ function getPreviewProfit({
 }
 
 function BundleItemsSection({
+  categoryOptions,
   childrenForms,
   conditionOptions,
   onAdd,
   onRemove,
   onUpdate,
 }: {
+  categoryOptions: string[]
   childrenForms: BundleChildForm[]
   conditionOptions: string[]
   onAdd: () => void
@@ -1320,12 +1295,11 @@ function BundleItemsSection({
                 }
                 placeholder="Name"
               />
-              <input
-                className={inputClassName}
+              <SuggestionCombobox
+                label="Child category"
+                options={categoryOptions}
                 value={child.category}
-                onChange={(event) =>
-                  onUpdate(child.id, 'category', event.target.value)
-                }
+                onChange={(value) => onUpdate(child.id, 'category', value)}
                 placeholder="Category"
               />
               <select
@@ -1356,9 +1330,8 @@ function BundleItemsSection({
               </select>
               <input
                 className={inputClassName}
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 value={child.buy_price}
                 onChange={(event) =>
                   onUpdate(child.id, 'buy_price', event.target.value)
@@ -1373,77 +1346,139 @@ function BundleItemsSection({
   )
 }
 
-function PlatformCombobox({
+function SuggestionCombobox({
+  label,
   onChange,
-  onOpenChange,
-  open,
   options,
+  placeholder,
   value,
 }: {
+  label: string
   onChange: (value: string) => void
-  onOpenChange: (open: boolean) => void
-  open: boolean
   options: string[]
+  placeholder: string
   value: string
 }) {
-  const filteredOptions = options.filter((option) => fuzzyMatch(option, value))
-  const showCustomOption =
-    value.trim() && !options.some((option) => option.toLowerCase() === value.trim().toLowerCase())
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [open, setOpen] = useState(false)
+  const [highlightedIndex, setHighlightedIndex] = useState(0)
+  const filteredOptions = options.filter((option) => optionMatches(option, value))
+  const exactMatch = options.some(
+    (option) => option.toLowerCase() === value.trim().toLowerCase(),
+  )
+  const showCustomOption = Boolean(value.trim() && !exactMatch)
+  const visibleOptions = showCustomOption
+    ? [`Use "${value.trim()}"`, ...filteredOptions]
+    : filteredOptions
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+    }
+  }, [open])
+
+  function selectOption(option: string) {
+    if (showCustomOption && option === visibleOptions[0]) {
+      onChange(value.trim())
+    } else {
+      onChange(option)
+    }
+
+    setOpen(false)
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setOpen(true)
+      setHighlightedIndex((currentIndex) =>
+        Math.min(currentIndex + 1, Math.max(visibleOptions.length - 1, 0)),
+      )
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setOpen(true)
+      setHighlightedIndex((currentIndex) => Math.max(currentIndex - 1, 0))
+      return
+    }
+
+    if (event.key === 'Enter' && open && visibleOptions[highlightedIndex]) {
+      event.preventDefault()
+      selectOption(visibleOptions[highlightedIndex])
+      return
+    }
+
+    if (event.key === 'Escape') {
+      setOpen(false)
+    }
+  }
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={`${inputClassName} flex items-center justify-between text-left`}
-        >
-          <span className={value ? '' : 'text-zinc-400'}>
-            {value || 'Select or type a platform'}
-          </span>
-          <ChevronsUpDown className="h-4 w-4 text-zinc-400" aria-hidden="true" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)]">
-        <Command shouldFilter={false}>
-          <CommandInput
-            value={value}
-            onValueChange={onChange}
-            placeholder="Search or add platform"
-          />
-          <CommandList>
-            <CommandEmpty>No platform found.</CommandEmpty>
-            <CommandGroup>
-              {showCustomOption ? (
-                <CommandItem
-                  value={value}
-                  onSelect={() => onOpenChange(false)}
-                >
-                  Use "{value.trim()}"
-                </CommandItem>
-              ) : null}
-              {filteredOptions.map((platform) => (
-                <CommandItem
-                  key={platform}
-                  value={platform}
-                  onSelect={(selectedPlatform) => {
-                    onChange(selectedPlatform)
-                    onOpenChange(false)
-                  }}
-                >
-                  <Check
-                    className={`mr-2 h-4 w-4 ${
-                      value === platform ? 'opacity-100' : 'opacity-0'
-                    }`}
-                    aria-hidden="true"
-                  />
-                  {platform}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div ref={containerRef} className="relative">
+      <input
+        className={inputClassName}
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value)
+          setHighlightedIndex(0)
+          setOpen(true)
+        }}
+        onFocus={() => {
+          setHighlightedIndex(0)
+          setOpen(true)
+        }}
+        onClick={() => {
+          setHighlightedIndex(0)
+          setOpen(true)
+        }}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-label={label}
+      />
+      {open ? (
+        <div className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-zinc-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-[#0a0a0f]">
+          {visibleOptions.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400">
+              No suggestions yet.
+            </div>
+          ) : (
+            visibleOptions.map((option, index) => (
+              <button
+                key={`${option}-${index}`}
+                type="button"
+                className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${
+                  highlightedIndex === index
+                    ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200'
+                    : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-white/10'
+                }`}
+                onMouseEnter={() => setHighlightedIndex(index)}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectOption(option)}
+              >
+                {option}
+              </button>
+            ))
+          )}
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -1532,7 +1567,7 @@ function getInitialState(item?: Item | null): FormState {
       item?.sell_price === null || item?.sell_price === undefined
         ? ''
         : String(item.sell_price),
-    platform: item?.platform ?? defaultPlatforms[0],
+    platform: item?.platform ?? '',
     status: item?.status ?? 'holding',
     bought_at: formatDateInputValue(item?.bought_at) || formatTodayDateInputValue(),
     sold_at: formatDateInputValue(item?.sold_at),
@@ -1584,12 +1619,28 @@ function toNewBundleChild(child: NormalizedBundleChild): NewBundleChild {
 }
 
 function uniqueValues(values: string[]) {
-  return Array.from(new Set(values.filter(Boolean))).sort((a, b) =>
+  const valuesByLowercase = new Map<string, string>()
+
+  for (const value of values) {
+    const trimmedValue = value.trim()
+
+    if (!trimmedValue) {
+      continue
+    }
+
+    const normalizedValue = trimmedValue.toLowerCase()
+
+    if (!valuesByLowercase.has(normalizedValue)) {
+      valuesByLowercase.set(normalizedValue, trimmedValue)
+    }
+  }
+
+  return Array.from(valuesByLowercase.values()).sort((a, b) =>
     a.localeCompare(b),
   )
 }
 
-function fuzzyMatch(option: string, query: string) {
+function optionMatches(option: string, query: string) {
   const normalizedOption = option.toLowerCase()
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -1597,19 +1648,7 @@ function fuzzyMatch(option: string, query: string) {
     return true
   }
 
-  let queryIndex = 0
-
-  for (const character of normalizedOption) {
-    if (character === normalizedQuery[queryIndex]) {
-      queryIndex += 1
-    }
-
-    if (queryIndex === normalizedQuery.length) {
-      return true
-    }
-  }
-
-  return false
+  return normalizedOption.includes(normalizedQuery)
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
