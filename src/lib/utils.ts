@@ -85,13 +85,25 @@ export function isAggregateItem(item: Item) {
   return !item.bundle_id || Boolean(item.is_bundle_parent)
 }
 
+export function isKeepingItem(item: Item) {
+  const status = String(item.status).trim().toLowerCase()
+  const category = item.category.trim().toLowerCase()
+
+  return (
+    status === 'keeper' ||
+    status === 'keeping' ||
+    category === 'keeper' ||
+    category === 'keeping'
+  )
+}
+
 export function getEffectiveItemStatus(item: Item, allItems: Item[]) {
   if (!item.is_bundle_parent) {
-    return item.status
+    return isKeepingItem(item) ? 'keeper' : item.status
   }
 
-  if (item.status === 'keeper') {
-    return item.status
+  if (isKeepingItem(item)) {
+    return 'keeper'
   }
 
   const children = allItems.filter((child) => child.bundle_id === item.tsid)

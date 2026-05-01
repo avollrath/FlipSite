@@ -34,6 +34,7 @@ import {
   formatCurrency,
   getEffectiveItemStatus,
   isAggregateItem,
+  isKeepingItem,
 } from '@/lib/utils'
 import type { Item } from '@/types'
 
@@ -64,20 +65,26 @@ export function Dashboard() {
 
   const kpis = useMemo(() => {
     const aggregateItems = dashboardItems.filter(isAggregateItem)
-    const soldItems = aggregateItems.filter(
+    const flippingItems = aggregateItems.filter((item) => !isKeepingItem(item))
+    const keepingItems = aggregateItems.filter(isKeepingItem)
+    const soldItems = flippingItems.filter(
       (item) => calculateItemSellValue(item, dashboardItems) > 0,
     )
     const childrenByBundle = getChildrenByBundle(dashboardItems)
-    const totalInvested = aggregateItems.reduce(
+    const totalInvested = flippingItems.reduce(
       (sum, item) => sum + item.buy_price,
       0,
     )
-    const totalRevenue = aggregateItems.reduce(
+    const totalRevenue = flippingItems.reduce(
       (sum, item) => sum + calculateItemSellValue(item, dashboardItems),
       0,
     )
-    const totalProfit = aggregateItems.reduce(
+    const totalProfit = flippingItems.reduce(
       (sum, item) => sum + calculateItemProfit(item, dashboardItems),
+      0,
+    )
+    const keepingValue = keepingItems.reduce(
+      (sum, item) => sum + item.buy_price,
       0,
     )
     const soldRois = soldItems
@@ -107,20 +114,22 @@ export function Dashboard() {
       return best
     }, null)
     const inventoryCount = dashboardItems.filter((item) =>
-      ['holding', 'keeper', 'listed'].includes(
+      ['holding', 'listed'].includes(
         getEffectiveItemStatus(item, dashboardItems),
-      ),
+      ) && !isKeepingItem(item),
     ).length
     const keeperCount = dashboardItems.filter(
-      (item) => getEffectiveItemStatus(item, dashboardItems) === 'keeper',
+      (item) => isKeepingItem(item),
     ).length
     const activeBundles = dashboardItems.filter((item) => {
-      if (!item.is_bundle_parent) {
+      if (!item.is_bundle_parent || isKeepingItem(item)) {
         return false
       }
 
       return (childrenByBundle.get(item.tsid) ?? []).some(
-        (child) => getEffectiveItemStatus(child, dashboardItems) !== 'sold',
+        (child) =>
+          !isKeepingItem(child) &&
+          getEffectiveItemStatus(child, dashboardItems) !== 'sold',
       )
     }).length
 
@@ -130,6 +139,7 @@ export function Dashboard() {
       bestFlip,
       inventoryCount,
       keeperCount,
+      keepingValue,
       totalInvested,
       totalProfit,
       totalRevenue,
@@ -174,7 +184,7 @@ export function Dashboard() {
           <KPICard
             title="Total Invested"
             value={kpis.totalInvested}
-            subtitle="Purchase cost across all items"
+            subtitle="Purchase cost in flipping inventory"
             icon={Banknote}
             trend="neutral"
             color="violet"
@@ -229,7 +239,7 @@ export function Dashboard() {
           <KPICard
             title="In Inventory"
             value={kpis.inventoryCount}
-            subtitle="Items held, listed, or kept"
+            subtitle="Items held or listed for resale"
             icon={Boxes}
             trend="neutral"
             color="violet"
@@ -243,6 +253,15 @@ export function Dashboard() {
             trend="neutral"
             color="indigo"
             onClick={() => navigate('/items?status=keeper')}
+          />
+          <KPICard
+            title="Keeping Value"
+            value={kpis.keepingValue}
+            subtitle="Purchase value kept for yourself"
+            icon={Heart}
+            trend="neutral"
+            color="green"
+            formatter={formatCurrency}
           />
           <KPICard
             title="Active Bundles"
@@ -383,7 +402,7 @@ export function Dashboard() {
 function KPILoadingGrid() {
   return (
     <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, index) => (
+      {Array.from({ length: 9 }).map((_, index) => (
         <div
           key={index}
           className="h-40 animate-pulse rounded-lg border border-zinc-200 bg-white/70 shadow-xl shadow-zinc-200/60 dark:border-white/10 dark:bg-[#13131a]/75 dark:shadow-black/30"
@@ -485,7 +504,9 @@ function CurrencyTooltip({ active, label, payload }: ChartTooltipProps) {
 }
 
 function buildChartData(items: Item[]) {
-  const aggregateItems = items.filter(isAggregateItem)
+  const aggregateItems = items
+    .filter(isAggregateItem)
+    .filter((item) => !isKeepingItem(item))
   const soldItems = aggregateItems
     .filter((item) => calculateItemSellValue(item, items) > 0)
     .sort((a, b) => dateValue(getEffectiveSoldAt(a, items)) - dateValue(getEffectiveSoldAt(b, items)))
