@@ -25,18 +25,23 @@ export function getImageFilesFromClipboard(
 
   return imageItems.flatMap((item, index) => {
     const file = item.getAsFile()
+    const mimeType = getImageMimeType(item.type)
 
     if (!file) {
       return []
     }
 
     return [
-      new File([file], getPastedImageName(item.type, timestamp, index), {
+      new File([file], getPastedImageName(mimeType, timestamp, index), {
         lastModified: timestamp,
-        type: file.type || item.type,
+        type: mimeType,
       }),
     ]
   })
+}
+
+function getImageMimeType(mimeType: string) {
+  return mimeType.startsWith('image/') ? mimeType : 'image/png'
 }
 
 function getPastedImageName(mimeType: string, timestamp: number, index: number) {

@@ -38,6 +38,23 @@ describe('getImageFilesFromClipboard', () => {
 
     expect(files).toEqual([])
   })
+
+  it('uses the clipboard image MIME type even when the returned file type is empty', () => {
+    const imageWithEmptyType = new File(['large screenshot'], 'clipboard', {
+      type: '',
+    })
+    const files = getImageFilesFromClipboard(
+      createClipboardEvent([
+        createClipboardItem(imageWithEmptyType, 'image/png'),
+      ]),
+      1777645363000,
+    )
+
+    expect(files).toHaveLength(1)
+    expect(files[0].name).toBe('pasted-image-1777645363000.png')
+    expect(files[0].type).toBe('image/png')
+    expect(files[0].type.startsWith('image/')).toBe(true)
+  })
 })
 
 function createClipboardEvent(items: ClipboardItemMock[]) {
