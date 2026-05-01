@@ -77,6 +77,20 @@ const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
   { key: 'sold_at', label: 'Date Sold' },
   { key: 'actions', label: 'Actions' },
 ]
+const gallerySortOptions: Array<{ key: SortKey; label: string }> = [
+  { key: 'bought_at', label: 'Bought date' },
+  { key: 'sold_at', label: 'Sold date' },
+  { key: 'name', label: 'Name' },
+  { key: 'category', label: 'Category' },
+  { key: 'condition', label: 'Condition' },
+  { key: 'buy_price', label: 'Buy price' },
+  { key: 'sell_price', label: 'Sell price' },
+  { key: 'profit', label: 'Profit' },
+  { key: 'roi', label: 'ROI %' },
+  { key: 'platform', label: 'Platform' },
+  { key: 'status', label: 'Status' },
+  { key: 'created_at', label: 'Created date' },
+]
 
 export function Items() {
   const { data: items = [], isLoading } = useItems()
@@ -104,7 +118,7 @@ export function Items() {
     () => new Set(),
   )
   const [sort, setSort] = useState<SortState>({
-    key: 'created_at' as SortKey,
+    key: 'bought_at',
     direction: 'desc',
   })
   const [drawer, setDrawer] = useState<DrawerState>({
@@ -317,6 +331,20 @@ export function Items() {
     }))
   }
 
+  function updateGallerySortKey(key: SortKey) {
+    setSort((currentSort) => ({
+      key,
+      direction: currentSort.key === key ? currentSort.direction : 'desc',
+    }))
+  }
+
+  function updateSortDirection(direction: SortState['direction']) {
+    setSort((currentSort) => ({
+      ...currentSort,
+      direction,
+    }))
+  }
+
   function toggleBundle(tsid: string) {
     setExpandedBundles((current) => {
       const next = new Set(current)
@@ -411,6 +439,13 @@ export function Items() {
             />
           </label>
           <ViewToggle value={viewMode} onChange={setViewMode} />
+          {viewMode === 'gallery' ? (
+            <GallerySortControl
+              sort={sort}
+              onDirectionChange={updateSortDirection}
+              onKeyChange={updateGallerySortKey}
+            />
+          ) : null}
 
           <FilterSelect
             label="Status"
@@ -860,6 +895,51 @@ function ViewToggle({
   )
 }
 
+function GallerySortControl({
+  onDirectionChange,
+  onKeyChange,
+  sort,
+}: {
+  onDirectionChange: (direction: SortState['direction']) => void
+  onKeyChange: (key: SortKey) => void
+  sort: SortState
+}) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_112px]">
+      <label className="block">
+        <span className="sr-only">Gallery sort field</span>
+        <select
+          className={controlClassName}
+          value={sort.key}
+          onChange={(event) => onKeyChange(event.target.value as SortKey)}
+        >
+          {gallerySortOptions.map((option) => (
+            <option key={option.key} value={option.key}>
+              Sort: {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="grid h-11 grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-[#0a0a0f]">
+        {(['asc', 'desc'] as const).map((direction) => (
+          <button
+            key={direction}
+            type="button"
+            className={`rounded-md px-2 text-xs font-semibold transition ${
+              sort.direction === direction
+                ? 'bg-white text-violet-700 shadow-sm dark:bg-white/10 dark:text-violet-200'
+                : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100'
+            }`}
+            onClick={() => onDirectionChange(direction)}
+          >
+            {direction === 'asc' ? 'Asc' : 'Desc'}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function GalleryView({
   allItems,
   items,
@@ -1120,7 +1200,7 @@ function compareItems(a: Item, b: Item, sort: SortState, allItems: Item[]) {
 
 function getSortValue(item: Item, key: SortKey, allItems: Item[]) {
   if (key === 'profit') {
-    return calculateItemProfit(item, allItems)
+    return calculateItemProfit(item, allItems) ?? Number.NEGATIVE_INFINITY
   }
 
   if (key === 'roi') {
@@ -1129,6 +1209,10 @@ function getSortValue(item: Item, key: SortKey, allItems: Item[]) {
 
   if (key === 'sell_price') {
     return calculateItemSellValue(item, allItems)
+  }
+
+  if (key === 'status') {
+    return getStatusLabel(getEffectiveItemStatus(item, allItems))
   }
 
   if (key === 'bought_at' || key === 'sold_at') {
