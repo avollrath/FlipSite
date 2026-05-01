@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 
 const ITEM_FILES_BUCKET = 'item-files'
 const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 60
+const THUMBNAIL_SIZE_PX = 80
 
 export type ItemFile = {
   id: string
@@ -14,6 +15,12 @@ export type ItemFile = {
   mime_type: string | null
   size_bytes: number | null
   created_at: string
+}
+
+export type ItemImageThumbnail = {
+  item_id: string
+  file_path: string
+  signed_url: string
 }
 
 function isImageFile(file: File) {
@@ -131,4 +138,58 @@ export async function getSignedItemFileUrl(filePath: string) {
   }
 
   return data.signedUrl
+}
+
+export async function getFirstItemImageThumbnails(itemIds: string[]) {
+  const uniqueItemIds = Array.from(new Set(itemIds)).filter(Boolean)
+
+  if (uniqueItemIds.length === 0) {
+    return []
+  }
+
+  const { data: imageFiles, error } = await supabase
+    .from('item_files')
+    .select('item_id,file_path,created_at')
+    .in('item_id', uniqueItemIds)
+    .eq('file_type', 'image')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  const firstImageByItemId = new Map<string, string>()
+
+  for (const imageFile of imageFiles ?? []) {
+    if (!firstImageByItemId.has(imageFile.item_id)) {
+      firstImageByItemId.set(imageFile.item_id, imageFile.file_path)
+    }
+  }
+
+  const thumbnails = await Promise.all(
+    Array.from(firstImageByItemId.entries()).map(async ([itemId, filePath]) => {
+      const { data: signedUrl, error: signedUrlError } = await supabase.storage
+        .from(ITEM_FILES_BUCKET)
+        .createSignedUrl(filePath, SIGNED_URL_EXPIRES_IN_SECONDS, {
+          transform: {
+            height: THUMBNAIL_SIZE_PX,
+            quality: 70,
+            resize: 'cover',
+            width: THUMBNAIL_SIZE_PX,
+          },
+        })
+
+      if (signedUrlError) {
+        throw signedUrlError
+      }
+
+      return {
+        item_id: itemId,
+        file_path: filePath,
+        signed_url: signedUrl.signedUrl,
+      }
+    }),
+  )
+
+  return thumbnails
 }

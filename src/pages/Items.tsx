@@ -5,17 +5,23 @@ import {
   ChevronRight,
   Download,
   Edit3,
+  Image as ImageIcon,
   Link2,
   PackageOpen,
   Plus,
   Search,
   Trash2,
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
 import { useDeleteItem, useItems } from '@/hooks/useItems'
+import {
+  getFirstItemImageThumbnails,
+  type ItemImageThumbnail,
+} from '@/lib/itemFiles'
 import {
   calculateItemProfit,
   calculateItemROI,
@@ -250,6 +256,23 @@ export function Items() {
     statusFilter,
     visibleItems,
   ])
+  const visibleRowItemIds = useMemo(
+    () => visibleRows.map(({ item }) => item.tsid),
+    [visibleRows],
+  )
+  const { data: thumbnailByItemId = new Map<string, ItemImageThumbnail>() } =
+    useQuery({
+      queryKey: ['item-image-thumbnails', visibleRowItemIds],
+      enabled: visibleRowItemIds.length > 0,
+      staleTime: 1000 * 60 * 30,
+      queryFn: async () => {
+        const thumbnails = await getFirstItemImageThumbnails(visibleRowItemIds)
+
+        return new Map(
+          thumbnails.map((thumbnail) => [thumbnail.item_id, thumbnail]),
+        )
+      },
+    })
 
   function openAddDrawer() {
     setDrawer({ open: true, mode: 'add', item: null })
@@ -471,6 +494,7 @@ export function Items() {
                       onEdit={() => openEditDrawer(item)}
                       onDelete={() => setDeleteTarget(item)}
                       onToggleBundle={() => toggleBundle(item.tsid)}
+                      thumbnail={thumbnailByItemId.get(item.tsid)}
                       allItems={items}
                     />
                   ))}
@@ -489,6 +513,7 @@ export function Items() {
                 isExpanded={expandedBundles.has(item.tsid)}
                 onEdit={() => openEditDrawer(item)}
                 onToggleBundle={() => toggleBundle(item.tsid)}
+                thumbnail={thumbnailByItemId.get(item.tsid)}
                 allItems={items}
               />
             ))}
@@ -522,6 +547,7 @@ function ItemRow({
   onDelete,
   onEdit,
   onToggleBundle,
+  thumbnail,
   allItems,
 }: {
   childCount: number
@@ -531,6 +557,7 @@ function ItemRow({
   onDelete: () => void
   onEdit: () => void
   onToggleBundle: () => void
+  thumbnail: ItemImageThumbnail | undefined
   allItems: Item[]
 }) {
   const sellValue = calculateItemSellValue(item, allItems)
@@ -566,6 +593,7 @@ function ItemRow({
           {isChild ? (
             <Link2 className="h-4 w-4 text-violet-400" aria-hidden="true" />
           ) : null}
+          <ItemThumbnail name={item.name} thumbnail={thumbnail} />
           <span>{item.name}</span>
           {item.is_bundle_parent ? (
             <BundleBadge count={childCount} />
@@ -698,6 +726,7 @@ function ItemCard({
   item,
   onEdit,
   onToggleBundle,
+  thumbnail,
   allItems,
 }: {
   childCount: number
@@ -706,6 +735,7 @@ function ItemCard({
   item: Item
   onEdit: () => void
   onToggleBundle: () => void
+  thumbnail: ItemImageThumbnail | undefined
   allItems: Item[]
 }) {
   const sellValue = calculateItemSellValue(item, allItems)
@@ -721,7 +751,9 @@ function ItemCard({
       onClick={onEdit}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="flex min-w-0 items-start gap-3">
+          <ItemThumbnail name={item.name} thumbnail={thumbnail} />
+          <div className="min-w-0">
           <h3 className="font-semibold text-zinc-950 dark:text-zinc-50">
             <span className="inline-flex items-center gap-2">
               {isChild ? (
@@ -734,6 +766,7 @@ function ItemCard({
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {item.category || 'Uncategorized'} - {item.platform}
           </p>
+          </div>
         </div>
         <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
       </div>
@@ -766,6 +799,34 @@ function ItemCard({
         <MobileMetric label="Sold" value={formatDate(item.sold_at) || '--'} />
       </div>
     </button>
+  )
+}
+
+function ItemThumbnail({
+  name,
+  thumbnail,
+}: {
+  name: string
+  thumbnail: ItemImageThumbnail | undefined
+}) {
+  if (thumbnail) {
+    return (
+      <img
+        className="h-10 w-10 shrink-0 rounded-md border border-zinc-200 object-cover dark:border-white/10"
+        src={thumbnail.signed_url}
+        alt=""
+        loading="lazy"
+      />
+    )
+  }
+
+  return (
+    <div
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-dashed border-zinc-200 bg-zinc-50 text-zinc-300 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-600"
+      aria-label={`${name} has no image`}
+    >
+      <ImageIcon className="h-4 w-4" aria-hidden="true" />
+    </div>
   )
 }
 

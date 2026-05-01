@@ -9,6 +9,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   useEffect,
   useMemo,
@@ -590,6 +591,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 }
 
 function ItemFilesSection({ itemId }: { itemId: string }) {
+  const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [files, setFiles] = useState<ItemFile[]>([])
   const [error, setError] = useState('')
@@ -651,10 +653,12 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
       }
 
       await refreshFiles()
+      void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
       toast.success(selectedFiles.length === 1 ? 'File uploaded' : 'Files uploaded')
     } catch (uploadError) {
       if (uploadedAny) {
         await refreshFiles()
+        void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
       }
 
       setError(getErrorMessage(uploadError, 'Unable to upload files'))
@@ -671,6 +675,7 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
     try {
       await deleteItemFile(file.id, file.file_path)
       await refreshFiles()
+      void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
       toast.success('File deleted')
     } catch (deleteError) {
       setError(getErrorMessage(deleteError, 'Unable to delete file'))
