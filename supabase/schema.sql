@@ -144,3 +144,12 @@ using (
 -- Bundle support migration - run in Supabase SQL Editor:
 -- ALTER TABLE items ADD COLUMN IF NOT EXISTS bundle_id uuid REFERENCES items(tsid) ON DELETE SET NULL;
 -- ALTER TABLE items ADD COLUMN IF NOT EXISTS is_bundle_parent boolean DEFAULT false;
+
+-- Buy/sell platform migration - run in Supabase SQL Editor:
+-- Safe step:
+-- ALTER TABLE items ADD COLUMN IF NOT EXISTS buy_platform text;
+-- ALTER TABLE items ADD COLUMN IF NOT EXISTS sell_platform text;
+-- UPDATE items SET buy_platform = platform WHERE platform IS NOT NULL;
+--
+-- Optional destructive cleanup after verifying buy_platform was populated:
+-- ALTER TABLE items DROP COLUMN IF EXISTS platform;

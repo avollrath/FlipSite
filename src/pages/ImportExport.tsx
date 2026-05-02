@@ -7,7 +7,7 @@ import { itemsQueryKey, useItems } from '@/hooks/useItems'
 import { downloadCsv, parseCsv, toCsv, type CsvRow } from '@/lib/csv'
 import { toSupabaseTimestamp } from '@/lib/dateInput'
 import { supabase } from '@/lib/supabase'
-import { parseMoneyInput } from '@/lib/utils'
+import { getBuyPlatform, getSellPlatform, parseMoneyInput } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
 type ImportPreviewRow = {
@@ -21,7 +21,8 @@ const exportFields = [
  'condition',
  'buy_price',
  'sell_price',
- 'platform',
+ 'buy_platform',
+ 'sell_platform',
  'status',
  'bought_at',
  'sold_at',
@@ -49,7 +50,12 @@ export function ImportExport() {
  const rows = items.map((item) =>
  exportFields.reduce<Record<string, string | number | boolean | null>>(
   (record, field) => {
-  record[field] = item[field] ?? ''
+  record[field] =
+    field === 'buy_platform'
+      ? getBuyPlatform(item)
+      : field === 'sell_platform'
+        ? getSellPlatform(item)
+        : item[field] ?? ''
   return record
   },
   {},
@@ -72,7 +78,8 @@ export function ImportExport() {
   is_bundle_parent: false,
   name: 'Example item',
   notes: '',
-  platform: 'Seller name',
+  buy_platform: 'Seller name',
+  sell_platform: '',
   sell_price: '',
   sold_at: '',
   status: 'holding',
@@ -196,7 +203,7 @@ export function ImportExport() {
    Import Preview
   </h3>
   <p className="mt-1 text-sm text-muted ">
-   Required fields: name, category, condition, buy_price, platform,
+   Required fields: name, category, condition, buy_price, buy_platform,
    status, bought_at.
   </p>
   </div>
@@ -267,13 +274,16 @@ function validateRow(row: CsvRow) {
  'category',
  'condition',
  'buy_price',
- 'platform',
  'status',
  'bought_at',
- ]) {
+]) {
  if (!row[field]?.trim()) {
  errors.push(`${field} required`)
  }
+ }
+
+ if (!row.buy_platform?.trim() && !row.platform?.trim()) {
+ errors.push('buy_platform required')
  }
 
  if (row.buy_price && parseMoneyInput(row.buy_price) === null) {
@@ -300,6 +310,9 @@ function validateRow(row: CsvRow) {
 }
 
 function toInsertRow(row: CsvRow, userId: string): Omit<Item, 'tsid' | 'created_at'> {
+ const buyPlatform = row.buy_platform?.trim() || row.platform?.trim() || ''
+ const sellPlatform = row.sell_platform?.trim() || ''
+
  return {
  bought_at: parseImportDate(row.bought_at) ?? new Date().toISOString(),
  bundle_id: row.bundle_id || null,
@@ -309,7 +322,9 @@ function toInsertRow(row: CsvRow, userId: string): Omit<Item, 'tsid' | 'created_
  is_bundle_parent: parseBoolean(row.is_bundle_parent),
  name: row.name.trim(),
  notes: row.notes?.trim() || null,
- platform: row.platform.trim(),
+ buy_platform: buyPlatform || null,
+ platform: buyPlatform,
+ sell_platform: sellPlatform || null,
  sell_price: row.sell_price ? parseMoneyInput(row.sell_price) : null,
  sold_at: row.sold_at ? parseImportDate(row.sold_at) : null,
  status: row.status as ItemStatus,

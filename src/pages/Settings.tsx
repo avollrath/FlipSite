@@ -23,7 +23,7 @@ import {
  useTheme,
  type ThemeName,
 } from '@/lib/theme'
-import { getStatusLabel } from '@/lib/utils'
+import { getBuyPlatform, getSellPlatform, getStatusLabel } from '@/lib/utils'
 import type { ItemStatus } from '@/types'
 
 const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor']
@@ -39,7 +39,10 @@ export function Settings() {
  const savedTimerRef = useRef<number | null>(null)
 
  const platforms = useMemo(
- () => uniqueValues(items.map((item) => item.platform)),
+ () =>
+ uniqueValues(
+  items.flatMap((item) => [getBuyPlatform(item), getSellPlatform(item)]),
+ ),
  [items],
  )
  const categories = useMemo(
@@ -189,7 +192,7 @@ export function Settings() {
   description="Stored locally in this browser. Defaults apply to new items only."
  >
   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-  <Field label="Default platform">
+  <Field label="Default buy platform">
   <SettingsCombobox
    id="default-platform"
    options={platforms}

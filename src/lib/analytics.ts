@@ -2,6 +2,7 @@ import {
   calculateItemProfit,
   calculateItemROI,
   calculateItemSellValue,
+  getBuyPlatform,
   getEffectiveItemStatus,
   isAggregateItem,
   isKeepingItem,
@@ -107,7 +108,7 @@ export function buildProfitByCategory(items: Item[]): ChartDatum[] {
 }
 
 export function buildProfitByPlatform(items: Item[]): ChartDatum[] {
-  return buildProfitBreakdown(items, (item) => item.platform || 'Unknown')
+  return buildProfitBreakdown(items, (item) => getBuyPlatform(item) || 'Unknown')
 }
 
 export function buildCategoryStats(items: Item[]): CategoryStat[] {

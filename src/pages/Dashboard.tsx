@@ -17,8 +17,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Pie,
-  PieChart,
+  LabelList,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -73,11 +72,6 @@ export function Dashboard() {
   const kpis = useMemo(() => buildKpis(dashboardItems), [dashboardItems])
   const chartData = useMemo(() => buildChartData(dashboardItems), [dashboardItems])
   const hasChartData = chartData.soldItems.length >= 2
-  const totalPlatformRevenue = chartData.salesByPlatform.reduce(
-    (sum, item) => sum + item.revenue,
-    0,
-  )
-
   return (
     <section>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -246,72 +240,7 @@ export function Dashboard() {
             title="Profit by Category"
           />
 
-          <ChartCard
-            hasData={hasChartData}
-            legend={
-              <DonutLegend
-                colors={chartColors.pie}
-                data={chartData.salesByPlatform}
-                total={totalPlatformRevenue}
-              />
-            }
-            title="Sales by Platform"
-          >
-            <div className="relative h-[220px]">
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <defs>
-                    {chartData.salesByPlatform.map((entry, index) => (
-                      <radialGradient key={entry.platform} id={`radialGradient-platform-${index}`}>
-                        <stop
-                          offset="45%"
-                          stopColor={chartColors.pie[index % chartColors.pie.length]}
-                          stopOpacity={1}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor={chartColors.pie[index % chartColors.pie.length]}
-                          stopOpacity={0.7}
-                        />
-                      </radialGradient>
-                    ))}
-                  </defs>
-                  <Tooltip content={<CurrencyTooltip />} />
-                  <Pie
-                    animationDuration={600}
-                    animationEasing="ease-out"
-                    data={chartData.salesByPlatform}
-                    dataKey="revenue"
-                    innerRadius="62%"
-                    isAnimationActive
-                    nameKey="platform"
-                    outerRadius="85%"
-                    paddingAngle={3}
-                    stroke="none"
-                    strokeWidth={0}
-                  >
-                    {chartData.salesByPlatform.map((entry, index) => (
-                      <Cell
-                        key={entry.platform}
-                        fill={`url(#radialGradient-platform-${index})`}
-                        stroke="none"
-                      />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                <div className="text-center">
-                  <p className="text-base font-semibold text-base">
-                    {compactCurrency(totalPlatformRevenue)}
-                  </p>
-                  <p className="text-[10px] font-medium uppercase tracking-wide text-muted">
-                    revenue
-                  </p>
-                </div>
-              </div>
-            </div>
-          </ChartCard>
+          <TopFlipsChart colors={chartColors} data={chartData.topFlips} />
 
           <ChartCard
             hasData={hasChartData}
@@ -411,6 +340,75 @@ function ProfitBarChart({
                 stroke="none"
               />
             ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartCard>
+  )
+}
+
+function TopFlipsChart({
+  colors,
+  data,
+}: {
+  colors: ChartColors
+  data: Array<{ name: string; profit: number }>
+}) {
+  return (
+    <ChartCard
+      emptyText="No sold items yet"
+      hasData={data.length >= 2}
+      subtitle="Your most profitable sales"
+      title="Top Flips"
+    >
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={data} layout="vertical" margin={{ right: 56 }}>
+          <defs>
+            <linearGradient id="gradientAccent-top-flips" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor={colors.accent} stopOpacity={0.5} />
+              <stop offset="100%" stopColor={colors.accent} stopOpacity={0.95} />
+            </linearGradient>
+          </defs>
+          <ChartGrid />
+          <XAxis
+            axisLine={false}
+            fontSize={11}
+            stroke="hsl(var(--text-muted))"
+            tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
+            tickFormatter={(value) => compactCurrency(Number(value))}
+            tickLine={false}
+            type="number"
+          />
+          <YAxis
+            axisLine={false}
+            dataKey="name"
+            fontSize={11}
+            stroke="hsl(var(--text-muted))"
+            tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
+            tickFormatter={(value) => truncateLabel(String(value), 20)}
+            tickLine={false}
+            type="category"
+            width={130}
+          />
+          <Tooltip content={<CurrencyTooltip />} cursor={{ fill: 'transparent' }} />
+          <Bar
+            activeBar={{ fill: colors.accent, filter: 'brightness(1.15)', opacity: 1 }}
+            animationDuration={600}
+            animationEasing="ease-out"
+            dataKey="profit"
+            fill="url(#gradientAccent-top-flips)"
+            isAnimationActive
+            maxBarSize={18}
+            name="Profit"
+            radius={[0, 4, 4, 0]}
+            stroke="none"
+          >
+            <LabelList
+              dataKey="profit"
+              formatter={(value) => formatCurrency(Number(value ?? 0))}
+              position="right"
+              style={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
+            />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -556,33 +554,6 @@ function DotLegend({ items }: { items: Array<{ color: string; label: string }> }
   )
 }
 
-function DonutLegend({
-  colors,
-  data,
-  total,
-}: {
-  colors: string[]
-  data: Array<{ platform: string; revenue: number }>
-  total: number
-}) {
-  return (
-    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">
-      {data.map((entry, index) => (
-        <span key={entry.platform} className="inline-flex items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: colors[index % colors.length] }}
-          />
-          {entry.platform}
-          <span className="text-muted/75">
-            {total > 0 ? `${Math.round((entry.revenue / total) * 100)}%` : '0%'}
-          </span>
-        </span>
-      ))}
-    </div>
-  )
-}
-
 function buildKpis(dashboardItems: Item[]) {
   const aggregateItems = dashboardItems.filter(isAggregateItem)
   const flippingItems = aggregateItems.filter((item) => !isKeepingItem(item))
@@ -707,15 +678,13 @@ function buildChartData(items: Item[]) {
     ([category, profit]) => ({ category, profit }),
   ).sort((a, b) => b.profit - a.profit)
 
-  const salesByPlatform = Array.from(
-    soldItems.reduce((map, item) => {
-      const platform = item.platform || 'Other'
-      const current = map.get(platform) ?? 0
-      map.set(platform, current + calculateItemSellValue(item, items))
-      return map
-    }, new Map<string, number>()),
-    ([platform, revenue]) => ({ platform, revenue }),
-  ).sort((a, b) => b.revenue - a.revenue)
+  const topFlips = soldItems
+    .map((item) => ({
+      name: item.name,
+      profit: calculateItemProfit(item, items),
+    }))
+    .sort((a, b) => b.profit - a.profit)
+    .slice(0, 8)
 
   const monthlyVolume = Array.from(
     aggregateItems.reduce((map, item) => {
@@ -751,8 +720,8 @@ function buildChartData(items: Item[]) {
     cumulativeProfit,
     monthlyVolume,
     profitByCategory,
-    salesByPlatform,
     soldItems,
+    topFlips,
   }
 }
 
@@ -878,6 +847,10 @@ function compactCurrency(value: number) {
   }).format(value)
 
   return `${formatted}€`
+}
+
+function truncateLabel(value: string, maxLength: number) {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 3)}...` : value
 }
 
 function getChartColors() {

@@ -133,6 +133,18 @@ export function isKeepingItem(item: Item) {
   )
 }
 
+export function getBuyPlatform(item: Item) {
+  return item.buy_platform ?? item.platform ?? ''
+}
+
+export function getSellPlatform(item: Item) {
+  return item.sell_platform ?? ''
+}
+
+export function getItemPlatformSearchText(item: Item) {
+  return [getBuyPlatform(item), getSellPlatform(item)].filter(Boolean).join(' ')
+}
+
 export function getEffectiveItemStatus(item: Item, allItems: Item[]) {
   if (!item.is_bundle_parent) {
     return isKeepingItem(item) ? 'keeper' : item.status

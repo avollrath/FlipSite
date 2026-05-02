@@ -36,7 +36,9 @@ import {
   calculateItemROI,
   calculateItemSellValue,
   formatCurrency,
+  getBuyPlatform,
   getEffectiveItemStatus,
+  getSellPlatform,
   isAggregateItem,
   isKeepingItem,
 } from '@/lib/utils'
@@ -93,15 +95,20 @@ export function Analytics() {
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [categories, setCategories] = useState<string[]>([])
-  const [platforms, setPlatforms] = useState<string[]>([])
+  const [buyPlatforms, setBuyPlatforms] = useState<string[]>([])
+  const [sellPlatforms, setSellPlatforms] = useState<string[]>([])
   const [statuses, setStatuses] = useState<FilterStatus[]>([])
 
   const categoryOptions = useMemo(
     () => uniqueValues(items.map((item) => item.category)),
     [items],
   )
-  const platformOptions = useMemo(
-    () => uniqueValues(items.map((item) => item.platform)),
+  const buyPlatformOptions = useMemo(
+    () => uniqueValues(items.map((item) => getBuyPlatform(item))),
+    [items],
+  )
+  const sellPlatformOptions = useMemo(
+    () => uniqueValues(items.map((item) => getSellPlatform(item))),
     [items],
   )
   const dateRange = useMemo(
@@ -113,10 +120,11 @@ export function Analytics() {
       getFilteredCalculationItems(items, {
         categories,
         dateRange,
-        platforms,
+        buyPlatforms,
         statuses,
+        sellPlatforms,
       }),
-    [categories, dateRange, items, platforms, statuses],
+    [buyPlatforms, categories, dateRange, items, sellPlatforms, statuses],
   )
   const summary = useMemo(() => buildSummary(filteredItems), [filteredItems])
   const monthlyData = useMemo(() => buildMonthlyPerformance(filteredItems), [filteredItems])
@@ -125,7 +133,7 @@ export function Analytics() {
     [filteredItems],
   )
   const profitByPlatform = useMemo(
-    () => buildProfitBreakdown(filteredItems, (item) => item.platform || 'Unknown'),
+    () => buildProfitBreakdown(filteredItems, (item) => getBuyPlatform(item) || 'Unknown'),
     [filteredItems],
   )
   const roiDistribution = useMemo(() => buildRoiDistribution(filteredItems), [filteredItems])
@@ -134,7 +142,8 @@ export function Analytics() {
   const activeFilterCount =
     (datePreset === 'all' ? 0 : 1) +
     categories.length +
-    platforms.length +
+    buyPlatforms.length +
+    sellPlatforms.length +
     statuses.length
 
   function clearFilters() {
@@ -142,7 +151,8 @@ export function Analytics() {
     setCustomFrom('')
     setCustomTo('')
     setCategories([])
-    setPlatforms([])
+    setBuyPlatforms([])
+    setSellPlatforms([])
     setStatuses([])
   }
 
@@ -168,15 +178,18 @@ export function Analytics() {
         customFrom={customFrom}
         customTo={customTo}
         datePreset={datePreset}
-        platforms={platforms}
-        platformOptions={platformOptions}
+        buyPlatformOptions={buyPlatformOptions}
+        buyPlatforms={buyPlatforms}
         statuses={statuses}
         onCategoriesChange={setCategories}
         onClear={clearFilters}
         onCustomFromChange={setCustomFrom}
         onCustomToChange={setCustomTo}
         onDatePresetChange={setDatePreset}
-        onPlatformsChange={setPlatforms}
+        sellPlatformOptions={sellPlatformOptions}
+        sellPlatforms={sellPlatforms}
+        onBuyPlatformsChange={setBuyPlatforms}
+        onSellPlatformsChange={setSellPlatforms}
         onStatusesChange={setStatuses}
       />
 
@@ -376,37 +389,43 @@ export function Analytics() {
 
 function FilterBar({
   activeFilterCount,
+  buyPlatformOptions,
+  buyPlatforms,
   categories,
   categoryOptions,
   customFrom,
   customTo,
   datePreset,
-  platforms,
-  platformOptions,
+  sellPlatformOptions,
+  sellPlatforms,
   statuses,
+  onBuyPlatformsChange,
   onCategoriesChange,
   onClear,
   onCustomFromChange,
   onCustomToChange,
   onDatePresetChange,
-  onPlatformsChange,
+  onSellPlatformsChange,
   onStatusesChange,
 }: {
   activeFilterCount: number
+  buyPlatformOptions: string[]
+  buyPlatforms: string[]
   categories: string[]
   categoryOptions: string[]
   customFrom: string
   customTo: string
   datePreset: DatePreset
-  platforms: string[]
-  platformOptions: string[]
+  sellPlatformOptions: string[]
+  sellPlatforms: string[]
   statuses: FilterStatus[]
+  onBuyPlatformsChange: (values: string[]) => void
   onCategoriesChange: (values: string[]) => void
   onClear: () => void
   onCustomFromChange: (value: string) => void
   onCustomToChange: (value: string) => void
   onDatePresetChange: (value: DatePreset) => void
-  onPlatformsChange: (values: string[]) => void
+  onSellPlatformsChange: (values: string[]) => void
   onStatusesChange: (values: FilterStatus[]) => void
 }) {
   return (
@@ -456,11 +475,18 @@ function FilterBar({
           onChange={onCategoriesChange}
         />
         <MultiSelect
-          label="Platform"
-          allLabel="All platforms"
-          options={platformOptions}
-          values={platforms}
-          onChange={onPlatformsChange}
+          label="Bought from"
+          allLabel="All sources"
+          options={buyPlatformOptions}
+          values={buyPlatforms}
+          onChange={onBuyPlatformsChange}
+        />
+        <MultiSelect
+          label="Sold on"
+          allLabel="All channels"
+          options={sellPlatformOptions}
+          values={sellPlatforms}
+          onChange={onSellPlatformsChange}
         />
         <MultiSelect
           label="Status"
@@ -1144,9 +1170,10 @@ function buildCumulativeProfit(items: Item[]) {
 function getFilteredCalculationItems(
   items: Item[],
   filters: {
+    buyPlatforms: string[]
     categories: string[]
     dateRange: { from: Date | null; to: Date | null }
-    platforms: string[]
+    sellPlatforms: string[]
     statuses: FilterStatus[]
   },
 ) {
@@ -1164,9 +1191,10 @@ function matchesFilters(
   item: Item,
   allItems: Item[],
   filters: {
+    buyPlatforms: string[]
     categories: string[]
     dateRange: { from: Date | null; to: Date | null }
-    platforms: string[]
+    sellPlatforms: string[]
     statuses: FilterStatus[]
   },
 ) {
@@ -1177,7 +1205,8 @@ function matchesFilters(
 
   return (
     matchesOption(filters.categories, item.category) &&
-    matchesOption(filters.platforms, item.platform) &&
+    matchesOption(filters.buyPlatforms, getBuyPlatform(item)) &&
+    matchesOption(filters.sellPlatforms, getSellPlatform(item)) &&
     (filters.statuses.length === 0 || filters.statuses.includes(status)) &&
     isWithinDateRange(date, filters.dateRange)
   )

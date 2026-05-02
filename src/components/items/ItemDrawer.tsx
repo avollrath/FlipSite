@@ -60,6 +60,8 @@ import {
 import {
  calcProfit,
  formatCurrency,
+ getBuyPlatform,
+ getSellPlatform,
  getStatusLabel,
  parseMoneyInput,
 } from '@/lib/utils'
@@ -81,7 +83,8 @@ type FormState = {
  condition: string
  buy_price: string
  sell_price: string
- platform: string
+ buy_platform: string
+ sell_platform: string
  status: ItemStatus
  bought_at: string
  sold_at: string
@@ -142,7 +145,13 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
  [items],
  )
  const platforms = useMemo(
- () => uniqueValues(items.map((existingItem) => existingItem.platform)),
+ () =>
+ uniqueValues(
+  items.flatMap((existingItem) => [
+  getBuyPlatform(existingItem),
+  getSellPlatform(existingItem),
+  ]),
+ ),
  [items],
  )
  const conditionOptions = useMemo(
@@ -188,7 +197,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
  ...currentForm,
  [key]: value,
  ...(key === 'status' && value !== 'sold' && value !== 'listed'
-  ? { sell_price: '', sold_at: '' }
+  ? { sell_platform: '', sell_price: '', sold_at: '' }
   : {}),
  }))
  }
@@ -261,7 +270,9 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
  condition: form.condition,
  buy_price: buyPriceValue,
  sell_price: showSellFields ? sellPriceValue : null,
- platform: form.platform.trim(),
+ platform: form.buy_platform.trim(),
+ buy_platform: form.buy_platform.trim() || null,
+ sell_platform: showSellFields ? form.sell_platform.trim() || null : null,
  status: form.status,
  bought_at: boughtAt,
  sold_at: soldAt,
@@ -351,6 +362,8 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   bought_at: parent.bought_at,
   is_bundle_parent: false,
   platform: parent.platform,
+  buy_platform: parent.buy_platform ?? parent.platform ?? null,
+  sell_platform: null,
   sell_price: null,
   sold_at: null,
   notes: null,
@@ -465,13 +478,13 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
    </select>
   </Field>
 
-  <Field label="Seller">
+ <Field label="Bought from">
    <SuggestionCombobox
-   label="Seller"
+   label="Bought from"
    options={platforms}
-   value={form.platform}
-   onChange={(value) => updateField('platform', value)}
-   placeholder="Type or select a seller"
+   value={form.buy_platform}
+   onChange={(value) => updateField('buy_platform', value)}
+   placeholder="Type or select a source"
    />
   </Field>
   </div>
@@ -505,6 +518,18 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
    </Field>
   ) : null}
   </div>
+
+  {showSellFields ? (
+  <Field label="Sold on">
+   <SuggestionCombobox
+   label="Sold on"
+   options={platforms}
+   value={form.sell_platform}
+   onChange={(value) => updateField('sell_platform', value)}
+   placeholder="Type or select a sales channel"
+   />
+  </Field>
+  ) : null}
 
   <div className="grid gap-4 sm:grid-cols-2">
   <Field label="Status">
@@ -1252,7 +1277,7 @@ function BundleItemsSection({
   Bundle Items
   </h3>
   <p className="mt-1 text-sm text-muted ">
-  Child items inherit platform and date bought from the parent.
+  Child items inherit bought-from platform and date bought from the parent.
   </p>
   </div>
   <button
@@ -1570,7 +1595,8 @@ function getInitialState(item?: Item | null): FormState {
  item?.sell_price === null || item?.sell_price === undefined
   ? ''
   : String(item.sell_price),
- platform: item?.platform ?? defaults?.defaultPlatform ?? '',
+ buy_platform: item ? getBuyPlatform(item) : defaults?.defaultPlatform ?? '',
+ sell_platform: item ? getSellPlatform(item) : '',
  status: item?.status ?? defaults?.defaultStatus ?? 'holding',
  bought_at: formatDateInputValue(item?.bought_at) || formatTodayDateInputValue(),
  sold_at: formatDateInputValue(item?.sold_at),

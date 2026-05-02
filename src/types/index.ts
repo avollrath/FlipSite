@@ -8,7 +8,9 @@ export type Item = {
   condition: string
   buy_price: number
   sell_price: number | null
-  platform: string
+  platform?: string | null
+  buy_platform?: string | null
+  sell_platform?: string | null
   status: ItemStatus
   bought_at: string
   sold_at: string | null

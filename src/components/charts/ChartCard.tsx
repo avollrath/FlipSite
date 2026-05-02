@@ -5,6 +5,7 @@ type ChartCardProps = {
   emptyText?: string
   hasData?: boolean
   legend?: ReactNode
+  subtitle?: string
   title: string
 }
 
@@ -13,11 +14,15 @@ export function ChartCard({
   emptyText = 'Add more sold items to unlock this chart.',
   hasData = true,
   legend,
+  subtitle,
   title,
 }: ChartCardProps) {
   return (
     <article className="rounded-xl border border-border-base bg-card p-5 shadow-sm">
-      <h3 className="mb-4 text-base font-semibold text-base">{title}</h3>
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-base">{title}</h3>
+        {subtitle ? <p className="mt-1 text-xs text-muted">{subtitle}</p> : null}
+      </div>
       {hasData ? (
         <>
           {children}

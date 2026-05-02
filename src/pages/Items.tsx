@@ -31,7 +31,10 @@ import {
  cn,
  formatCurrency,
  formatDate,
+ getBuyPlatform,
  getEffectiveItemStatus,
+ getItemPlatformSearchText,
+ getSellPlatform,
  getStatusLabel,
  isKeepingItem,
 } from '@/lib/utils'
@@ -50,7 +53,8 @@ type SortKey =
  | 'sell_price'
  | 'profit'
  | 'roi'
- | 'platform'
+ | 'buy_platform'
+ | 'sell_platform'
  | 'status'
  | 'bought_at'
  | 'sold_at'
@@ -75,7 +79,8 @@ const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
  { key: 'sell_price', label: 'Sell Price' },
  { key: 'profit', label: 'Profit' },
  { key: 'roi', label: 'ROI %' },
- { key: 'platform', label: 'Platform' },
+ { key: 'buy_platform', label: 'Bought from' },
+ { key: 'sell_platform', label: 'Sold on' },
  { key: 'status', label: 'Status' },
  { key: 'bought_at', label: 'Date Bought' },
  { key: 'sold_at', label: 'Date Sold' },
@@ -91,7 +96,8 @@ const gallerySortOptions: Array<{ key: SortKey; label: string }> = [
  { key: 'sell_price', label: 'Sell price' },
  { key: 'profit', label: 'Profit' },
  { key: 'roi', label: 'ROI %' },
- { key: 'platform', label: 'Platform' },
+ { key: 'buy_platform', label: 'Bought from' },
+ { key: 'sell_platform', label: 'Sold on' },
  { key: 'status', label: 'Status' },
  { key: 'created_at', label: 'Created date' },
 ]
@@ -111,7 +117,8 @@ export function Items() {
  >(
  queryStatus ?? 'all',
  )
- const [platformFilter, setPlatformFilter] = useState('all')
+ const [buyPlatformFilter, setBuyPlatformFilter] = useState('all')
+ const [sellPlatformFilter, setSellPlatformFilter] = useState('all')
  const [categoryFilter, setCategoryFilter] = useState('all')
  const [bundleFilter, setBundleFilter] = useState<BundleFilter>(
  queryBundleFilter,
@@ -133,8 +140,12 @@ export function Items() {
  })
  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null)
 
- const platforms = useMemo(
- () => uniqueValues(items.map((item) => item.platform)),
+ const buyPlatforms = useMemo(
+ () => uniqueValues(items.map((item) => getBuyPlatform(item))),
+ [items],
+ )
+ const sellPlatforms = useMemo(
+ () => uniqueValues(items.map((item) => getSellPlatform(item))),
  [items],
  )
  const categories = useMemo(
@@ -183,7 +194,7 @@ export function Items() {
   item.name,
   item.category,
   item.condition,
-  item.platform,
+  getItemPlatformSearchText(item),
   effectiveStatus,
   item.notes ?? '',
   ]
@@ -197,8 +208,10 @@ export function Items() {
   const matchesInventory =
   !inventoryOnly ||
   ['holding', 'keeper', 'listed'].includes(effectiveStatus)
-  const matchesPlatform =
-  platformFilter === 'all' || item.platform === platformFilter
+  const matchesBuyPlatform =
+  buyPlatformFilter === 'all' || getBuyPlatform(item) === buyPlatformFilter
+  const matchesSellPlatform =
+  sellPlatformFilter === 'all' || getSellPlatform(item) === sellPlatformFilter
   const matchesCategory =
   categoryFilter === 'all' || item.category === categoryFilter
 
@@ -213,7 +226,8 @@ export function Items() {
   matchesSearch &&
   matchesStatus &&
   matchesInventory &&
-  matchesPlatform &&
+  matchesBuyPlatform &&
+  matchesSellPlatform &&
   matchesCategory &&
   matchesBundleFilter
   )
@@ -226,8 +240,9 @@ export function Items() {
  focusedItemId,
  inventoryOnly,
  items,
- platformFilter,
+ buyPlatformFilter,
  search,
+ sellPlatformFilter,
  sort,
  statusFilter,
  ])
@@ -245,7 +260,8 @@ export function Items() {
  if (
  statusFilter !== 'all' ||
  inventoryOnly ||
- platformFilter !== 'all' ||
+ buyPlatformFilter !== 'all' ||
+ sellPlatformFilter !== 'all' ||
  categoryFilter !== 'all' ||
  search.trim()
  ) {
@@ -274,8 +290,9 @@ export function Items() {
  expandedBundles,
  focusedItemId,
  inventoryOnly,
- platformFilter,
+ buyPlatformFilter,
  search,
+ sellPlatformFilter,
  statusFilter,
  visibleItems,
  ])
@@ -406,7 +423,8 @@ export function Items() {
   'Sell Price': isKeeper ? '' : calculateItemSellValue(item, items),
   Profit: isKeeper ? '' : profit ?? '',
   'ROI %': isKeeper || roi === null ? '' : roi.toFixed(2),
-  Platform: item.platform,
+  'Bought from': getBuyPlatform(item),
+  'Sold on': getSellPlatform(item),
   Status: getStatusLabel(getEffectiveItemStatus(item, items)),
   'Date Bought': formatDate(item.bought_at),
   'Date Sold': formatDate(item.sold_at),
@@ -483,12 +501,25 @@ export function Items() {
   className="min-w-[150px] flex-[0_1_180px]"
   />
   <FilterSelect
-  label="Platform"
-  value={platformFilter}
-  onChange={setPlatformFilter}
+  label="Bought from"
+  value={buyPlatformFilter}
+  onChange={setBuyPlatformFilter}
   options={[
-   { value: 'all', label: 'All Platforms' },
-   ...platforms.map((platform) => ({
+   { value: 'all', label: 'All Sources' },
+   ...buyPlatforms.map((platform) => ({
+   value: platform,
+   label: platform,
+   })),
+  ]}
+  className="min-w-[150px] flex-[0_1_180px]"
+  />
+  <FilterSelect
+  label="Sold on"
+  value={sellPlatformFilter}
+  onChange={setSellPlatformFilter}
+  options={[
+   { value: 'all', label: 'All Channels' },
+   ...sellPlatforms.map((platform) => ({
    value: platform,
    label: platform,
    })),
@@ -720,7 +751,10 @@ function ItemRow({
   {isKeeper || roi === null ? '--' : `${roi.toFixed(1)}%`}
  </td>
  <td className="px-4 py-4 text-muted ">
-  {item.platform}
+  {getBuyPlatform(item) || '--'}
+ </td>
+ <td className="px-4 py-4 text-muted ">
+  {getSellPlatform(item) || '--'}
  </td>
  <td className="px-4 py-4">
   <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
@@ -870,7 +904,7 @@ function ItemCard({
   </span>
   </h3>
   <p className="mt-1 text-sm text-muted ">
-  {item.category || 'Uncategorized'} - {item.platform}
+  {item.category || 'Uncategorized'} - {getBuyPlatform(item) || '--'}
   </p>
   </div>
   </div>
@@ -1289,6 +1323,14 @@ function getSortValue(item: Item, key: SortKey, allItems: Item[]) {
 
  if (key === 'status') {
  return getStatusLabel(getEffectiveItemStatus(item, allItems))
+ }
+
+ if (key === 'buy_platform') {
+ return getBuyPlatform(item)
+ }
+
+ if (key === 'sell_platform') {
+ return getSellPlatform(item)
  }
 
  if (key === 'bought_at' || key === 'sold_at') {
