@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowRight, Loader2, Sparkles } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { Logo } from '@/components/ui/Logo'
 import { useAuth } from '@/hooks/useAuth'
 
 type AuthMode = 'login' | 'signup'
@@ -60,8 +61,8 @@ export function Login() {
  <main className="grid min-h-screen place-items-center bg-surface px-6 py-10 text-base ">
  <section className="w-full max-w-md animate-auth-card">
   <div className="mb-8 flex flex-col items-center text-center">
-  <div className="mb-4 grid h-14 w-14 place-items-center rounded-lg bg-accent text-accent-fg shadow-lg shadow-accent/20">
-  <Sparkles className="h-7 w-7" aria-hidden="true" />
+  <div className="mb-6">
+   <Logo size={48} />
   </div>
   <p className="text-3xl font-semibold">FlipSite</p>
   <p className="mt-2 text-sm text-muted ">
