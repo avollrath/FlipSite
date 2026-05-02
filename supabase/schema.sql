@@ -1,3 +1,5 @@
+-- Schema version: current as of 2026-05-02. Run this only on a fresh database.
+
 create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.items (
@@ -8,19 +10,43 @@ create table if not exists public.items (
   condition text not null,
   buy_price numeric(12, 2) not null check (buy_price >= 0),
   sell_price numeric(12, 2) check (sell_price is null or sell_price >= 0),
-  platform text not null,
-  -- Status values: holding, listed, sold, keeper.
-  -- Existing Supabase databases need the manual constraint update block at the bottom of this file.
+  buy_platform text,
+  sell_platform text,
   status text not null default 'holding' check (status in ('holding', 'listed', 'sold', 'keeper')),
   bought_at timestamptz not null,
   sold_at timestamptz,
   notes text,
+  bundle_id uuid references public.items (tsid) on delete set null,
+  is_bundle_parent boolean default false,
   created_at timestamptz not null default now()
 );
 
 alter table public.items enable row level security;
 
 create index if not exists items_user_id_idx on public.items (user_id);
+create index if not exists items_bundle_id_idx on public.items (bundle_id);
+
+-- Ensure bundle children belong to the same user as their parent
+create or replace function public.check_bundle_user_match()
+returns trigger as $$
+begin
+  if new.bundle_id is not null then
+    if not exists (
+      select 1 from public.items
+      where tsid = new.bundle_id
+      and user_id = new.user_id
+    ) then
+      raise exception 'Bundle parent must belong to the same user';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists enforce_bundle_user_match on public.items;
+create trigger enforce_bundle_user_match
+  before insert or update on public.items
+  for each row execute function public.check_bundle_user_match();
 
 drop policy if exists "Users can select their own items" on public.items;
 create policy "Users can select their own items"
@@ -101,6 +127,39 @@ using ((select auth.uid()) = user_id);
 
 grant select, insert, delete on public.item_files to authenticated;
 
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  username text,
+  avatar_url text,
+  updated_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+
+drop policy if exists "Users can view own profile" on public.profiles;
+create policy "Users can view own profile"
+on public.profiles
+for select
+to authenticated
+using ((select auth.uid()) = id);
+
+drop policy if exists "Users can insert own profile" on public.profiles;
+create policy "Users can insert own profile"
+on public.profiles
+for insert
+to authenticated
+with check ((select auth.uid()) = id);
+
+drop policy if exists "Users can update own profile" on public.profiles;
+create policy "Users can update own profile"
+on public.profiles
+for update
+to authenticated
+using ((select auth.uid()) = id)
+with check ((select auth.uid()) = id);
+
+grant select, insert, update on public.profiles to authenticated;
+
 insert into storage.buckets (id, name, public)
 values ('item-files', 'item-files', false)
 on conflict (id) do update
@@ -136,106 +195,38 @@ using (
   and (storage.foldername(name))[1] = (select auth.uid()::text)
 );
 
--- Run this in Supabase SQL Editor to add keeper status support:
--- ALTER TABLE items DROP CONSTRAINT IF EXISTS items_status_check;
--- ALTER TABLE items ADD CONSTRAINT items_status_check
---   CHECK (status IN ('holding', 'listed', 'sold', 'keeper'));
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do update
+set public = true;
 
--- Bundle support migration - run in Supabase SQL Editor:
--- ALTER TABLE items ADD COLUMN IF NOT EXISTS bundle_id uuid REFERENCES items(tsid) ON DELETE SET NULL;
--- ALTER TABLE items ADD COLUMN IF NOT EXISTS is_bundle_parent boolean DEFAULT false;
-
--- Buy/sell platform migration - run in Supabase SQL Editor:
--- Safe step:
--- ALTER TABLE items ADD COLUMN IF NOT EXISTS buy_platform text;
--- ALTER TABLE items ADD COLUMN IF NOT EXISTS sell_platform text;
--- UPDATE items SET buy_platform = platform WHERE platform IS NOT NULL;
---
--- Optional destructive cleanup after verifying buy_platform was populated:
--- ALTER TABLE items DROP COLUMN IF EXISTS platform;
-
--- ============================================================
--- MIGRATION: Buy/Sell platform split
--- Applied automatically by Codex
--- ============================================================
-ALTER TABLE items ADD COLUMN IF NOT EXISTS buy_platform text;
-ALTER TABLE items ADD COLUMN IF NOT EXISTS sell_platform text;
-UPDATE items SET buy_platform = platform WHERE platform IS NOT NULL AND buy_platform IS NULL;
-
--- ============================================================
--- MIGRATION: Profiles table
--- Applied automatically by Codex
--- ============================================================
-CREATE TABLE IF NOT EXISTS profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  username text,
-  avatar_url text,
-  updated_at timestamptz DEFAULT now()
+drop policy if exists "Avatar upload policy" on storage.objects;
+create policy "Avatar upload policy"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'avatars'
+  and name like (select auth.uid()::text) || '/%'
 );
 
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+drop policy if exists "Avatar update policy" on storage.objects;
+create policy "Avatar update policy"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'avatars'
+  and name like (select auth.uid()::text) || '/%'
+)
+with check (
+  bucket_id = 'avatars'
+  and name like (select auth.uid()::text) || '/%'
+);
 
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can view own profile'
-  ) THEN
-    CREATE POLICY "Users can view own profile" ON profiles
-      FOR SELECT USING (auth.uid() = id);
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can update own profile'
-  ) THEN
-    CREATE POLICY "Users can update own profile" ON profiles
-      FOR UPDATE USING (auth.uid() = id);
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can insert own profile'
-  ) THEN
-    CREATE POLICY "Users can insert own profile" ON profiles
-      FOR INSERT WITH CHECK (auth.uid() = id);
-  END IF;
-END $$;
-
--- ============================================================
--- MIGRATION: Avatars storage bucket
--- Applied automatically by Codex
--- ============================================================
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('avatars', 'avatars', true)
-ON CONFLICT (id) DO NOTHING;
-
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Avatar upload policy'
-  ) THEN
-    CREATE POLICY "Avatar upload policy" ON storage.objects
-      FOR INSERT TO authenticated
-      WITH CHECK (bucket_id = 'avatars' AND name LIKE auth.uid()::text || '/%');
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Avatar update policy'
-  ) THEN
-    CREATE POLICY "Avatar update policy" ON storage.objects
-      FOR UPDATE TO authenticated
-      USING (bucket_id = 'avatars' AND name LIKE auth.uid()::text || '/%');
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Avatar public read policy'
-  ) THEN
-    CREATE POLICY "Avatar public read policy" ON storage.objects
-      FOR SELECT TO public
-      USING (bucket_id = 'avatars');
-  END IF;
-END $$;
+drop policy if exists "Avatar public read policy" on storage.objects;
+create policy "Avatar public read policy"
+on storage.objects
+for select
+to public
+using (bucket_id = 'avatars');
