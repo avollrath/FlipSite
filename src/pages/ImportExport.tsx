@@ -329,7 +329,6 @@ function toInsertRow(row: CsvRow, userId: string): Omit<Item, 'tsid' | 'created_
  name: row.name.trim(),
  notes: row.notes?.trim() || null,
  buy_platform: buyPlatform || null,
- platform: buyPlatform,
  sell_platform: sellPlatform || null,
  sell_price: row.sell_price ? parseMoneyInput(row.sell_price) : null,
  sold_at: row.sold_at ? parseImportDate(row.sold_at) : null,
