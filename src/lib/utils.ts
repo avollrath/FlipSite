@@ -34,19 +34,6 @@ export function calcProfit(
   return sellPrice - buyPrice
 }
 
-export function calcROI(
-  buyPrice: number | null | undefined,
-  sellPrice: number | null | undefined,
-) {
-  const profit = calcProfit(buyPrice, sellPrice)
-
-  if (profit === null || !buyPrice) {
-    return null
-  }
-
-  return (profit / buyPrice) * 100
-}
-
 export function parseMoneyInput(value: string) {
   const normalized = value
     .trim()
@@ -187,6 +174,3 @@ export function getStatusLabel(status: ItemStatus) {
 
   return labels[status]
 }
-
-export const selectTriggerClass =
-  'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-base bg-surface px-3 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50'
