@@ -27,6 +27,7 @@ import {
   YAxis,
 } from 'recharts'
 import { ChartCard } from '@/components/charts/ChartCard'
+import { KPICard } from '@/components/charts/KPICard'
 import { useItems } from '@/hooks/useItems'
 import { useTheme } from '@/lib/theme'
 import {
@@ -176,37 +177,49 @@ export function Analytics() {
 
       <SectionHeading>Performance by the numbers</SectionHeading>
       <div className="grid gap-4 md:grid-cols-3">
-        <SummaryCard
+        <KPICard
           icon={TrendingUp}
-          label="Total Revenue"
-          value={formatCurrency(summary.totalRevenue)}
+          title="Total Revenue"
+          value={summary.totalRevenue}
           subtitle="Total from all your sales"
+          trend="neutral"
+          color="green"
+          formatter={formatCurrency}
         />
-        <SummaryCard
+        <KPICard
           icon={Banknote}
-          label="Total Profit"
-          value={formatCurrency(summary.totalProfit)}
+          title="Total Profit"
+          value={summary.totalProfit}
           subtitle="What you earned after costs"
+          trend={profitTrend(summary.totalProfit)}
+          color={summary.totalProfit < 0 ? 'rose' : 'green'}
+          formatter={formatCurrency}
         />
-        <SummaryCard
+        <KPICard
           icon={Activity}
-          label="Profit per Flip"
-          value={formatCurrency(summary.averageProfit)}
+          title="Profit per Flip"
+          value={summary.averageProfit}
           subtitle={`${summary.soldItemsCount} sold items`}
+          trend={profitTrend(summary.averageProfit)}
+          color={summary.averageProfit < 0 ? 'rose' : 'green'}
+          formatter={formatCurrency}
         />
       </div>
 
       <SectionHeading>What's Sitting Unsold</SectionHeading>
       <div className="grid gap-4 md:grid-cols-3">
-        <SummaryCard
+        <KPICard
           icon={Percent}
-          label="Average ROI %"
-          value={`${summary.averageRoi.toFixed(1)}%`}
+          title="Average ROI %"
+          value={summary.averageRoi}
           subtitle="Average return on each sale"
+          trend={profitTrend(summary.averageRoi)}
+          color={summary.averageRoi < 0 ? 'rose' : 'green'}
+          formatter={(value) => `${value.toFixed(1)}%`}
         />
-        <SummaryCard
+        <KPICard
           icon={TrendingUp}
-          label="Best Flip"
+          title="Best Flip"
           value={truncateText(summary.bestFlip?.name ?? 'No sold items', 22)}
           valueTitle={summary.bestFlip?.name}
           subtitle={
@@ -214,36 +227,50 @@ export function Analytics() {
               ? `${formatCurrency(summary.bestFlip.profit)} profit · ${summary.bestFlip.roi.toFixed(1)}% ROI`
               : 'No profit data yet'
           }
+          trend="up"
+          color="green"
         />
-        <SummaryCard
+        <KPICard
           icon={TrendingDown}
-          label="Biggest Loss"
+          title="Biggest Loss"
           value={truncateText(summary.worstFlip?.name ?? 'No sold items', 22)}
           valueTitle={summary.worstFlip?.name}
           subtitle={
             summary.worstFlip
-              ? `${formatCurrency(Math.abs(summary.worstFlip.profit))} loss`
+              ? (
+                <span className="text-negative">
+                  {formatCurrency(Math.abs(summary.worstFlip.profit))} loss
+                </span>
+              )
               : 'No loss data yet'
           }
-          tone="negative"
+          trend="down"
+          color="rose"
         />
-        <SummaryCard
+        <KPICard
           icon={Boxes}
-          label="Sold Items"
-          value={String(summary.soldItemsCount)}
+          title="Sold Items"
+          value={summary.soldItemsCount}
           subtitle="Items successfully sold"
+          trend="neutral"
+          color="blue"
         />
-        <SummaryCard
+        <KPICard
           icon={Banknote}
-          label="Tied-Up Cash"
-          value={formatCurrency(summary.activeInventoryValue)}
+          title="Tied-Up Cash"
+          value={summary.activeInventoryValue}
           subtitle="Money tied up in unsold items"
+          trend="neutral"
+          color="amber"
+          formatter={formatCurrency}
         />
-        <SummaryCard
+        <KPICard
           icon={PackageSearch}
-          label="Unsold Items"
-          value={String(summary.unrealisedItemsCount)}
+          title="Unsold Items"
+          value={summary.unrealisedItemsCount}
           subtitle={`Spent ${formatCurrency(summary.unrealisedBuyCost)}, not sold yet`}
+          trend="neutral"
+          color="indigo"
         />
       </div>
 
@@ -786,46 +813,6 @@ function EmptyChart() {
   )
 }
 
-function SummaryCard({
-  icon: Icon,
-  label,
-  subtitle,
-  tone = 'neutral',
-  value,
-  valueTitle,
-}: {
-  icon: typeof TrendingUp
-  label: string
-  subtitle: string
-  tone?: 'negative' | 'neutral' | 'positive'
-  value: string
-  valueTitle?: string
-}) {
-  const valueClassName = tone === 'negative' ? 'text-negative' : 'text-base'
-
-  return (
-    <article className="min-h-[120px] rounded-xl border border-border-base bg-card p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-widest text-muted">
-            {label}
-          </p>
-          <p
-            className={`mt-3 truncate text-3xl font-bold ${valueClassName}`}
-            title={valueTitle}
-          >
-            {value}
-          </p>
-        </div>
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent">
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-      </div>
-      <p className="mt-4 truncate text-xs text-muted">{subtitle}</p>
-    </article>
-  )
-}
-
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="mt-8 mb-3 text-xs font-medium uppercase tracking-widest text-muted">
@@ -985,6 +972,18 @@ function LoadingGrid() {
       ))}
     </div>
   )
+}
+
+function profitTrend(value: number) {
+  if (value > 0) {
+    return 'up'
+  }
+
+  if (value < 0) {
+    return 'down'
+  }
+
+  return 'neutral'
 }
 
 function buildSummary(items: Item[]) {

@@ -4,17 +4,18 @@ import {
  ArrowUpRight,
  type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 type KPICardProps = {
  title: string
  value: number | string
- subtitle: string
+ subtitle: ReactNode
  icon: LucideIcon
  trend: 'up' | 'down' | 'neutral'
  color: 'violet' | 'indigo' | 'blue' | 'green' | 'amber' | 'rose'
  formatter?: (value: number) => string
  onClick?: () => void
+ valueTitle?: string
 }
 
 const colorStyles = {
@@ -35,6 +36,7 @@ export function KPICard({
  title,
  trend,
  value,
+ valueTitle,
 }: KPICardProps) {
  const numericValue = typeof value === 'number' ? value : null
  const animatedValue = useCountUp(numericValue ?? 0)
@@ -59,21 +61,28 @@ export function KPICard({
 
  return (
  <article
- className={`relative min-h-[100px] overflow-hidden rounded-lg border border-border-base bg-card/70 p-5 shadow-xl shadow-border-base/40 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-2xl ${
+ className={`relative min-h-[100px] overflow-hidden rounded-lg border border-border-base bg-card p-5 shadow-xl shadow-border-base/40 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-2xl ${
   onClick ? 'cursor-pointer focus-visible:ring-4 focus-visible:ring-accent/20' : ''
  }`}
  {...interactiveProps}
  >
  <div
-  className={`absolute inset-x-8 -top-16 h-28 rounded-full bg-gradient-to-b blur-3xl ${colorStyles[color]}`}
+  className="pointer-events-none absolute inset-0"
+  style={{
+  background:
+   'radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--accent) / 0.13) 0%, transparent 70%)',
+  }}
  />
- <div className="relative">
+ <div className="relative z-10">
   <div className="flex items-start justify-between gap-4">
   <div className="min-w-0">
   <p className="text-[11px] font-medium uppercase tracking-widest text-muted">
    {title}
   </p>
-  <p className="mt-3 truncate text-2xl font-bold tracking-tight text-base md:text-3xl">
+  <p
+   className="mt-3 truncate text-3xl font-bold tracking-tight text-base"
+   title={valueTitle}
+  >
    {displayValue}
   </p>
   </div>
