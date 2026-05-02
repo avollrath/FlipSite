@@ -43,8 +43,13 @@ export function Login() {
 
  navigate(destination, { replace: true })
  } catch (error) {
+ if (import.meta.env.DEV) {
+  console.error(error)
+ }
  const message =
-  error instanceof Error ? error.message : 'Authentication failed'
+  mode === 'login'
+  ? 'Invalid email or password'
+  : 'Unable to create account. Please try again.'
  toast.error(message)
  } finally {
  setSubmitting(false)

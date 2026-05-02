@@ -32,7 +32,7 @@ async function getAuthenticatedUser() {
   const { data, error } = await supabase.auth.getUser()
 
   if (error) {
-    throw error
+    throwSafeFileError(error, 'Unable to verify your session. Please try again.')
   }
 
   if (!data.user) {
@@ -45,7 +45,14 @@ async function getAuthenticatedUser() {
 export async function uploadItemFile(itemId: string, file: File) {
   const user = await getAuthenticatedUser()
   const shouldCompress = isImageFile(file)
-  const uploadFile = shouldCompress ? await compressImage(file) : file
+  let uploadFile: File
+
+  try {
+    uploadFile = shouldCompress ? await compressImage(file) : file
+  } catch (error) {
+    throwSafeFileError(error, 'Unable to prepare file for upload. Please try again.')
+  }
+
   const fileType: ItemFile['file_type'] = shouldCompress ? 'image' : 'file'
   const timestamp = Date.now()
   const filePath = getItemFilePath({
@@ -64,7 +71,7 @@ export async function uploadItemFile(itemId: string, file: File) {
     })
 
   if (uploadError) {
-    throw uploadError
+    throwSafeFileError(uploadError, 'Unable to upload file. Please try again.')
   }
 
   const { data, error: insertError } = await supabase
@@ -83,7 +90,7 @@ export async function uploadItemFile(itemId: string, file: File) {
 
   if (insertError) {
     await supabase.storage.from(ITEM_FILES_BUCKET).remove([filePath])
-    throw insertError
+    throwSafeFileError(insertError, 'Unable to save file details. Please try again.')
   }
 
   return data as ItemFile
@@ -97,7 +104,7 @@ export async function getItemFiles(itemId: string) {
     .order('created_at', { ascending: false })
 
   if (error) {
-    throw error
+    throwSafeFileError(error, 'Unable to load item files. Please try again.')
   }
 
   return data as ItemFile[]
@@ -109,7 +116,7 @@ export async function deleteItemFile(fileId: string, filePath: string) {
     .remove([filePath])
 
   if (storageError) {
-    throw storageError
+    throwSafeFileError(storageError, 'Unable to remove file from storage. Please try again.')
   }
 
   const { error: deleteError } = await supabase
@@ -118,7 +125,7 @@ export async function deleteItemFile(fileId: string, filePath: string) {
     .eq('id', fileId)
 
   if (deleteError) {
-    throw deleteError
+    throwSafeFileError(deleteError, 'Unable to delete file details. Please try again.')
   }
 }
 
@@ -128,7 +135,7 @@ export async function getSignedItemFileUrl(filePath: string) {
     .createSignedUrl(filePath, SIGNED_URL_EXPIRES_IN_SECONDS)
 
   if (error) {
-    throw error
+    throwSafeFileError(error, 'Unable to open file. Please try again.')
   }
 
   return data.signedUrl
@@ -153,7 +160,7 @@ export async function getFirstItemImageThumbnails(
     .order('created_at', { ascending: false })
 
   if (error) {
-    throw error
+    throwSafeFileError(error, 'Unable to load item thumbnails. Please try again.')
   }
 
   const firstImageByItemId = getFirstImagePathByItemId(imageFiles ?? [])
@@ -172,7 +179,7 @@ export async function getFirstItemImageThumbnails(
         })
 
       if (signedUrlError) {
-        throw signedUrlError
+        throwSafeFileError(signedUrlError, 'Unable to load item thumbnail. Please try again.')
       }
 
       return {
@@ -184,4 +191,12 @@ export async function getFirstItemImageThumbnails(
   )
 
   return thumbnails
+}
+
+function throwSafeFileError(error: unknown, message: string): never {
+  if (import.meta.env.DEV) {
+    console.error(error)
+  }
+
+  throw new Error(message)
 }

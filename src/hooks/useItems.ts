@@ -82,7 +82,8 @@ export function useAddItem() {
       toast.success('Item added')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Unable to add item'))
+      logError(error)
+      toast.error('Unable to add item. Please try again.')
     },
   })
 }
@@ -143,7 +144,8 @@ export function useAddBundle() {
       toast.success('Bundle added')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Unable to add bundle'))
+      logError(error)
+      toast.error('Unable to add bundle. Please try again.')
     },
   })
 }
@@ -189,7 +191,8 @@ export function useUpdateItem() {
       toast.success('Item updated')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Unable to update item'))
+      logError(error)
+      toast.error('Unable to update item. Please try again.')
     },
   })
 }
@@ -221,13 +224,16 @@ export function useDeleteItem() {
       toast.success('Item deleted')
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Unable to delete item'))
+      logError(error)
+      toast.error('Unable to delete item. Please try again.')
     },
   })
 }
 
-function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback
+function logError(error: unknown) {
+  if (import.meta.env.DEV) {
+    console.error(error)
+  }
 }
 
 async function markBundleParentSoldIfComplete(

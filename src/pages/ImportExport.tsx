@@ -101,7 +101,10 @@ export function ImportExport() {
  setFileName(file.name)
  setPreviewRows(rows.map((row) => ({ errors: validateRow(row), row })))
  } catch (error) {
- toast.error(error instanceof Error ? error.message : 'Unable to parse CSV')
+ if (import.meta.env.DEV) {
+  console.error(error)
+ }
+ toast.error('Unable to parse CSV. Please check the file and try again.')
  } finally {
  event.target.value = ''
  }
@@ -133,7 +136,10 @@ export function ImportExport() {
  setPreviewRows([])
  setFileName('')
  } catch (error) {
- toast.error(error instanceof Error ? error.message : 'Unable to import CSV')
+ if (import.meta.env.DEV) {
+  console.error(error)
+ }
+ toast.error('Unable to import CSV. Please try again.')
  } finally {
  setIsImporting(false)
  }

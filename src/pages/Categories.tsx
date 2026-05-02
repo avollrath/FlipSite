@@ -83,7 +83,10 @@ export function Categories() {
  setMergeSource('')
  setMergeTarget('')
  } catch (error) {
- toast.error(error instanceof Error ? error.message : 'Unable to update category')
+ if (import.meta.env.DEV) {
+  console.error(error)
+ }
+ toast.error('Unable to update category. Please try again.')
  } finally {
  setIsSaving(false)
  }
