@@ -59,7 +59,7 @@ export function KPICard({
 
  return (
  <article
- className={`relative overflow-hidden rounded-lg border border-border-base bg-card/70 p-5 shadow-xl shadow-border-base/40 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-2xl ${
+ className={`relative min-h-[100px] overflow-hidden rounded-lg border border-border-base bg-card/70 p-5 shadow-xl shadow-border-base/40 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-2xl ${
   onClick ? 'cursor-pointer focus-visible:ring-4 focus-visible:ring-accent/20' : ''
  }`}
  {...interactiveProps}
@@ -69,11 +69,15 @@ export function KPICard({
  />
  <div className="relative">
   <div className="flex items-start justify-between gap-4">
-  <div>
-  <p className="text-sm font-medium text-muted ">
+  <div className="min-w-0">
+  <p className="text-xs font-medium uppercase tracking-wide text-muted">
    {title}
   </p>
-  <p className="mt-3 text-3xl font-semibold tracking-tight text-base ">
+  <p
+   className={`mt-3 truncate font-bold tracking-tight text-base ${
+    numericValue === null ? 'text-lg' : 'text-xl md:text-2xl'
+   }`}
+  >
    {displayValue}
   </p>
   </div>
@@ -83,7 +87,7 @@ export function KPICard({
   <Icon className="h-5 w-5" aria-hidden="true" />
   </div>
   </div>
-  <div className="mt-5 flex items-center gap-2 text-sm text-muted ">
+  <div className="mt-4 flex items-center gap-2 text-xs text-muted">
   <TrendIcon
   className={`h-4 w-4 ${trendClassName(trend)}`}
   aria-hidden="true"

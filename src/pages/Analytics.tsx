@@ -97,6 +97,7 @@ export function Analytics() {
         >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyData}>
+              <ChartGradients idSuffix="analytics-revenue" />
               <ChartGrid />
               <ChartXAxis dataKey="label" rotate={monthlyData.length > 6} />
               <ChartYAxis />
@@ -106,7 +107,7 @@ export function Analytics() {
                 animationDuration={600}
                 animationEasing="ease-out"
                 dataKey="revenue"
-                fill={colors.accent}
+                fill="url(#gradientAccent-analytics-revenue)"
                 isAnimationActive
                 maxBarSize={28}
                 name="Revenue"
@@ -124,6 +125,7 @@ export function Analytics() {
         >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyData}>
+              <ChartGradients idSuffix="analytics-monthly-profit" />
               <ChartGrid />
               <ChartXAxis dataKey="label" rotate={monthlyData.length > 6} />
               <ChartYAxis />
@@ -141,7 +143,11 @@ export function Analytics() {
                 {monthlyData.map((entry) => (
                   <Cell
                     key={entry.label}
-                    fill={(entry.profit ?? 0) >= 0 ? colors.positive : colors.negative}
+                    fill={
+                      (entry.profit ?? 0) >= 0
+                        ? 'url(#gradientPositive-analytics-monthly-profit)'
+                        : 'url(#gradientNegative-analytics-monthly-profit)'
+                    }
                     opacity={0.85}
                     stroke="none"
                   />
@@ -183,6 +189,7 @@ function ProfitBarChart({
     >
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data}>
+          <ChartGradients idSuffix={`analytics-${title.toLowerCase().replaceAll(' ', '-')}`} />
           <ChartGrid />
           <ChartXAxis dataKey="label" rotate={data.length > 6} />
           <ChartYAxis />
@@ -200,7 +207,11 @@ function ProfitBarChart({
             {data.map((entry) => (
               <Cell
                 key={entry.label}
-                fill={(entry.profit ?? 0) >= 0 ? colors.accent : colors.negative}
+                fill={
+                  (entry.profit ?? 0) >= 0
+                    ? `url(#gradientAccent-analytics-${title.toLowerCase().replaceAll(' ', '-')})`
+                    : `url(#gradientNegative-analytics-${title.toLowerCase().replaceAll(' ', '-')})`
+                }
                 opacity={0.85}
                 stroke="none"
               />
@@ -242,6 +253,25 @@ function ChartGrid() {
       strokeOpacity={0.5}
       vertical={false}
     />
+  )
+}
+
+function ChartGradients({ idSuffix }: { idSuffix: string }) {
+  return (
+    <defs>
+      <linearGradient id={`gradientAccent-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.95} />
+        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
+      </linearGradient>
+      <linearGradient id={`gradientPositive-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--positive))" stopOpacity={0.95} />
+        <stop offset="100%" stopColor="hsl(var(--positive))" stopOpacity={0.5} />
+      </linearGradient>
+      <linearGradient id={`gradientNegative-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--negative))" stopOpacity={0.95} />
+        <stop offset="100%" stopColor="hsl(var(--negative))" stopOpacity={0.5} />
+      </linearGradient>
+    </defs>
   )
 }
 

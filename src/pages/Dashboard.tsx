@@ -257,6 +257,22 @@ export function Dashboard() {
             <div className="relative h-[220px]">
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
+                  <defs>
+                    {chartData.salesByPlatform.map((entry, index) => (
+                      <radialGradient key={entry.platform} id={`radialGradient-platform-${index}`}>
+                        <stop
+                          offset="45%"
+                          stopColor={chartColors.pie[index % chartColors.pie.length]}
+                          stopOpacity={1}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={chartColors.pie[index % chartColors.pie.length]}
+                          stopOpacity={0.7}
+                        />
+                      </radialGradient>
+                    ))}
+                  </defs>
                   <Tooltip content={<CurrencyTooltip />} />
                   <Pie
                     animationDuration={600}
@@ -274,7 +290,7 @@ export function Dashboard() {
                     {chartData.salesByPlatform.map((entry, index) => (
                       <Cell
                         key={entry.platform}
-                        fill={chartColors.pie[index % chartColors.pie.length]}
+                        fill={`url(#radialGradient-platform-${index})`}
                         stroke="none"
                       />
                     ))}
@@ -308,6 +324,7 @@ export function Dashboard() {
           >
             <ResponsiveContainer width="100%" height={220}>
               <BarChart barCategoryGap="30%" barGap={2} data={chartData.monthlyVolume}>
+                <ChartGradients idSuffix="dashboard-monthly-volume" />
                 <ChartGrid />
                 <ChartXAxis dataKey="month" rotate={chartData.monthlyVolume.length > 6} />
                 <ChartYAxis />
@@ -317,7 +334,7 @@ export function Dashboard() {
                   animationDuration={600}
                   animationEasing="ease-out"
                   dataKey="buy"
-                  fill={chartColors.accent}
+                  fill="url(#gradientAccent-dashboard-monthly-volume)"
                   isAnimationActive
                   maxBarSize={14}
                   name="Buy Volume"
@@ -329,7 +346,7 @@ export function Dashboard() {
                   animationDuration={600}
                   animationEasing="ease-out"
                   dataKey="sell"
-                  fill={chartColors.positive}
+                  fill="url(#gradientPositive-dashboard-monthly-volume)"
                   isAnimationActive
                   maxBarSize={14}
                   name="Sell Volume"
@@ -354,6 +371,8 @@ function ProfitBarChart({
   data: Array<{ category: string; profit: number }>
   title: string
 }) {
+  const gradientSuffix = `dashboard-${title.toLowerCase().replaceAll(' ', '-')}`
+
   return (
     <ChartCard
       hasData={data.length > 0}
@@ -362,6 +381,7 @@ function ProfitBarChart({
     >
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data}>
+          <ChartGradients idSuffix={gradientSuffix} />
           <ChartGrid />
           <ChartXAxis dataKey="category" rotate={data.length > 6} />
           <ChartYAxis />
@@ -379,7 +399,11 @@ function ProfitBarChart({
             {data.map((entry) => (
               <Cell
                 key={entry.category}
-                fill={entry.profit >= 0 ? colors.accent : colors.negative}
+                fill={
+                  entry.profit >= 0
+                    ? `url(#gradientAccent-${gradientSuffix})`
+                    : `url(#gradientNegative-${gradientSuffix})`
+                }
                 opacity={0.85}
                 stroke="none"
               />
@@ -425,6 +449,25 @@ function ChartGrid() {
       strokeOpacity={0.5}
       vertical={false}
     />
+  )
+}
+
+function ChartGradients({ idSuffix }: { idSuffix: string }) {
+  return (
+    <defs>
+      <linearGradient id={`gradientAccent-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.95} />
+        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
+      </linearGradient>
+      <linearGradient id={`gradientPositive-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--positive))" stopOpacity={0.95} />
+        <stop offset="100%" stopColor="hsl(var(--positive))" stopOpacity={0.5} />
+      </linearGradient>
+      <linearGradient id={`gradientNegative-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--negative))" stopOpacity={0.95} />
+        <stop offset="100%" stopColor="hsl(var(--negative))" stopOpacity={0.5} />
+      </linearGradient>
+    </defs>
   )
 }
 
