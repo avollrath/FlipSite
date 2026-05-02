@@ -1002,14 +1002,33 @@ function GalleryCard({
  <ImageWithSkeleton
   src={thumbnail?.signed_url}
   alt={item.name}
-  skeletonClassName="aspect-square w-full rounded-t-lg"
+  skeletonClassName="aspect-square w-full"
   className="group-hover:scale-105"
  />
- <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-3">
-  <p className="line-clamp-2 text-sm font-semibold text-accent-fg">
+ <div
+  className="absolute inset-0 rounded-lg"
+  style={{
+  background:
+   'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0) 65%)',
+  }}
+ />
+ {item.is_bundle_parent ? (
+ <div className="absolute left-2 top-2">
+  <span className="rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+  Bundle
+  </span>
+ </div>
+ ) : null}
+ <div className="absolute right-2 top-2">
+  <span className="rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+  {getStatusLabel(effectiveStatus)}
+  </span>
+ </div>
+ <div className="absolute inset-x-0 bottom-0 p-3">
+  <p className="line-clamp-2 text-sm font-semibold leading-tight text-white drop-shadow-sm">
   {item.name}
   </p>
-  <p className="mt-1 text-xs font-medium text-accent-fg/85">
+  <p className="mt-0.5 text-xs font-medium text-white/80">
   {formatCurrency(price)}
   </p>
  </div>
