@@ -147,10 +147,12 @@ export function Analytics() {
   return (
     <section className="space-y-6">
       <div>
-        <p className="text-sm font-medium text-accent">Analytics</p>
-        <h2 className="mt-2 text-4xl font-semibold tracking-tight">
+        <h1 className="text-4xl font-semibold tracking-tight">
+          Performance
+        </h1>
+        <p className="mt-2 text-sm text-muted">
           Performance by the numbers
-        </h2>
+        </p>
       </div>
 
       <FilterBar
@@ -172,57 +174,55 @@ export function Analytics() {
         onStatusesChange={setStatuses}
       />
 
-      <SectionHeading>Performance</SectionHeading>
+      <SectionHeading>Performance by the numbers</SectionHeading>
       <div className="grid gap-4 md:grid-cols-3">
         <SummaryCard
           icon={TrendingUp}
           label="Total Revenue"
           value={formatCurrency(summary.totalRevenue)}
-          subtitle="Sold item revenue"
+          subtitle="Total from all your sales"
         />
         <SummaryCard
           icon={Banknote}
           label="Total Profit"
           value={formatCurrency(summary.totalProfit)}
-          subtitle="Revenue minus buy cost"
-          tone={summary.totalProfit < 0 ? 'negative' : 'positive'}
+          subtitle="What you earned after costs"
         />
         <SummaryCard
           icon={Activity}
-          label="Avg Profit per Sale"
+          label="Profit per Flip"
           value={formatCurrency(summary.averageProfit)}
           subtitle={`${summary.soldItemsCount} sold items`}
-          tone={summary.averageProfit < 0 ? 'negative' : 'positive'}
         />
       </div>
 
-      <SectionHeading>Inventory Health</SectionHeading>
+      <SectionHeading>What's Sitting Unsold</SectionHeading>
       <div className="grid gap-4 md:grid-cols-3">
         <SummaryCard
           icon={Percent}
           label="Average ROI %"
           value={`${summary.averageRoi.toFixed(1)}%`}
-          subtitle="Mean return across sold items"
-          tone={summary.averageRoi < 0 ? 'negative' : 'positive'}
+          subtitle="Average return on each sale"
         />
         <SummaryCard
           icon={TrendingUp}
-          label="Best Single Flip"
-          value={summary.bestFlip?.name ?? 'No sold items'}
+          label="Best Flip"
+          value={truncateText(summary.bestFlip?.name ?? 'No sold items', 22)}
+          valueTitle={summary.bestFlip?.name}
           subtitle={
             summary.bestFlip
-              ? `${formatCurrency(summary.bestFlip.profit)} | ${summary.bestFlip.roi.toFixed(1)}% ROI`
+              ? `${formatCurrency(summary.bestFlip.profit)} profit · ${summary.bestFlip.roi.toFixed(1)}% ROI`
               : 'No profit data yet'
           }
-          tone="positive"
         />
         <SummaryCard
           icon={TrendingDown}
-          label="Worst Single Flip"
-          value={summary.worstFlip?.name ?? 'No sold items'}
+          label="Biggest Loss"
+          value={truncateText(summary.worstFlip?.name ?? 'No sold items', 22)}
+          valueTitle={summary.worstFlip?.name}
           subtitle={
             summary.worstFlip
-              ? `${formatCurrency(summary.worstFlip.profit)} loss/profit`
+              ? `${formatCurrency(Math.abs(summary.worstFlip.profit))} loss`
               : 'No loss data yet'
           }
           tone="negative"
@@ -231,23 +231,23 @@ export function Analytics() {
           icon={Boxes}
           label="Sold Items"
           value={String(summary.soldItemsCount)}
-          subtitle="Completed flips"
+          subtitle="Items successfully sold"
         />
         <SummaryCard
           icon={Banknote}
-          label="Active Inventory Value"
+          label="Tied-Up Cash"
           value={formatCurrency(summary.activeInventoryValue)}
-          subtitle="Holding and listed buy cost"
+          subtitle="Money tied up in unsold items"
         />
         <SummaryCard
           icon={PackageSearch}
-          label="Unrealised Items"
+          label="Unsold Items"
           value={String(summary.unrealisedItemsCount)}
-          subtitle={`${formatCurrency(summary.unrealisedBuyCost)} potential cost basis`}
+          subtitle={`Spent ${formatCurrency(summary.unrealisedBuyCost)}, not sold yet`}
         />
       </div>
 
-      <SectionHeading>Charts</SectionHeading>
+      <SectionHeading>Monthly Breakdown</SectionHeading>
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartShell
           hasData={monthlyData.length > 0}
@@ -332,7 +332,7 @@ export function Analytics() {
         <ProfitBarChart colors={colors} data={profitByPlatform} title="Profit by Platform" />
       </div>
 
-      <SectionHeading>Deep Dive</SectionHeading>
+      <SectionHeading>Digging Deeper</SectionHeading>
       <div className="grid gap-4 xl:grid-cols-2">
         <RoiDistributionChart colors={colors} data={roiDistribution} />
         <DurationProfitChart colors={colors} data={durationProfit} />
@@ -581,7 +581,7 @@ function RoiDistributionChart({
     <ChartShell
       hasData={data.length > 0}
       legend={<DotLegend items={[{ color: colors.accent, label: 'Average ROI' }]} />}
-      title="ROI Distribution"
+      title="Best Categories to Flip"
     >
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} layout="vertical" margin={{ right: 32 }}>
@@ -642,7 +642,7 @@ function DurationProfitChart({
     <ChartShell
       hasData={data.length > 0}
       legend={<DotLegend items={[{ color: colors.accent, label: 'Sold item' }]} />}
-      title="Flip Duration vs Profit"
+      title="Does Waiting Pay Off?"
     >
       <ResponsiveContainer width="100%" height={220}>
         <ScatterChart>
@@ -651,7 +651,14 @@ function DurationProfitChart({
             axisLine={false}
             dataKey="days"
             fontSize={11}
-            name="Days held"
+            label={{
+              fill: 'hsl(var(--text-muted))',
+              fontSize: 11,
+              offset: -2,
+              position: 'insideBottom',
+              value: 'Days held before selling',
+            }}
+            name="Days held before selling"
             stroke="hsl(var(--text-muted))"
             tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
             tickLine={false}
@@ -661,7 +668,14 @@ function DurationProfitChart({
             axisLine={false}
             dataKey="profit"
             fontSize={11}
-            name="Profit"
+            label={{
+              angle: -90,
+              fill: 'hsl(var(--text-muted))',
+              fontSize: 11,
+              position: 'insideLeft',
+              value: 'Profit (€)',
+            }}
+            name="Profit (€)"
             stroke="hsl(var(--text-muted))"
             tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
             tickFormatter={(value) => compactCurrency(Number(value))}
@@ -694,8 +708,8 @@ function CumulativeProfitChart({
   return (
     <ChartShell
       hasData={data.length > 0}
-      legend={<DotLegend items={[{ color: colors.accent, label: 'Actual' }, { color: colors.muted, label: 'Linear pace' }]} />}
-      title="Cumulative Profit Pace"
+      legend={<DotLegend items={[{ color: colors.accent, label: 'Your profit' }, { color: colors.muted, label: 'Steady pace' }]} />}
+      title="Profit Over Time"
     >
       <ResponsiveContainer width="100%" height={220}>
         <AreaChart data={data}>
@@ -718,7 +732,7 @@ function CumulativeProfitChart({
             dot={false}
             fill="url(#analytics-cumulative-profit)"
             isAnimationActive
-            name="Actual"
+            name="Your profit"
             stroke={colors.accent}
             strokeWidth={2}
             type="monotone"
@@ -729,7 +743,7 @@ function CumulativeProfitChart({
             dataKey="pace"
             dot={false}
             isAnimationActive
-            name="Linear pace"
+            name="Steady pace"
             stroke={colors.muted}
             strokeDasharray="4 4"
             strokeWidth={2}
@@ -778,15 +792,16 @@ function SummaryCard({
   subtitle,
   tone = 'neutral',
   value,
+  valueTitle,
 }: {
   icon: typeof TrendingUp
   label: string
   subtitle: string
   tone?: 'negative' | 'neutral' | 'positive'
   value: string
+  valueTitle?: string
 }) {
-  const valueClassName =
-    tone === 'positive' ? 'text-positive' : tone === 'negative' ? 'text-negative' : 'text-base'
+  const valueClassName = tone === 'negative' ? 'text-negative' : 'text-base'
 
   return (
     <article className="min-h-[120px] rounded-xl border border-border-base bg-card p-5 shadow-sm">
@@ -795,7 +810,10 @@ function SummaryCard({
           <p className="text-[11px] font-medium uppercase tracking-widest text-muted">
             {label}
           </p>
-          <p className={`mt-3 truncate text-3xl font-bold md:text-4xl ${valueClassName}`}>
+          <p
+            className={`mt-3 truncate text-3xl font-bold ${valueClassName}`}
+            title={valueTitle}
+          >
             {value}
           </p>
         </div>
@@ -932,8 +950,10 @@ function ScatterTooltip({ active, payload }: TooltipProps) {
   return (
     <div className="rounded-lg border border-border-base bg-card px-3 py-2 text-xs text-muted shadow-lg">
       <p className="mb-1 max-w-56 truncate text-xs text-base">{datum.name}</p>
-      <p>Days held: <span className="font-bold text-base">{datum.days}</span></p>
-      <p>Profit: <span className="font-bold text-base">{formatCurrency(datum.profit)}</span></p>
+      <p>
+        Held {datum.days} days · earned{' '}
+        <span className="font-bold text-base">{formatCurrency(datum.profit)}</span>
+      </p>
     </div>
   )
 }
@@ -1266,6 +1286,10 @@ function uniqueValues(values: string[]) {
 
 function average(values: number[]) {
   return values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
+}
+
+function truncateText(value: string, maxLength: number) {
+  return value.length > maxLength ? `${value.slice(0, maxLength).trimEnd()}...` : value
 }
 
 function monthLabel(value: string) {

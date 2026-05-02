@@ -78,10 +78,9 @@ export function Dashboard() {
     <section>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm font-medium text-accent">Dashboard</p>
-          <h2 className="mt-2 text-4xl font-semibold tracking-tight">
+          <h1 className="text-4xl font-semibold tracking-tight">
             Inventory at a glance
-          </h2>
+          </h1>
         </div>
         <label className="w-full sm:w-44">
           <span className="sr-only">Filter dashboard by year</span>

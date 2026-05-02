@@ -399,10 +399,7 @@ export function Items() {
  <div className="flex flex-col gap-4">
   <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
   <div>
-  <p className="text-sm font-medium text-accent ">
-   Inventory
-  </p>
-  <h2 className="mt-2 text-4xl font-semibold tracking-tight">Items</h2>
+  <h1 className="text-4xl font-semibold tracking-tight">My Items</h1>
   </div>
   <div className="flex flex-col gap-3 sm:flex-row">
   <button

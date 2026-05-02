@@ -135,12 +135,9 @@ export function ImportExport() {
  return (
  <section className="space-y-6">
  <div>
-  <p className="text-sm font-medium text-accent ">
-  Import / Export
-  </p>
-  <h2 className="mt-2 text-4xl font-semibold tracking-tight">
-  Move data in and out
-  </h2>
+  <h1 className="text-4xl font-semibold tracking-tight">
+  Import & Export
+  </h1>
  </div>
 
  <div className="grid gap-4 xl:grid-cols-2">

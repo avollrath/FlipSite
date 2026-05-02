@@ -92,12 +92,9 @@ export function Categories() {
  return (
  <section className="space-y-6">
  <div>
-  <p className="text-sm font-medium text-accent ">
+  <h1 className="text-4xl font-semibold tracking-tight">
   Categories
-  </p>
-  <h2 className="mt-2 text-4xl font-semibold tracking-tight">
-  Category management
-  </h2>
+  </h1>
  </div>
 
  <div className="grid gap-4 xl:grid-cols-2">
