@@ -76,7 +76,7 @@ export function KPICard({
  <div className="relative z-10">
   <div className="flex items-start justify-between gap-4">
   <div className="min-w-0">
-  <p className="text-[11px] font-medium uppercase tracking-widest text-muted">
+  <p className="text-xs font-medium uppercase tracking-widest text-muted">
    {title}
   </p>
   <p
@@ -92,7 +92,7 @@ export function KPICard({
   <Icon className="h-5 w-5" aria-hidden="true" />
   </div>
   </div>
-  <div className="mt-4 flex items-center gap-2 text-xs text-muted">
+  <div className="mt-4 flex items-center gap-2 text-sm text-muted">
   <TrendIcon
   className={`h-4 w-4 ${trendClassName(trend)}`}
   aria-hidden="true"

@@ -17,7 +17,7 @@ export function ChartCard({
 }: ChartCardProps) {
   return (
     <article className="rounded-xl border border-border-base bg-card p-5 shadow-sm">
-      <h3 className="mb-4 text-sm font-semibold text-base">{title}</h3>
+      <h3 className="mb-4 text-base font-semibold text-base">{title}</h3>
       {hasData ? (
         <>
           {children}
