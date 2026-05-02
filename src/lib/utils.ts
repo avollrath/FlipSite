@@ -19,6 +19,9 @@ export function formatCurrency(value: number | null | undefined) {
   }).format(value)
 }
 
+export const sumCurrency = (values: Array<number | null | undefined>): number =>
+  Math.round(values.reduce<number>((acc, value) => acc + (value ?? 0), 0) * 100) / 100
+
 export function calcProfit(
   buyPrice: number | null | undefined,
   sellPrice: number | null | undefined,

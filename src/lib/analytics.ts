@@ -4,6 +4,7 @@ import {
   getEffectiveItemStatus,
   isAggregateItem,
   isKeepingItem,
+  sumCurrency,
 } from '@/lib/utils'
 import type { Item } from '@/types'
 
@@ -45,8 +46,8 @@ export function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
 
     const label = monthLabel(soldAt)
     const current = monthlyData.get(label) ?? { profit: 0, revenue: 0 }
-    current.profit += calculateItemProfit(item, items)
-    current.revenue += revenue
+    current.profit = sumCurrency([current.profit, calculateItemProfit(item, items)])
+    current.revenue = sumCurrency([current.revenue, revenue])
     monthlyData.set(label, current)
   }
 
@@ -75,17 +76,12 @@ export function buildCategoryStats(items: Item[]): CategoryStat[] {
         soldCount: categoryItems.filter(
           (item) => !isKeepingItem(item) && getEffectiveItemStatus(item, items) === 'sold',
         ).length,
-        totalBuyValue: aggregateItems.reduce(
-          (sum, item) => sum + item.buy_price,
-          0,
+        totalBuyValue: sumCurrency(aggregateItems.map((item) => item.buy_price)),
+        totalProfit: sumCurrency(
+          flippingAggregateItems.map((item) => calculateItemProfit(item, items)),
         ),
-        totalProfit: flippingAggregateItems.reduce(
-          (sum, item) => sum + calculateItemProfit(item, items),
-          0,
-        ),
-        totalSellValue: flippingAggregateItems.reduce(
-          (sum, item) => sum + calculateItemSellValue(item, items),
-          0,
+        totalSellValue: sumCurrency(
+          flippingAggregateItems.map((item) => calculateItemSellValue(item, items)),
         ),
       }
     })

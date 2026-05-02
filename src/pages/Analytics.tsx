@@ -41,6 +41,7 @@ import {
   getSellPlatform,
   isAggregateItem,
   isKeepingItem,
+  sumCurrency,
 } from '@/lib/utils'
 import type { Item } from '@/types'
 
@@ -1044,11 +1045,10 @@ function buildSummary(items: Item[]) {
       roi,
     }
   })
-  const totalRevenue = soldItems.reduce(
-    (sum, item) => sum + calculateItemSellValue(item, items),
-    0,
+  const totalRevenue = sumCurrency(
+    soldItems.map((item) => calculateItemSellValue(item, items)),
   )
-  const totalProfit = soldStats.reduce((sum, stat) => sum + stat.profit, 0)
+  const totalProfit = sumCurrency(soldStats.map((stat) => stat.profit))
   const averageRoi =
     soldStats.length > 0
       ? soldStats.reduce((sum, stat) => sum + stat.roi, 0) / soldStats.length
@@ -1057,7 +1057,7 @@ function buildSummary(items: Item[]) {
   const worstStat = soldStats.toSorted((a, b) => a.profit - b.profit)[0]
 
   return {
-    activeInventoryValue: activeItems.reduce((sum, item) => sum + item.buy_price, 0),
+    activeInventoryValue: sumCurrency(activeItems.map((item) => item.buy_price)),
     averageProfit: soldStats.length > 0 ? totalProfit / soldStats.length : 0,
     averageRoi,
     bestFlip: bestStat
@@ -1066,7 +1066,7 @@ function buildSummary(items: Item[]) {
     soldItemsCount: soldItems.length,
     totalProfit,
     totalRevenue,
-    unrealisedBuyCost: activeItems.reduce((sum, item) => sum + item.buy_price, 0),
+    unrealisedBuyCost: sumCurrency(activeItems.map((item) => item.buy_price)),
     unrealisedItemsCount: activeItems.length,
     worstFlip: worstStat
       ? { name: worstStat.item.name, profit: worstStat.profit, roi: worstStat.roi }
@@ -1086,8 +1086,8 @@ function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
 
     const label = monthLabel(soldAt)
     const current = monthlyData.get(label) ?? { profit: 0, revenue: 0 }
-    current.profit += calculateItemProfit(item, items)
-    current.revenue += calculateItemSellValue(item, items)
+    current.profit = sumCurrency([current.profit, calculateItemProfit(item, items)])
+    current.revenue = sumCurrency([current.revenue, calculateItemSellValue(item, items)])
     monthlyData.set(label, current)
   }
 
@@ -1102,7 +1102,7 @@ function buildProfitBreakdown(items: Item[], getLabel: (item: Item) => string): 
 
   for (const item of getSoldAggregateItems(items)) {
     const label = getLabel(item)
-    data.set(label, (data.get(label) ?? 0) + calculateItemProfit(item, items))
+    data.set(label, sumCurrency([data.get(label) ?? 0, calculateItemProfit(item, items)]))
   }
 
   return Array.from(data, ([label, profit]) => ({ label, profit })).sort(
@@ -1153,11 +1153,13 @@ function buildCumulativeProfit(items: Item[]) {
   const soldItems = getSoldAggregateItems(items).sort(
     (a, b) => dateValue(getEffectiveSoldAt(a, items)) - dateValue(getEffectiveSoldAt(b, items)),
   )
-  const totalProfit = soldItems.reduce((sum, item) => sum + calculateItemProfit(item, items), 0)
+  const totalProfit = sumCurrency(
+    soldItems.map((item) => calculateItemProfit(item, items)),
+  )
   let runningProfit = 0
 
   return soldItems.map((item, index) => {
-    runningProfit += calculateItemProfit(item, items)
+    runningProfit = sumCurrency([runningProfit, calculateItemProfit(item, items)])
 
     return {
       actual: runningProfit,

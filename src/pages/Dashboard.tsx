@@ -36,6 +36,7 @@ import {
   getEffectiveItemStatus,
   isAggregateItem,
   isKeepingItem,
+  sumCurrency,
 } from '@/lib/utils'
 import type { Item } from '@/types'
 
@@ -562,22 +563,14 @@ function buildKpis(dashboardItems: Item[]) {
     (item) => calculateItemSellValue(item, dashboardItems) > 0,
   )
   const childrenByBundle = getChildrenByBundle(dashboardItems)
-  const totalInvested = flippingItems.reduce(
-    (sum, item) => sum + (item.buy_price ?? 0),
-    0,
+  const totalInvested = sumCurrency(flippingItems.map((item) => item.buy_price))
+  const totalRevenue = sumCurrency(
+    soldItems.map((item) => calculateItemSellValue(item, dashboardItems)),
   )
-  const totalRevenue = soldItems.reduce(
-    (sum, item) => sum + calculateItemSellValue(item, dashboardItems),
-    0,
+  const totalProfit = sumCurrency(
+    soldItems.map((item) => calculateItemProfit(item, dashboardItems)),
   )
-  const totalProfit = soldItems.reduce(
-    (sum, item) => sum + calculateItemProfit(item, dashboardItems),
-    0,
-  )
-  const keepingValue = keepingItems.reduce(
-    (sum, item) => sum + item.buy_price,
-    0,
-  )
+  const keepingValue = sumCurrency(keepingItems.map((item) => item.buy_price))
   const soldRois = soldItems
     .map((item) => calculateItemROI(item, dashboardItems))
     .filter((roi): roi is number => roi !== null)
@@ -660,7 +653,7 @@ function buildChartData(items: Item[]) {
 
   let runningProfit = 0
   const cumulativeProfit = soldItems.map((item) => {
-    runningProfit += calculateItemProfit(item, items)
+    runningProfit = sumCurrency([runningProfit, calculateItemProfit(item, items)])
 
     return {
       date: shortDate(getEffectiveSoldAt(item, items)),
@@ -672,7 +665,7 @@ function buildChartData(items: Item[]) {
     soldItems.reduce((map, item) => {
       const category = item.category || 'Uncategorized'
       const current = map.get(category) ?? 0
-      map.set(category, current + calculateItemProfit(item, items))
+      map.set(category, sumCurrency([current, calculateItemProfit(item, items)]))
       return map
     }, new Map<string, number>()),
     ([category, profit]) => ({ category, profit }),
@@ -694,7 +687,7 @@ function buildChartData(items: Item[]) {
         month: boughtMonth,
         sell: 0,
       }
-      buyBucket.buy += item.buy_price
+      buyBucket.buy = sumCurrency([buyBucket.buy, item.buy_price])
       map.set(boughtMonth, buyBucket)
 
       const sellValue = isKeepingItem(item) ? 0 : calculateItemSellValue(item, items)
@@ -707,7 +700,7 @@ function buildChartData(items: Item[]) {
           month: soldMonth,
           sell: 0,
         }
-        sellBucket.sell += sellValue
+        sellBucket.sell = sumCurrency([sellBucket.sell, sellValue])
         map.set(soldMonth, sellBucket)
       }
 
