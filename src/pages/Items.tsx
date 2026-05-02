@@ -6,6 +6,8 @@ import {
  Download,
  Edit3,
  Link2,
+ LayoutGrid,
+ LayoutList,
  PackageOpen,
  Plus,
  Search,
@@ -26,6 +28,7 @@ import {
  calculateItemProfit,
  calculateItemROI,
  calculateItemSellValue,
+ cn,
  formatCurrency,
  formatDate,
  getEffectiveItemStatus,
@@ -913,21 +916,37 @@ function ViewToggle({
  value: ViewMode
 }) {
  return (
- <div className="grid h-11 flex-[0_0_auto] grid-cols-2 rounded-lg border border-border-base bg-surface-2 p-1 ">
- {(['list', 'gallery'] as const).map((option) => (
+ <div className="flex flex-[0_0_auto] items-center gap-0.5 rounded-lg border border-border-base bg-surface-2 p-1">
  <button
-  key={option}
   type="button"
-  className={`flex h-8 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium capitalize transition ${
-  value === option
-   ? 'bg-card text-accent shadow-sm bg-surface-2 '
-   : 'text-muted hover:text-base'
-  }`}
-  onClick={() => onChange(option)}
+  className={cn(
+  'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
+  value === 'list'
+   ? 'bg-card text-accent shadow-sm'
+   : 'text-muted hover:text-base',
+  )}
+  onClick={() => onChange('list')}
+  title="List view"
+  aria-label="List view"
+  aria-pressed={value === 'list'}
   >
-  {option === 'list' ? 'List' : 'Gallery'}
+  <LayoutList className="h-4 w-4" aria-hidden="true" />
   </button>
- ))}
+  <button
+  type="button"
+  className={cn(
+  'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
+  value === 'gallery'
+   ? 'bg-card text-accent shadow-sm'
+   : 'text-muted hover:text-base',
+  )}
+  onClick={() => onChange('gallery')}
+  title="Gallery view"
+  aria-label="Gallery view"
+  aria-pressed={value === 'gallery'}
+  >
+  <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+  </button>
  </div>
  )
 }
