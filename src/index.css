@@ -29,8 +29,8 @@ body,
  --font-family: 'JetBrains Mono', monospace;
 }
 
-[data-font='jersey-10'] {
- --font-family: 'Jersey 10', sans-serif;
+[data-font='michroma'] {
+ --font-family: 'Michroma', sans-serif;
 }
 
 [data-font='electrolize'] {

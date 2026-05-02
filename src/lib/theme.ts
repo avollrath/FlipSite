@@ -23,7 +23,7 @@ export type FontKey =
   | 'geist-sans'
   | 'plus-jakarta'
   | 'jetbrains-mono'
-  | 'jersey-10'
+  | 'michroma'
   | 'electrolize'
 
 type ThemeContextValue = {
@@ -55,7 +55,7 @@ const fonts: FontKey[] = [
   'geist-sans',
   'plus-jakarta',
   'jetbrains-mono',
-  'jersey-10',
+  'michroma',
   'electrolize',
 ]
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
@@ -89,9 +89,9 @@ export const fontOptions: Array<{
     value: 'jetbrains-mono',
   },
   {
-    family: "'Jersey 10', sans-serif",
-    label: 'Jersey 10',
-    value: 'jersey-10',
+    family: "'Michroma', sans-serif",
+    label: 'Michroma',
+    value: 'michroma',
   },
   {
     family: "'Electrolize', sans-serif",
