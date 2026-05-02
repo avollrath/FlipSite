@@ -50,7 +50,7 @@ export function Categories() {
  return
  }
 
- if (trimmedSource.toLowerCase() === trimmedTarget.toLowerCase()) {
+ if (trimmedSource === trimmedTarget) {
  toast.error('Source and target categories are the same')
  return
  }
