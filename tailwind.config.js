@@ -4,6 +4,9 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-family)', 'sans-serif'],
+      },
       colors: {
         accent: 'hsl(var(--accent) / <alpha-value>)',
         'accent-soft': 'hsl(var(--accent-soft) / <alpha-value>)',

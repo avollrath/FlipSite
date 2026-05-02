@@ -1,4 +1,11 @@
-import { Check, Clipboard, MonitorCog, ShieldAlert, UserRound } from 'lucide-react'
+import {
+ Check,
+ Clipboard,
+ MonitorCog,
+ ShieldAlert,
+ Type as TypeIcon,
+ UserRound,
+} from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
@@ -10,7 +17,12 @@ import {
  saveSetting,
  type FlipSiteSettings,
 } from '@/lib/settings'
-import { themeOptions, useTheme, type ThemeName } from '@/lib/theme'
+import {
+ fontOptions,
+ themeOptions,
+ useTheme,
+ type ThemeName,
+} from '@/lib/theme'
 import { getStatusLabel } from '@/lib/utils'
 import type { ItemStatus } from '@/types'
 
@@ -19,7 +31,7 @@ const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 
 export function Settings() {
  const { user } = useAuth()
- const { mode, setMode, setTheme, theme } = useTheme()
+ const { font, mode, setFont, setMode, setTheme, theme } = useTheme()
  const { data: items = [] } = useItems()
  const [settings, setSettings] = useState<FlipSiteSettings>(() => loadSettings())
  const [copied, setCopied] = useState(false)
@@ -115,6 +127,7 @@ export function Settings() {
   </Field>
   </Panel>
 
+  <div className="space-y-4">
   <Panel
   icon={MonitorCog}
   title="Appearance"
@@ -149,6 +162,25 @@ export function Settings() {
   ))}
   </div>
   </Panel>
+
+  <Panel
+  icon={TypeIcon}
+  title="Typography"
+  description="Choose the font used throughout the app."
+  >
+  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+  {fontOptions.map((option) => (
+   <FontSwatch
+   key={option.value}
+   active={font === option.value}
+   family={option.family}
+   label={option.label}
+   onSelect={() => setFont(option.value)}
+   />
+  ))}
+  </div>
+  </Panel>
+  </div>
  </div>
 
  <Panel
@@ -351,6 +383,51 @@ function ThemeSwatch({
  <span className="mt-2 flex items-center justify-between gap-2 text-xs font-semibold text-base">
   {label}
   {active ? <Check className="h-3.5 w-3.5 text-accent" aria-hidden="true" /> : null}
+ </span>
+ </button>
+ )
+}
+
+function FontSwatch({
+ active,
+ family,
+ label,
+ onSelect,
+}: {
+ active: boolean
+ family: string
+ label: string
+ onSelect: () => void
+}) {
+ return (
+ <button
+ type="button"
+ className={`relative rounded-lg border p-3 text-left transition hover:bg-surface-2 ${
+  active
+  ? 'border-accent ring-2 ring-accent'
+  : 'border-border-base hover:border-accent/50'
+ }`}
+ onClick={onSelect}
+ aria-pressed={active}
+ >
+ {active ? (
+  <Check
+  className="absolute right-2 top-2 h-3.5 w-3.5 text-accent"
+  aria-hidden="true"
+  />
+ ) : null}
+ <span className="block pr-5 text-xs font-medium text-muted">{label}</span>
+ <span
+  className="mt-3 block text-xl font-medium text-base"
+  style={{ fontFamily: family }}
+ >
+  AaBbCc
+ </span>
+ <span
+  className="mt-1 block text-sm text-muted"
+  style={{ fontFamily: family }}
+ >
+  12345
  </span>
  </button>
  )
