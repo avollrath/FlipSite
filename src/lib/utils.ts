@@ -64,9 +64,13 @@ export function parseMoneyInput(value: string) {
 }
 
 export function calculateItemSellValue(item: Item, allItems: Item[]) {
+  if (isKeepingItem(item)) {
+    return 0
+  }
+
   if (item.is_bundle_parent) {
     const childrenSell = allItems
-      .filter((child) => child.bundle_id === item.tsid)
+      .filter((child) => child.bundle_id === item.tsid && !isKeepingItem(child))
       .reduce((sum, child) => sum + (child.sell_price ?? 0), 0)
 
     return (item.sell_price ?? 0) + childrenSell
@@ -76,6 +80,10 @@ export function calculateItemSellValue(item: Item, allItems: Item[]) {
 }
 
 export function calculateItemProfit(item: Item, allItems: Item[]) {
+  if (isKeepingItem(item)) {
+    return 0
+  }
+
   if (item.is_bundle_parent) {
     return calculateItemSellValue(item, allItems) - (item.buy_price ?? 0)
   }
@@ -88,6 +96,10 @@ export function calculateItemProfit(item: Item, allItems: Item[]) {
 }
 
 export function calculateItemROI(item: Item, allItems: Item[]) {
+  if (isKeepingItem(item)) {
+    return null
+  }
+
   if (item.bundle_id && !item.is_bundle_parent) {
     return item.buy_price > 0
       ? ((item.sell_price ?? 0) - item.buy_price) / item.buy_price * 100

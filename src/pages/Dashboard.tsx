@@ -106,7 +106,7 @@ export function Dashboard() {
           <KPICard
             title="Total Invested"
             value={kpis.totalInvested}
-            subtitle="Purchase cost in flipping inventory"
+            subtitle="Purchase cost across all items"
             icon={Banknote}
             trend="neutral"
             color="violet"
@@ -581,15 +581,15 @@ function buildKpis(dashboardItems: Item[]) {
     (item) => calculateItemSellValue(item, dashboardItems) > 0,
   )
   const childrenByBundle = getChildrenByBundle(dashboardItems)
-  const totalInvested = flippingItems.reduce(
+  const totalInvested = aggregateItems.reduce(
     (sum, item) => sum + item.buy_price,
     0,
   )
-  const totalRevenue = flippingItems.reduce(
+  const totalRevenue = soldItems.reduce(
     (sum, item) => sum + calculateItemSellValue(item, dashboardItems),
     0,
   )
-  const totalProfit = flippingItems.reduce(
+  const totalProfit = soldItems.reduce(
     (sum, item) => sum + calculateItemProfit(item, dashboardItems),
     0,
   )
@@ -667,10 +667,9 @@ function profitTrend(value: number) {
 }
 
 function buildChartData(items: Item[]) {
-  const aggregateItems = items
-    .filter(isAggregateItem)
-    .filter((item) => !isKeepingItem(item))
-  const soldItems = aggregateItems
+  const aggregateItems = items.filter(isAggregateItem)
+  const flippingItems = aggregateItems.filter((item) => !isKeepingItem(item))
+  const soldItems = flippingItems
     .filter((item) => calculateItemSellValue(item, items) > 0)
     .sort(
       (a, b) =>
@@ -719,7 +718,7 @@ function buildChartData(items: Item[]) {
       buyBucket.buy += item.buy_price
       map.set(boughtMonth, buyBucket)
 
-      const sellValue = calculateItemSellValue(item, items)
+      const sellValue = isKeepingItem(item) ? 0 : calculateItemSellValue(item, items)
       const soldAt = getEffectiveSoldAt(item, items)
 
       if (sellValue > 0 && soldAt) {

@@ -117,25 +117,27 @@ export function buildCategoryStats(items: Item[]): CategoryStat[] {
     .map((category) => {
       const categoryItems = items.filter((item) => item.category === category)
       const aggregateItems = categoryItems.filter(isAggregateItem)
+      const flippingAggregateItems = aggregateItems.filter((item) => !isKeepingItem(item))
 
       return {
         activeCount: categoryItems.filter((item) =>
+          !isKeepingItem(item) &&
           ['holding', 'listed'].includes(getEffectiveItemStatus(item, items)),
         ).length,
         category,
         itemCount: categoryItems.length,
         soldCount: categoryItems.filter(
-          (item) => getEffectiveItemStatus(item, items) === 'sold',
+          (item) => !isKeepingItem(item) && getEffectiveItemStatus(item, items) === 'sold',
         ).length,
         totalBuyValue: aggregateItems.reduce(
           (sum, item) => sum + item.buy_price,
           0,
         ),
-        totalProfit: aggregateItems.reduce(
+        totalProfit: flippingAggregateItems.reduce(
           (sum, item) => sum + calculateItemProfit(item, items),
           0,
         ),
-        totalSellValue: aggregateItems.reduce(
+        totalSellValue: flippingAggregateItems.reduce(
           (sum, item) => sum + calculateItemSellValue(item, items),
           0,
         ),

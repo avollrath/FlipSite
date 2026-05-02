@@ -30,6 +30,7 @@ import {
  formatDate,
  getEffectiveItemStatus,
  getStatusLabel,
+ isKeepingItem,
 } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
@@ -370,6 +371,7 @@ export function Items() {
 
  function exportVisibleItems() {
  const rows = visibleItems.map((item) => {
+ const isKeeper = isKeepingItem(item)
  const profit = calculateItemProfit(item, items)
  const roi = calculateItemROI(item, items)
 
@@ -378,9 +380,9 @@ export function Items() {
   Category: item.category,
   Condition: item.condition,
   'Buy Price': item.buy_price,
-  'Sell Price': calculateItemSellValue(item, items),
-  Profit: profit ?? '',
-  'ROI %': roi === null ? '' : roi.toFixed(2),
+  'Sell Price': isKeeper ? '' : calculateItemSellValue(item, items),
+  Profit: isKeeper ? '' : profit ?? '',
+  'ROI %': isKeeper || roi === null ? '' : roi.toFixed(2),
   Platform: item.platform,
   Status: getStatusLabel(getEffectiveItemStatus(item, items)),
   'Date Bought': formatDate(item.bought_at),
@@ -626,6 +628,7 @@ function ItemRow({
  thumbnail: ItemImageThumbnail | undefined
  allItems: Item[]
 }) {
+ const isKeeper = isKeepingItem(item)
  const sellValue = calculateItemSellValue(item, allItems)
  const profit = calculateItemProfit(item, allItems)
  const roi = calculateItemROI(item, allItems)
@@ -673,12 +676,14 @@ function ItemRow({
   {item.condition}
  </td>
  <td className="px-4 py-4">{formatCurrency(item.buy_price)}</td>
- <td className="px-4 py-4">{formatCurrency(sellValue)}</td>
- <td className={metricCellClassName(profit)}>
-  {profit === null ? '--' : formatCurrency(profit)}
+ <td className={isKeeper ? 'px-4 py-4 text-muted' : 'px-4 py-4'}>
+  {isKeeper ? '--' : formatCurrency(sellValue)}
  </td>
- <td className={metricCellClassName(roi)}>
-  {roi === null ? '--' : `${roi.toFixed(1)}%`}
+ <td className={isKeeper ? 'px-4 py-4 font-semibold text-muted' : metricCellClassName(profit)}>
+  {isKeeper || profit === null ? '--' : formatCurrency(profit)}
+ </td>
+ <td className={isKeeper ? 'px-4 py-4 font-semibold text-muted' : metricCellClassName(roi)}>
+  {isKeeper || roi === null ? '--' : `${roi.toFixed(1)}%`}
  </td>
  <td className="px-4 py-4 text-muted ">
   {item.platform}
@@ -804,6 +809,7 @@ function ItemCard({
  thumbnail: ItemImageThumbnail | undefined
  allItems: Item[]
 }) {
+ const isKeeper = isKeepingItem(item)
  const sellValue = calculateItemSellValue(item, allItems)
  const profit = calculateItemProfit(item, allItems)
  const roi = calculateItemROI(item, allItems)
@@ -850,16 +856,16 @@ function ItemCard({
  ) : null}
  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
   <MobileMetric label="Buy" value={formatCurrency(item.buy_price)} />
-  <MobileMetric label="Sell" value={formatCurrency(sellValue)} />
+  <MobileMetric label="Sell" value={isKeeper ? '--' : formatCurrency(sellValue)} />
   <MobileMetric
   label="Profit"
-  value={profit === null ? '--' : formatCurrency(profit)}
-  tone={profit}
+  value={isKeeper || profit === null ? '--' : formatCurrency(profit)}
+  tone={isKeeper ? null : profit}
   />
   <MobileMetric
   label="ROI"
-  value={roi === null ? '--' : `${roi.toFixed(1)}%`}
-  tone={roi}
+  value={isKeeper || roi === null ? '--' : `${roi.toFixed(1)}%`}
+  tone={isKeeper ? null : roi}
   />
   <MobileMetric label="Bought" value={formatDate(item.bought_at)} />
   <MobileMetric label="Sold" value={formatDate(item.sold_at) || '--'} />
@@ -878,13 +884,13 @@ function ViewToggle({
  return (
  <div className="grid h-11 flex-[0_0_auto] grid-cols-2 rounded-lg border border-border-base bg-surface-2 p-1 ">
  {(['list', 'gallery'] as const).map((option) => (
-  <button
+ <button
   key={option}
   type="button"
-  className={`rounded-md px-3 text-sm font-semibold capitalize transition ${
+  className={`flex h-8 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium capitalize transition ${
   value === option
    ? 'bg-card text-accent shadow-sm bg-surface-2 '
-   : 'text-muted hover:text-base hover:text-base'
+   : 'text-muted hover:text-base'
   }`}
   onClick={() => onChange(option)}
   >
@@ -1202,14 +1208,26 @@ function compareItems(a: Item, b: Item, sort: SortState, allItems: Item[]) {
 
 function getSortValue(item: Item, key: SortKey, allItems: Item[]) {
  if (key === 'profit') {
+ if (isKeepingItem(item)) {
+ return Number.NEGATIVE_INFINITY
+ }
+
  return calculateItemProfit(item, allItems) ?? Number.NEGATIVE_INFINITY
  }
 
  if (key === 'roi') {
+ if (isKeepingItem(item)) {
+ return Number.NEGATIVE_INFINITY
+ }
+
  return calculateItemROI(item, allItems) ?? Number.NEGATIVE_INFINITY
  }
 
  if (key === 'sell_price') {
+ if (isKeepingItem(item)) {
+ return 0
+ }
+
  return calculateItemSellValue(item, allItems)
  }
 
