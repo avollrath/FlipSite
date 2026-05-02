@@ -190,6 +190,7 @@ export function Settings() {
   </h1>
  </div>
 
+ <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
   <Panel
   icon={UserRound}
   title="Profile & Account"
@@ -274,6 +275,18 @@ export function Settings() {
    </div>
   </div>
   </Panel>
+
+  <Panel
+  icon={ShieldAlert}
+  title="Danger Zone"
+  description="Account deletion is intentionally not available here."
+  >
+  <p className="text-sm text-muted ">
+  Export your inventory before deleting or migrating any data. Use the
+  Import / Export page to download a CSV backup first.
+  </p>
+  </Panel>
+ </div>
 
  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
   <Panel
@@ -399,17 +412,6 @@ export function Settings() {
    <span className="text-xs text-muted transition-opacity">✓ Saved</span>
   ) : null}
   </div>
- </Panel>
-
- <Panel
-  icon={ShieldAlert}
-  title="Danger Zone"
-  description="Account deletion is intentionally not available here."
- >
-  <p className="text-sm text-muted ">
-  Export your inventory before deleting or migrating any data. Use the
-  Import / Export page to download a CSV backup first.
-  </p>
  </Panel>
 
  {cropImageSrc ? (
