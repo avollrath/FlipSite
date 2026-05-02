@@ -2,6 +2,7 @@ import {
   Activity,
   Banknote,
   Boxes,
+  ChevronDown,
   FilterX,
   PackageSearch,
   Percent,
@@ -515,8 +516,9 @@ function MultiSelect({
     <details className="group relative">
       <summary className="grid cursor-pointer list-none gap-1 text-xs font-medium text-muted">
         {label}
-        <span className={`${filterControlClassName} flex items-center truncate pr-8`}>
-          {summary}
+        <span className={`${filterControlClassName} flex items-center justify-between gap-2 pr-10`}>
+          <span className="truncate">{summary}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
         </span>
       </summary>
       <div className="absolute left-0 top-full z-30 mt-2 w-60 rounded-lg border border-border-base bg-card p-2 shadow-lg">
