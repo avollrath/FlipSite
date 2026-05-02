@@ -172,3 +172,108 @@
   --sidebar-text: 215 16% 76%;
   --sidebar-accent: 215 45% 65%;
 }
+
+/* THEME: cyberpunk */
+[data-theme="cyberpunk"] {
+  --accent: 174 100% 40%;
+  --accent-soft: 174 80% 88%;
+  --accent-fg: 0 0% 0%;
+  --surface: 270 15% 96%;
+  --surface-2: 270 12% 90%;
+  --border: 174 40% 78%;
+  --text: 270 20% 8%;
+  --text-muted: 270 10% 40%;
+  --positive: 122 80% 36%;
+  --negative: 330 100% 50%;
+  --card-bg: 0 0% 100%;
+  --sidebar-bg: 270 30% 8%;
+  --sidebar-text: 174 80% 80%;
+  --sidebar-accent: 174 100% 52%;
+}
+
+.dark[data-theme="cyberpunk"] {
+  --accent: 174 100% 52%;
+  --accent-soft: 174 60% 14%;
+  --accent-fg: 0 0% 0%;
+  --surface: 270 25% 5%;
+  --surface-2: 270 20% 9%;
+  --border: 174 60% 22%;
+  --text: 174 20% 92%;
+  --text-muted: 270 15% 55%;
+  --positive: 122 80% 50%;
+  --negative: 330 100% 58%;
+  --card-bg: 270 22% 8%;
+  --sidebar-bg: 270 30% 3%;
+  --sidebar-text: 174 70% 75%;
+  --sidebar-accent: 174 100% 58%;
+}
+
+/* THEME: cassette */
+[data-theme="cassette"] {
+  --accent: 14 90% 52%;
+  --accent-soft: 14 80% 92%;
+  --accent-fg: 0 0% 100%;
+  --surface: 38 25% 95%;
+  --surface-2: 38 20% 88%;
+  --border: 38 20% 78%;
+  --text: 20 30% 12%;
+  --text-muted: 20 15% 45%;
+  --positive: 88 55% 38%;
+  --negative: 4 75% 52%;
+  --card-bg: 38 30% 98%;
+  --sidebar-bg: 20 25% 12%;
+  --sidebar-text: 38 25% 80%;
+  --sidebar-accent: 14 85% 62%;
+}
+
+.dark[data-theme="cassette"] {
+  --accent: 14 88% 58%;
+  --accent-soft: 14 40% 18%;
+  --accent-fg: 0 0% 100%;
+  --surface: 22 20% 7%;
+  --surface-2: 22 18% 11%;
+  --border: 22 18% 18%;
+  --text: 38 18% 88%;
+  --text-muted: 22 12% 52%;
+  --positive: 88 50% 48%;
+  --negative: 4 70% 58%;
+  --card-bg: 22 18% 10%;
+  --sidebar-bg: 22 25% 5%;
+  --sidebar-text: 38 18% 76%;
+  --sidebar-accent: 14 88% 62%;
+}
+
+/* THEME: eighties */
+[data-theme="eighties"] {
+  --accent: 290 80% 52%;
+  --accent-soft: 290 70% 92%;
+  --accent-fg: 0 0% 100%;
+  --surface: 300 15% 97%;
+  --surface-2: 300 12% 91%;
+  --border: 290 30% 80%;
+  --text: 290 25% 10%;
+  --text-muted: 290 10% 42%;
+  --positive: 160 70% 38%;
+  --negative: 5 80% 55%;
+  --card-bg: 0 0% 100%;
+  --sidebar-bg: 290 35% 10%;
+  --sidebar-text: 290 20% 85%;
+  --sidebar-accent: 48 95% 58%;
+}
+
+.dark[data-theme="eighties"] {
+  --accent: 290 80% 62%;
+  --accent-soft: 290 40% 16%;
+  --accent-fg: 0 0% 100%;
+  --surface: 285 22% 6%;
+  --surface-2: 285 18% 10%;
+  --border: 285 25% 18%;
+  --text: 290 18% 90%;
+  --text-muted: 285 12% 54%;
+  --positive: 160 65% 50%;
+  --negative: 5 75% 58%;
+  --card-bg: 285 20% 9%;
+  --sidebar-bg: 285 28% 4%;
+  --sidebar-text: 290 18% 80%;
+  --sidebar-accent: 48 95% 62%;
+}

@@ -70,14 +70,10 @@ export function KPICard({
  <div className="relative">
   <div className="flex items-start justify-between gap-4">
   <div className="min-w-0">
-  <p className="text-xs font-medium uppercase tracking-wide text-muted">
+  <p className="text-[11px] font-medium uppercase tracking-widest text-muted">
    {title}
   </p>
-  <p
-   className={`mt-3 truncate font-bold tracking-tight text-base ${
-    numericValue === null ? 'text-lg' : 'text-xl md:text-2xl'
-   }`}
-  >
+  <p className="mt-3 truncate text-2xl font-bold tracking-tight text-base md:text-3xl">
    {displayValue}
   </p>
   </div>

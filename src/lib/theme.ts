@@ -8,7 +8,15 @@ import {
   type ReactNode,
 } from 'react'
 
-export type ThemeName = 'midnight' | 'emerald' | 'amber' | 'rose' | 'slate'
+export type ThemeName =
+  | 'midnight'
+  | 'emerald'
+  | 'amber'
+  | 'rose'
+  | 'slate'
+  | 'cyberpunk'
+  | 'cassette'
+  | 'eighties'
 export type ThemeMode = 'light' | 'dark'
 
 type ThemeContextValue = {
@@ -22,15 +30,27 @@ type ThemeContextValue = {
 const themeStorageKey = 'flipsite-theme'
 const modeStorageKey = 'flipsite-theme-mode'
 const legacyModeStorageKey = 'flipsite-theme'
-const themes: ThemeName[] = ['midnight', 'emerald', 'amber', 'rose', 'slate']
+const themes: ThemeName[] = [
+  'midnight',
+  'emerald',
+  'amber',
+  'rose',
+  'slate',
+  'cyberpunk',
+  'cassette',
+  'eighties',
+]
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 export const themeOptions: Array<{ label: string; value: ThemeName }> = [
-  { label: 'Midnight Indigo', value: 'midnight' },
-  { label: 'Emerald', value: 'emerald' },
-  { label: 'Amber', value: 'amber' },
-  { label: 'Rose', value: 'rose' },
-  { label: 'Slate', value: 'slate' },
+  { label: 'Midnight Drop', value: 'midnight' },
+  { label: 'Forest Glass', value: 'emerald' },
+  { label: 'Golden Hour', value: 'amber' },
+  { label: 'Cold Brew', value: 'slate' },
+  { label: 'Neon Petal', value: 'rose' },
+  { label: 'Cyberpunk', value: 'cyberpunk' },
+  { label: 'Cassette Futurism', value: 'cassette' },
+  { label: 'Colorful 80s', value: 'eighties' },
 ]
 
 export function applyStoredTheme() {
