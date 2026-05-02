@@ -447,7 +447,7 @@ export function Items() {
   <div className="flex flex-col gap-3 sm:flex-row">
   <button
    type="button"
-   className="inline-flex items-center justify-center gap-2 rounded-lg border border-border-base bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60 hover:bg-surface-2"
+   className="inline-flex items-center justify-center gap-2 rounded-lg border border-border-base bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
    onClick={exportVisibleItems}
    disabled={displayedItems.length === 0}
   >
@@ -614,7 +614,7 @@ export function Items() {
     ))}
     </tr>
     </thead>
-    <tbody className="divide-y divide-border-base divide-border-base">
+    <tbody className="divide-y divide-border-base">
     {visibleRows.map(({ item, isChild }) => (
     <ItemRow
      key={item.tsid}
@@ -710,7 +710,7 @@ function ItemRow({
   {item.is_bundle_parent ? (
   <button
    type="button"
-   className="rounded p-1 text-muted transition hover:bg-surface-2 hover:text-accent hover:bg-surface-2 hover:text-accent"
+   className="rounded p-1 text-muted transition hover:bg-surface-2 hover:text-accent"
    onClick={(event) => {
    event.stopPropagation()
    onToggleBundle()
@@ -769,7 +769,7 @@ function ItemRow({
   <div className="flex items-center gap-1">
   <button
   type="button"
-  className="rounded-lg p-2 text-muted transition hover:bg-surface-2 hover:text-accent hover:bg-surface-2 hover:text-accent"
+  className="rounded-lg p-2 text-muted transition hover:bg-surface-2 hover:text-accent"
   onClick={(event) => {
   event.stopPropagation()
   onEdit()
@@ -780,7 +780,7 @@ function ItemRow({
   </button>
   <button
   type="button"
-  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative hover:bg-negative/10 hover:text-negative"
+  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative"
   onClick={(event) => {
   event.stopPropagation()
   onDelete()
@@ -837,7 +837,7 @@ function DeleteConfirmDialog({
   <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
   <button
   type="button"
-  className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2 hover:bg-surface-2"
+  className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
   onClick={onCancel}
   disabled={isDeleting}
   >
@@ -885,8 +885,8 @@ function ItemCard({
  return (
  <button
  type="button"
- className={`rounded-lg border border-border-base bg-card p-4 text-left shadow-sm transition hover:border-accent/35 hover:border-accent ${
-  isChild ? 'ml-5 border-accent/25 border-accent/30' : ''
+className={`rounded-lg border border-border-base bg-card p-4 text-left shadow-sm transition hover:border-accent ${
+  isChild ? 'ml-5 border-accent/30' : ''
  }`}
  onClick={onEdit}
  >
@@ -1080,7 +1080,7 @@ function GalleryCard({
  <button
  type="button"
  style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
- className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent/35 hover:shadow-md bg-surface-2/70 hover:border-accent animate-fadeIn opacity-0"
+ className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:-translate-y-0.5 hover:border-accent hover:shadow-md animate-fadeIn"
  onClick={onEdit}
  >
  <ImageWithSkeleton

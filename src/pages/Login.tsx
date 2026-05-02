@@ -70,7 +70,7 @@ export function Login() {
   </div>
 
   <div className="rounded-lg border border-border-base bg-card p-6 shadow-xl shadow-border-base/40 ">
-  <div className="mb-6 grid grid-cols-2 rounded-lg bg-surface-2 p-1 bg-surface-2/50">
+  <div className="mb-6 grid grid-cols-2 rounded-lg bg-surface-2/50 p-1">
   <button
    type="button"
    className={`rounded-md px-4 py-2 text-sm font-medium transition ${

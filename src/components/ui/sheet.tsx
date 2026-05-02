@@ -45,7 +45,7 @@ const SheetContent = forwardRef<
  {...props}
  >
  {children}
- <SheetPrimitive.Close className="absolute right-4 top-4 rounded-lg p-2 text-muted transition hover:bg-surface-2 hover:text-base focus:outline-none focus:ring-2 focus:ring-accent hover:bg-surface-2 hover:text-accent-fg">
+ <SheetPrimitive.Close className="absolute right-4 top-4 rounded-lg p-2 text-muted transition hover:bg-surface-2 hover:text-base focus:outline-none focus:ring-2 focus:ring-accent">
   <X className="h-5 w-5" aria-hidden="true" />
   <span className="sr-only">Close</span>
  </SheetPrimitive.Close>

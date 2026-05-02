@@ -184,7 +184,7 @@ export function ImportExport() {
   title="Import CSV"
   description="Upload a CSV, review validation, then append new rows."
   >
-  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-base bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2 hover:bg-surface-2">
+  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-base bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2">
   <Upload className="h-4 w-4" aria-hidden="true" />
   Choose CSV
   <input
@@ -241,7 +241,7 @@ export function ImportExport() {
    <th className="px-3 py-3">Validation</th>
    </tr>
    </thead>
-   <tbody className="divide-y divide-border-base divide-border-base">
+   <tbody className="divide-y divide-border-base">
    {previewRows.map((preview, index) => (
    <tr key={`${preview.row.name}-${index}`}>
     <td className="px-3 py-4">{index + 1}</td>
@@ -385,4 +385,4 @@ function Panel({
 const primaryButtonClassName =
  'inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70'
 const secondaryButtonClassName =
- 'inline-flex h-11 items-center justify-center rounded-lg border border-border-base bg-card px-4 text-sm font-semibold text-base transition hover:bg-surface-2 hover:bg-surface-2'
+ 'inline-flex h-11 items-center justify-center rounded-lg border border-border-base bg-card px-4 text-sm font-semibold text-base transition hover:bg-surface-2'

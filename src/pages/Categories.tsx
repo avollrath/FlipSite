@@ -183,7 +183,7 @@ export function Categories() {
    <th className="px-3 py-3">Profit</th>
    </tr>
   </thead>
-  <tbody className="divide-y divide-border-base divide-border-base">
+  <tbody className="divide-y divide-border-base">
    {isLoading ? (
    <tr>
    <td className="px-3 py-6 text-muted" colSpan={7}>

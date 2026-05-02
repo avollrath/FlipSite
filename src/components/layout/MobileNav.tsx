@@ -30,7 +30,7 @@ export function MobileNav() {
    `flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition ${
    isActive
    ? 'bg-accent text-accent-fg'
-   : 'text-muted hover:bg-surface-2 hover:text-base hover:bg-surface-2 hover:text-accent-fg'
+   : 'text-muted hover:bg-surface-2 hover:text-base'
    }`
   }
   >

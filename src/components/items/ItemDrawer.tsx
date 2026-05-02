@@ -424,7 +424,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
  <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
   <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
-  <div className="rounded-lg border border-accent/25 bg-accent-soft p-4 border-accent/30 bg-accent/10">
+  <div className="rounded-lg border border-accent/30 bg-accent/10 p-4">
   <p className="text-sm font-medium text-accent ">
    Profit Preview
   </p>
@@ -631,7 +631,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   <SheetFooter>
   <button
   type="button"
-  className="rounded-lg border border-border-base px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2 hover:bg-surface-2"
+  className="rounded-lg border border-border-base px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2"
   onClick={() => onOpenChange(false)}
   >
   Cancel
@@ -810,7 +810,7 @@ function PendingItemFilesSection({
  />
 
  {error ? (
-  <div className="mt-4 rounded-lg border border-accent/25 bg-accent-soft px-3 py-2 text-sm text-accent border-accent/30 bg-accent/10 ">
+  <div className="mt-4 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-accent ">
   {error}
   </div>
  ) : null}
@@ -848,7 +848,7 @@ function PendingItemFileRow({
 
  return (
  <div className="flex items-center gap-3 rounded-lg border border-border-base bg-card p-3 ">
- <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted bg-surface-2 ">
+ <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted ">
   {isImage ? (
   <ImageIcon className="h-6 w-6" aria-hidden="true" />
   ) : (
@@ -865,7 +865,7 @@ function PendingItemFileRow({
  </div>
  <button
   type="button"
-  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative disabled:cursor-not-allowed disabled:opacity-60 hover:bg-negative/10 hover:text-negative"
+  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative disabled:cursor-not-allowed disabled:opacity-60"
   onClick={onRemove}
   disabled={disabled}
   aria-label={`Remove ${file.name}`}
@@ -1131,7 +1131,7 @@ function ItemFileRow({
   <SignedImageThumbnail filePath={file.file_path} alt={displayName} />
   </button>
  ) : (
-  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted bg-surface-2 ">
+  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted ">
   <FileText className="h-6 w-6" aria-hidden="true" />
   </div>
  )}
@@ -1146,7 +1146,7 @@ function ItemFileRow({
  </div>
  <button
   type="button"
-  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative disabled:cursor-not-allowed disabled:opacity-60 hover:bg-negative/10 hover:text-negative"
+  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative disabled:cursor-not-allowed disabled:opacity-60"
   onClick={onDelete}
   disabled={isDeleting}
   aria-label={`Delete ${displayName}`}
@@ -1200,7 +1200,7 @@ function SignedImageThumbnail({
 
  if (failed || !signedUrl) {
  return (
- <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted bg-surface-2 ">
+ <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted ">
   <ImageIcon className="h-6 w-6" aria-hidden="true" />
  </div>
  )
@@ -1268,7 +1268,7 @@ function BundleItemsSection({
  ) => void
 }) {
  return (
- <section className="rounded-lg border border-accent/25 bg-accent-soft/70 p-4 border-accent/30 bg-accent/10">
+ <section className="rounded-lg border border-accent/30 bg-accent/10 p-4">
  <div className="flex items-center justify-between gap-3">
   <div>
   <h3 className="text-sm font-semibold text-base ">
@@ -1302,7 +1302,7 @@ function BundleItemsSection({
    {!child.tsid ? (
    <button
    type="button"
-   className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative hover:bg-negative/10 hover:text-negative"
+   className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative"
    onClick={() => onRemove(child.id)}
    aria-label="Remove child item"
    >
@@ -1490,7 +1490,7 @@ function SuggestionCombobox({
    className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${
    highlightedIndex === index
     ? 'bg-accent-soft text-accent bg-accent/15 '
-    : 'text-base hover:bg-surface-2 hover:bg-surface-2'
+    : 'text-base hover:bg-surface-2'
    }`}
    onMouseEnter={() => setHighlightedIndex(index)}
    onMouseDown={(event) => event.preventDefault()}
@@ -1550,7 +1550,7 @@ function DeletePanel({
  ) : (
   <button
   type="button"
-  className="flex items-center gap-2 text-sm font-semibold text-negative transition hover:text-negative hover:text-negative"
+  className="flex items-center gap-2 text-sm font-semibold text-negative transition hover:text-negative"
   onClick={onStart}
   >
   <Trash2 className="h-4 w-4" aria-hidden="true" />
