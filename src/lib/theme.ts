@@ -18,7 +18,13 @@ export type ThemeName =
   | 'cassette'
   | 'eighties'
 export type ThemeMode = 'light' | 'dark'
-export type FontKey = 'inter' | 'geist-sans' | 'plus-jakarta' | 'lora'
+export type FontKey =
+  | 'inter'
+  | 'geist-sans'
+  | 'plus-jakarta'
+  | 'jetbrains-mono'
+  | 'jersey-10'
+  | 'electrolize'
 
 type ThemeContextValue = {
   font: FontKey
@@ -44,7 +50,14 @@ const themes: ThemeName[] = [
   'cassette',
   'eighties',
 ]
-const fonts: FontKey[] = ['inter', 'geist-sans', 'plus-jakarta', 'lora']
+const fonts: FontKey[] = [
+  'inter',
+  'geist-sans',
+  'plus-jakarta',
+  'jetbrains-mono',
+  'jersey-10',
+  'electrolize',
+]
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 export const themeOptions: Array<{ label: string; value: ThemeName }> = [
@@ -70,7 +83,21 @@ export const fontOptions: Array<{
     label: 'Plus Jakarta',
     value: 'plus-jakarta',
   },
-  { family: "'Lora', Georgia, serif", label: 'Lora', value: 'lora' },
+  {
+    family: "'JetBrains Mono', monospace",
+    label: 'JetBrains Mono',
+    value: 'jetbrains-mono',
+  },
+  {
+    family: "'Jersey 10', sans-serif",
+    label: 'Jersey 10',
+    value: 'jersey-10',
+  },
+  {
+    family: "'Electrolize', sans-serif",
+    label: 'Electrolize',
+    value: 'electrolize',
+  },
 ]
 
 export function applyStoredTheme() {

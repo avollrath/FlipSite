@@ -168,7 +168,7 @@ export function Settings() {
   title="Typography"
   description="Choose the font used throughout the app."
   >
-  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
   {fontOptions.map((option) => (
    <FontSwatch
    key={option.value}
