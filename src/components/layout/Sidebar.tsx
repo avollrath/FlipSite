@@ -35,12 +35,12 @@ export function Sidebar() {
  }
 
  return (
- <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-border-base bg-sidebar p-5 text-accent-fg md:flex">
+ <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-border-base bg-sidebar p-5 md:flex">
  <NavLink to="/" className="flex items-center gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent shadow-lg shadow-accent/20">
   <Repeat2 className="h-5 w-5" aria-hidden="true" />
   </span>
-  <span className="text-xl font-semibold">FlipSite</span>
+  <span className="text-xl font-semibold text-white">FlipSite</span>
  </NavLink>
 
  <nav className="mt-10 space-y-2">
@@ -50,24 +50,24 @@ export function Sidebar() {
   to={href}
   end={href === '/'}
   className={({ isActive }) =>
-   `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+   `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
    isActive
-   ? 'bg-accent text-accent-fg shadow-lg shadow-accent/20'
-   : 'text-muted hover:bg-card/5 hover:text-accent-fg'
+   ? 'bg-accent/25 font-medium text-sidebar-accent [&>svg]:opacity-100'
+   : 'font-medium text-sidebar-text/90 hover:bg-white/10 hover:text-white [&>svg]:opacity-70 hover:[&>svg]:opacity-100'
    }`
   }
   >
-  <Icon className="h-5 w-5" aria-hidden="true" />
+  <Icon className="h-5 w-5 transition" aria-hidden="true" />
   {label}
   </NavLink>
   ))}
  </nav>
 
  <div className="mt-auto rounded-lg border border-border-base bg-card/[0.04] p-4">
-  <p className="truncate text-sm font-medium text-accent-fg">{user?.email}</p>
+  <p className="truncate text-sm font-medium text-white/60">{user?.email}</p>
   <button
   type="button"
-  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-card/10 px-3 py-2 text-sm font-medium text-base transition hover:bg-card/15 hover:text-accent-fg"
+  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white/50 transition hover:bg-white/15 hover:text-white/90"
   onClick={handleSignOut}
   >
   <LogOut className="h-4 w-4" aria-hidden="true" />

@@ -1,4 +1,12 @@
 /* ── THEME: Midnight Indigo (default) ── */
+/*
+ * SIDEBAR CONTRAST RULE:
+ * --sidebar-text lightness must always be >= 65% (sidebar bg is always dark)
+ * --sidebar-accent lightness must always be >= 60%
+ * --sidebar-bg lightness must always be <= 12%
+ * Never set sidebar colors that produce < 3:1 contrast ratio
+ */
+
 [data-theme="midnight"] {
   --accent: 220 70% 55%;
   --accent-soft: 220 70% 92%;
@@ -11,9 +19,9 @@
   --positive: 158 60% 38%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 220 30% 16%;
-  --sidebar-text: 220 20% 85%;
-  --sidebar-accent: 220 70% 65%;
+  --sidebar-bg: 220 30% 12%;
+  --sidebar-text: 220 20% 72%;
+  --sidebar-accent: 220 70% 72%;
 }
 
 .dark[data-theme="midnight"] {
@@ -29,8 +37,8 @@
   --negative: 4 70% 58%;
   --card-bg: 222 22% 11%;
   --sidebar-bg: 222 28% 6%;
-  --sidebar-text: 220 20% 80%;
-  --sidebar-accent: 220 75% 68%;
+  --sidebar-text: 220 25% 75%;
+  --sidebar-accent: 220 80% 75%;
 }
 
 /* ── THEME: Emerald ── */
@@ -46,9 +54,9 @@
   --positive: 158 64% 35%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 158 35% 14%;
-  --sidebar-text: 150 20% 85%;
-  --sidebar-accent: 158 60% 55%;
+  --sidebar-bg: 158 35% 12%;
+  --sidebar-text: 150 18% 70%;
+  --sidebar-accent: 158 58% 62%;
 }
 
 .dark[data-theme="emerald"] {
@@ -64,8 +72,8 @@
   --negative: 4 70% 58%;
   --card-bg: 160 15% 10%;
   --sidebar-bg: 160 22% 5%;
-  --sidebar-text: 150 18% 78%;
-  --sidebar-accent: 158 58% 55%;
+  --sidebar-text: 150 20% 72%;
+  --sidebar-accent: 158 65% 62%;
 }
 
 /* ── THEME: Amber ── */
@@ -81,9 +89,9 @@
   --positive: 158 60% 38%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 25 35% 14%;
-  --sidebar-text: 36 20% 85%;
-  --sidebar-accent: 38 90% 58%;
+  --sidebar-bg: 25 35% 12%;
+  --sidebar-text: 36 18% 70%;
+  --sidebar-accent: 38 85% 65%;
 }
 
 .dark[data-theme="amber"] {
@@ -99,8 +107,8 @@
   --negative: 4 70% 58%;
   --card-bg: 28 15% 10%;
   --sidebar-bg: 28 22% 5%;
-  --sidebar-text: 36 18% 78%;
-  --sidebar-accent: 38 90% 58%;
+  --sidebar-text: 36 20% 72%;
+  --sidebar-accent: 38 90% 65%;
 }
 
 /* ── THEME: Rose ── */
@@ -116,9 +124,9 @@
   --positive: 158 60% 38%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 346 30% 14%;
-  --sidebar-text: 346 18% 85%;
-  --sidebar-accent: 346 70% 65%;
+  --sidebar-bg: 346 30% 12%;
+  --sidebar-text: 346 18% 70%;
+  --sidebar-accent: 346 70% 68%;
 }
 
 .dark[data-theme="rose"] {
@@ -134,8 +142,8 @@
   --negative: 4 70% 58%;
   --card-bg: 350 15% 10%;
   --sidebar-bg: 350 22% 5%;
-  --sidebar-text: 346 18% 78%;
-  --sidebar-accent: 346 70% 65%;
+  --sidebar-text: 346 20% 72%;
+  --sidebar-accent: 346 75% 72%;
 }
 
 /* ── THEME: Slate ── */
@@ -151,9 +159,9 @@
   --positive: 158 60% 35%;
   --negative: 4 72% 50%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 215 25% 14%;
-  --sidebar-text: 215 15% 82%;
-  --sidebar-accent: 215 40% 62%;
+  --sidebar-bg: 215 25% 12%;
+  --sidebar-text: 215 15% 68%;
+  --sidebar-accent: 215 45% 68%;
 }
 
 .dark[data-theme="slate"] {
@@ -169,8 +177,8 @@
   --negative: 4 68% 56%;
   --card-bg: 218 18% 10%;
   --sidebar-bg: 218 24% 5%;
-  --sidebar-text: 215 16% 76%;
-  --sidebar-accent: 215 45% 65%;
+  --sidebar-text: 215 18% 72%;
+  --sidebar-accent: 215 50% 72%;
 }
 
 /* THEME: cyberpunk */
@@ -186,9 +194,9 @@
   --positive: 122 80% 36%;
   --negative: 330 100% 50%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 270 30% 8%;
-  --sidebar-text: 174 80% 80%;
-  --sidebar-accent: 174 100% 52%;
+  --sidebar-bg: 270 35% 6%;
+  --sidebar-text: 174 55% 68%;
+  --sidebar-accent: 174 90% 62%;
 }
 
 .dark[data-theme="cyberpunk"] {
@@ -203,9 +211,9 @@
   --positive: 122 80% 50%;
   --negative: 330 100% 58%;
   --card-bg: 270 22% 8%;
-  --sidebar-bg: 270 30% 3%;
-  --sidebar-text: 174 70% 75%;
-  --sidebar-accent: 174 100% 58%;
+  --sidebar-bg: 270 35% 4%;
+  --sidebar-text: 174 60% 72%;
+  --sidebar-accent: 174 100% 65%;
 }
 
 /* THEME: cassette */
@@ -222,8 +230,8 @@
   --negative: 4 75% 52%;
   --card-bg: 38 30% 98%;
   --sidebar-bg: 20 25% 12%;
-  --sidebar-text: 38 25% 80%;
-  --sidebar-accent: 14 85% 62%;
+  --sidebar-text: 38 18% 70%;
+  --sidebar-accent: 14 82% 65%;
 }
 
 .dark[data-theme="cassette"] {
@@ -239,8 +247,8 @@
   --negative: 4 70% 58%;
   --card-bg: 22 18% 10%;
   --sidebar-bg: 22 25% 5%;
-  --sidebar-text: 38 18% 76%;
-  --sidebar-accent: 14 88% 62%;
+  --sidebar-text: 38 20% 72%;
+  --sidebar-accent: 14 88% 68%;
 }
 
 /* THEME: eighties */
@@ -257,8 +265,8 @@
   --negative: 5 80% 55%;
   --card-bg: 0 0% 100%;
   --sidebar-bg: 290 35% 10%;
-  --sidebar-text: 290 20% 85%;
-  --sidebar-accent: 48 95% 58%;
+  --sidebar-text: 290 18% 72%;
+  --sidebar-accent: 48 90% 65%;
 }
 
 .dark[data-theme="eighties"] {
@@ -274,6 +282,6 @@
   --negative: 5 75% 58%;
   --card-bg: 285 20% 9%;
   --sidebar-bg: 285 28% 4%;
-  --sidebar-text: 290 18% 80%;
-  --sidebar-accent: 48 95% 62%;
+  --sidebar-text: 290 20% 75%;
+  --sidebar-accent: 48 95% 68%;
 }
