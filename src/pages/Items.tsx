@@ -1418,4 +1418,4 @@ function csvEscape(value: string | number) {
 const controlClassName =
  'h-11 w-full min-w-0 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
 const selectControlClassName =
- controlClassName + ' truncate whitespace-nowrap pr-10'
+ controlClassName + ' pr-10'
