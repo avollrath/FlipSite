@@ -68,9 +68,8 @@ export function Sidebar() {
   ))}
  </nav>
 
- <div className="mt-auto flex flex-col gap-3 border-t border-white/10 pt-4">
-  <div className="flex min-w-0 items-center gap-3">
-  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent/20">
+ <div className="mt-auto flex flex-col items-center gap-2 border-t border-white/10 pb-2 pt-4">
+  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent/20 ring-2 ring-white/10">
    {avatarUrl ? (
    <img
     src={avatarUrl}
@@ -78,26 +77,25 @@ export function Sidebar() {
     className="h-full w-full object-cover"
    />
    ) : (
-   <span className="text-sm font-semibold text-sidebar-accent">
+   <span className="text-lg font-semibold text-sidebar-accent">
     {fallbackInitial}
    </span>
    )}
   </div>
-  <div className="min-w-0 flex-1">
-   <p className="truncate text-sm font-semibold leading-tight text-white">
+  <div className="flex w-full flex-col items-center gap-0.5 px-2">
+   <p className="max-w-full truncate text-center text-sm font-semibold leading-tight text-white">
    {displayName}
    </p>
-   <p className="mt-0.5 truncate text-[11px] leading-tight text-white/45">
+   <p className="max-w-full truncate text-center text-[11px] leading-tight text-white/40">
    {user?.email}
    </p>
   </div>
-  </div>
   <button
   type="button"
-  className="flex w-fit items-center gap-2 text-xs text-white/50 transition-colors hover:text-white/90"
+  className="mt-1 flex items-center gap-1.5 text-[11px] text-white/35 transition-colors hover:text-white/70"
   onClick={handleSignOut}
   >
-  <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+  <LogOut className="h-3 w-3" aria-hidden="true" />
   Logout
   </button>
  </div>

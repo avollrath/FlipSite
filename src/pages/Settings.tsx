@@ -1,7 +1,7 @@
 import {
- Check,
- Clipboard,
  Camera,
+ Check,
+ LogOut,
  MonitorCog,
  ShieldAlert,
  Type as TypeIcon,
@@ -39,7 +39,7 @@ const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor']
 const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 
 export function Settings() {
- const { user } = useAuth()
+ const { signOut, user } = useAuth()
  const {
  profile,
  updateProfile,
@@ -50,7 +50,6 @@ export function Settings() {
  const { font, mode, setFont, setMode, setTheme, theme } = useTheme()
  const { data: items = [] } = useItems()
  const [settings, setSettings] = useState<FlipSiteSettings>(() => loadSettings())
- const [copied, setCopied] = useState(false)
  const [saved, setSaved] = useState(false)
  const [profileSaved, setProfileSaved] = useState(false)
  const [draftUsername, setDraftUsername] = useState<string | null>(null)
@@ -174,15 +173,13 @@ export function Settings() {
  }
  }
 
- async function copyUserId() {
- if (!user?.id) {
- return
+ async function handleSignOut() {
+ try {
+ await signOut()
+ toast.success('Signed out')
+ } catch (error) {
+ toast.error(error instanceof Error ? error.message : 'Unable to sign out')
  }
-
- await navigator.clipboard.writeText(user.id)
- setCopied(true)
- toast.success('User id copied')
- window.setTimeout(() => setCopied(false), 1500)
  }
 
  return (
@@ -193,11 +190,10 @@ export function Settings() {
   </h1>
  </div>
 
- <div className="grid gap-4 xl:grid-cols-2">
   <Panel
   icon={UserRound}
-  title="Profile"
-  description="Your name and avatar."
+  title="Profile & Account"
+  description="Your identity and login details."
   >
   <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
    <button
@@ -255,37 +251,27 @@ export function Settings() {
    </div>
    </div>
   </div>
-  </Panel>
-
-  <Panel
-  icon={UserRound}
-  title="Account"
-  description="Basic account information for this signed-in user."
-  >
-  <Field label="User ID">
-  <div className="flex gap-2">
-   <input className={inputClassName} value={user?.id ?? ''} readOnly />
+  <div className="mt-5 border-t border-border-base pt-5">
+   <p className="text-sm text-muted">
+   Signed in as <span className="font-medium text-base">{user?.email}</span>
+   </p>
    <button
    type="button"
-   className={secondaryIconButtonClassName}
-   onClick={copyUserId}
-   aria-label="Copy user id"
+   className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-accent transition hover:text-accent/80"
+   onClick={handleSignOut}
    >
-   {copied ? (
-   <Check className="h-4 w-4" aria-hidden="true" />
-   ) : (
-   <Clipboard className="h-4 w-4" aria-hidden="true" />
-   )}
+   <LogOut className="h-4 w-4" aria-hidden="true" />
+   Sign out
    </button>
   </div>
-  </Field>
   </Panel>
 
-  <div className="space-y-4">
+ <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
   <Panel
   icon={MonitorCog}
   title="Appearance"
   description="Light/dark mode and palette are saved separately."
+  className="h-full"
   >
   <div className="grid h-11 grid-cols-2 rounded-lg border border-border-base bg-surface-2 p-1">
   {(['light', 'dark'] as const).map((option) => (
@@ -303,7 +289,7 @@ export function Settings() {
    </button>
   ))}
   </div>
-  <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+  <div className="mt-5 grid grid-cols-4 gap-3">
   {themeOptions.map((option) => (
              <ThemeSwatch
               key={option.value}
@@ -321,6 +307,7 @@ export function Settings() {
   icon={TypeIcon}
   title="Typography"
   description="Choose the font used throughout the app."
+  className="h-full"
   >
   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
   {fontOptions.map((option) => (
@@ -335,7 +322,6 @@ export function Settings() {
   </div>
   </Panel>
   </div>
- </div>
 
  <Panel
   icon={MonitorCog}
@@ -430,17 +416,19 @@ export function Settings() {
 
 function Panel({
  children,
+ className = '',
  description,
  icon: Icon,
  title,
 }: {
  children: React.ReactNode
+ className?: string
  description: string
  icon: typeof UserRound
  title: string
 }) {
  return (
- <article className="rounded-lg border border-border-base bg-card p-5 shadow-sm ">
+ <article className={`rounded-lg border border-border-base bg-card p-5 shadow-sm ${className}`}>
  <div className="mb-5 flex items-start gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent bg-accent/15 ">
   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -598,8 +586,6 @@ function FontSwatch({
 const inputClassName =
  'h-11 w-full rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted read-only:bg-surface-2 focus:border-accent focus:ring-4 focus:ring-accent/10'
 const selectClassName = `${inputClassName} truncate pr-10`
-const secondaryIconButtonClassName =
- 'grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border-base bg-card text-muted transition hover:bg-surface-2 hover:text-base'
 
 function uniqueValues(values: Array<string | null | undefined>) {
  return Array.from(
