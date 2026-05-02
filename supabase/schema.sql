@@ -158,6 +158,7 @@ to authenticated
 using ((select auth.uid()) = id)
 with check ((select auth.uid()) = id);
 
+-- Grant table privileges (RLS policies alone are not sufficient)
 grant select, insert, update on public.profiles to authenticated;
 
 insert into storage.buckets (id, name, public)
