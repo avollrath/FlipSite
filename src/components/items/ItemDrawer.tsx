@@ -1,1671 +1,1671 @@
 import {
-  FileText,
-  Image as ImageIcon,
-  Link2,
-  Loader2,
-  Plus,
-  Trash2,
-  Upload,
+ FileText,
+ Image as ImageIcon,
+ Link2,
+ Loader2,
+ Plus,
+ Trash2,
+ Upload,
 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type ClipboardEvent,
-  type FormEvent,
-  type KeyboardEvent,
-  type ReactNode,
+ useEffect,
+ useMemo,
+ useRef,
+ useState,
+ type ChangeEvent,
+ type ClipboardEvent,
+ type FormEvent,
+ type KeyboardEvent,
+ type ReactNode,
 } from 'react'
 import { toast } from 'sonner'
 import {
-  ImageLightbox,
-  type LightboxImage,
+ ImageLightbox,
+ type LightboxImage,
 } from '@/components/ImageLightbox'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
+ Sheet,
+ SheetContent,
+ SheetDescription,
+ SheetFooter,
+ SheetHeader,
+ SheetTitle,
 } from '@/components/ui/sheet'
 import {
-  useAddItem,
-  useAddBundle,
-  useDeleteItem,
-  useItems,
-  useUpdateItem,
-  type ItemUpdate,
-  type NewBundleChild,
-  type NewItem,
+ useAddItem,
+ useAddBundle,
+ useDeleteItem,
+ useItems,
+ useUpdateItem,
+ type ItemUpdate,
+ type NewBundleChild,
+ type NewItem,
 } from '@/hooks/useItems'
 import {
-  deleteItemFile,
-  getItemFiles,
-  getSignedItemFileUrl,
-  uploadItemFile,
-  type ItemFile,
+ deleteItemFile,
+ getItemFiles,
+ getSignedItemFileUrl,
+ uploadItemFile,
+ type ItemFile,
 } from '@/lib/itemFiles'
 import { getImageFilesFromClipboard } from '@/lib/clipboardImages'
 import {
-  formatDateInputFromNativeValue,
-  formatDateInputValue,
-  formatNativeDateValue,
-  formatTodayDateInputValue,
-  toSupabaseTimestamp,
+ formatDateInputFromNativeValue,
+ formatDateInputValue,
+ formatNativeDateValue,
+ formatTodayDateInputValue,
+ toSupabaseTimestamp,
 } from '@/lib/dateInput'
 import {
-  calcProfit,
-  formatCurrency,
-  getStatusLabel,
-  parseMoneyInput,
+ calcProfit,
+ formatCurrency,
+ getStatusLabel,
+ parseMoneyInput,
 } from '@/lib/utils'
 import type { Item, ItemStatus } from '@/types'
 
 type ItemDrawerProps = {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  mode: 'add' | 'edit'
-  item?: Item | null
+ open: boolean
+ onOpenChange: (open: boolean) => void
+ mode: 'add' | 'edit'
+ item?: Item | null
 }
 
 type DrawerFormProps = ItemDrawerProps
 
 type FormState = {
-  name: string
-  category: string
-  condition: string
-  buy_price: string
-  sell_price: string
-  platform: string
-  status: ItemStatus
-  bought_at: string
-  sold_at: string
-  notes: string
+ name: string
+ category: string
+ condition: string
+ buy_price: string
+ sell_price: string
+ platform: string
+ status: ItemStatus
+ bought_at: string
+ sold_at: string
+ notes: string
 }
 
 type BundleChildForm = {
-  id: string
-  tsid?: string
-  name: string
-  condition: string
-  category: string
-  status: ItemStatus
-  buy_price: string
+ id: string
+ tsid?: string
+ name: string
+ condition: string
+ category: string
+ status: ItemStatus
+ buy_price: string
 }
 
 type NormalizedBundleChild = Omit<NewBundleChild, 'buy_price'> & {
-  buy_price: number
-  localId: string
-  tsid?: string
+ buy_price: number
+ localId: string
+ tsid?: string
 }
 
 const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor']
 const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 
 export function ItemDrawer(props: ItemDrawerProps) {
-  const { open, onOpenChange, mode, item } = props
-  const formKey = `${mode}-${item?.tsid ?? 'new'}-${open ? 'open' : 'closed'}`
+ const { open, onOpenChange, mode, item } = props
+ const formKey = `${mode}-${item?.tsid ?? 'new'}-${open ? 'open' : 'closed'}`
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <ItemDrawerForm key={formKey} {...props} />
-      </SheetContent>
-    </Sheet>
-  )
+ return (
+ <Sheet open={open} onOpenChange={onOpenChange}>
+ <SheetContent>
+  <ItemDrawerForm key={formKey} {...props} />
+ </SheetContent>
+ </Sheet>
+ )
 }
 
 function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
-  const queryClient = useQueryClient()
-  const { data: items = [] } = useItems()
-  const addItem = useAddItem()
-  const addBundle = useAddBundle()
-  const updateItem = useUpdateItem()
-  const deleteItem = useDeleteItem()
-  const [form, setForm] = useState<FormState>(() => getInitialState(item))
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [isBundle, setIsBundle] = useState(Boolean(item?.is_bundle_parent))
-  const [pendingFiles, setPendingFiles] = useState<File[]>([])
-  const [pendingFileError, setPendingFileError] = useState('')
-  const [isUploadingPendingFiles, setIsUploadingPendingFiles] = useState(false)
-  const [bundleChildren, setBundleChildren] = useState<BundleChildForm[]>(() =>
-    getInitialBundleChildren(item, items),
-  )
+ const queryClient = useQueryClient()
+ const { data: items = [] } = useItems()
+ const addItem = useAddItem()
+ const addBundle = useAddBundle()
+ const updateItem = useUpdateItem()
+ const deleteItem = useDeleteItem()
+ const [form, setForm] = useState<FormState>(() => getInitialState(item))
+ const [confirmDelete, setConfirmDelete] = useState(false)
+ const [isBundle, setIsBundle] = useState(Boolean(item?.is_bundle_parent))
+ const [pendingFiles, setPendingFiles] = useState<File[]>([])
+ const [pendingFileError, setPendingFileError] = useState('')
+ const [isUploadingPendingFiles, setIsUploadingPendingFiles] = useState(false)
+ const [bundleChildren, setBundleChildren] = useState<BundleChildForm[]>(() =>
+ getInitialBundleChildren(item, items),
+ )
 
-  const categories = useMemo(
-    () => uniqueValues(items.map((existingItem) => existingItem.category)),
-    [items],
-  )
-  const platforms = useMemo(
-    () => uniqueValues(items.map((existingItem) => existingItem.platform)),
-    [items],
-  )
-  const conditionOptions = useMemo(
-    () =>
-      uniqueValues([
-        ...conditions,
-        form.condition,
-        ...bundleChildren.map((child) => child.condition),
-        ...items.map((existingItem) => existingItem.condition),
-      ]),
-    [bundleChildren, form.condition, items],
-  )
+ const categories = useMemo(
+ () => uniqueValues(items.map((existingItem) => existingItem.category)),
+ [items],
+ )
+ const platforms = useMemo(
+ () => uniqueValues(items.map((existingItem) => existingItem.platform)),
+ [items],
+ )
+ const conditionOptions = useMemo(
+ () =>
+ uniqueValues([
+  ...conditions,
+  form.condition,
+  ...bundleChildren.map((child) => child.condition),
+  ...items.map((existingItem) => existingItem.condition),
+ ]),
+ [bundleChildren, form.condition, items],
+ )
 
-  const showSellFields = form.status === 'sold' || form.status === 'listed'
+ const showSellFields = form.status === 'sold' || form.status === 'listed'
 
-  const normalizedBuyPrice = parseMoneyInput(form.buy_price)
-  const normalizedSellPrice = parseMoneyInput(form.sell_price)
-  const existingBundleChildSell = item?.tsid
-    ? items
-        .filter((child) => child.bundle_id === item.tsid)
-        .reduce((sum, child) => sum + (child.sell_price ?? 0), 0)
-    : 0
-  const profit = getPreviewProfit({
-    bundleChildSell: existingBundleChildSell,
-    buyPrice: normalizedBuyPrice,
-    isBundle,
-    isBundleChild: Boolean(item?.bundle_id),
-    sellPrice: normalizedSellPrice,
+ const normalizedBuyPrice = parseMoneyInput(form.buy_price)
+ const normalizedSellPrice = parseMoneyInput(form.sell_price)
+ const existingBundleChildSell = item?.tsid
+ ? items
+  .filter((child) => child.bundle_id === item.tsid)
+  .reduce((sum, child) => sum + (child.sell_price ?? 0), 0)
+ : 0
+ const profit = getPreviewProfit({
+ bundleChildSell: existingBundleChildSell,
+ buyPrice: normalizedBuyPrice,
+ isBundle,
+ isBundleChild: Boolean(item?.bundle_id),
+ sellPrice: normalizedSellPrice,
+ })
+ const roi =
+ profit === null || !normalizedBuyPrice
+ ? null
+ : (profit / normalizedBuyPrice) * 100
+ const isSubmitting =
+ addItem.isPending ||
+ addBundle.isPending ||
+ updateItem.isPending ||
+ isUploadingPendingFiles
+ const isDeleting = deleteItem.isPending
+
+ function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
+ setForm((currentForm) => ({
+ ...currentForm,
+ [key]: value,
+ ...(key === 'status' && value !== 'sold' && value !== 'listed'
+  ? { sell_price: '', sold_at: '' }
+  : {}),
+ }))
+ }
+
+ function updateBundleChild<K extends keyof BundleChildForm>(
+ id: string,
+ key: K,
+ value: BundleChildForm[K],
+ ) {
+ setBundleChildren((children) =>
+ children.map((child) =>
+  child.id === id ? { ...child, [key]: value } : child,
+ ),
+ )
+ }
+
+ function addBundleChild() {
+ setBundleChildren((children) => [...children, createEmptyBundleChild()])
+ }
+
+ function removeBundleChild(id: string) {
+ setBundleChildren((children) => children.filter((child) => child.id !== id))
+ }
+
+ async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+ event.preventDefault()
+
+ const name = form.name.trim()
+ const category = form.category.trim()
+ const buyPriceValue = parseMoneyInput(form.buy_price)
+ const sellPriceValue = parseMoneyInput(form.sell_price)
+
+ if (!name) {
+ toast.error('Name is required')
+ return
+ }
+
+ if (buyPriceValue === null) {
+ toast.error('Enter a valid buy price')
+ return
+ }
+
+ if (!form.bought_at) {
+ toast.error('Date bought is required')
+ return
+ }
+
+ const boughtAt = toSupabaseTimestamp(form.bought_at)
+ const soldAt =
+ showSellFields && form.sold_at ? toSupabaseTimestamp(form.sold_at) : null
+
+ if (!boughtAt) {
+ toast.error('Use date format dd/MM/yyyy for date bought')
+ return
+ }
+
+ if (showSellFields && form.sold_at && !soldAt) {
+ toast.error('Use date format dd/MM/yyyy for date sold')
+ return
+ }
+
+ if (form.status === 'sold' && sellPriceValue === null) {
+ toast.error('Enter a valid sell price when an item is sold')
+ return
+ }
+
+ const payload: NewItem = {
+ name,
+ category,
+ condition: form.condition,
+ buy_price: buyPriceValue,
+ sell_price: showSellFields ? sellPriceValue : null,
+ platform: form.platform.trim(),
+ status: form.status,
+ bought_at: boughtAt,
+ sold_at: soldAt,
+ notes: form.notes.trim() || null,
+ }
+
+ try {
+ if (mode === 'edit' && item) {
+  const updates: ItemUpdate = { ...payload }
+
+  if (isBundle || item.is_bundle_parent) {
+  updates.is_bundle_parent = isBundle
+  }
+
+  await updateItem.mutateAsync({
+  tsid: item.tsid,
+  updates,
   })
-  const roi =
-    profit === null || !normalizedBuyPrice
-      ? null
-      : (profit / normalizedBuyPrice) * 100
-  const isSubmitting =
-    addItem.isPending ||
-    addBundle.isPending ||
-    updateItem.isPending ||
-    isUploadingPendingFiles
-  const isDeleting = deleteItem.isPending
 
-  function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((currentForm) => ({
-      ...currentForm,
-      [key]: value,
-      ...(key === 'status' && value !== 'sold' && value !== 'listed'
-        ? { sell_price: '', sold_at: '' }
-        : {}),
-    }))
+  if (isBundle) {
+  await saveEditedBundleChildren(item.tsid, payload)
   }
+ } else if (isBundle) {
+  const createdItem = await addBundle.mutateAsync({
+  parent: payload,
+  children: normalizeBundleChildren(),
+  })
+  await uploadPendingFiles(createdItem.tsid)
+ } else {
+  const createdItem = await addItem.mutateAsync(payload)
+  await uploadPendingFiles(createdItem.tsid)
+ }
 
-  function updateBundleChild<K extends keyof BundleChildForm>(
-    id: string,
-    key: K,
-    value: BundleChildForm[K],
-  ) {
-    setBundleChildren((children) =>
-      children.map((child) =>
-        child.id === id ? { ...child, [key]: value } : child,
-      ),
-    )
-  }
+ onOpenChange(false)
+ } catch {
+ return
+ }
+ }
 
-  function addBundleChild() {
-    setBundleChildren((children) => [...children, createEmptyBundleChild()])
-  }
+ async function uploadPendingFiles(itemId: string) {
+ if (pendingFiles.length === 0) {
+ return
+ }
 
-  function removeBundleChild(id: string) {
-    setBundleChildren((children) => children.filter((child) => child.id !== id))
-  }
+ setIsUploadingPendingFiles(true)
+ setPendingFileError('')
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+ try {
+ for (const pendingFile of pendingFiles) {
+  await uploadItemFile(itemId, pendingFile)
+ }
 
-    const name = form.name.trim()
-    const category = form.category.trim()
-    const buyPriceValue = parseMoneyInput(form.buy_price)
-    const sellPriceValue = parseMoneyInput(form.sell_price)
+ setPendingFiles([])
+ void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
+ toast.success(pendingFiles.length === 1 ? 'File uploaded' : 'Files uploaded')
+ } catch (uploadError) {
+ const message = getErrorMessage(uploadError, 'Unable to upload files')
+ setPendingFileError(`Item was created, but files could not upload: ${message}`)
+ toast.warning('Item was created, but files could not upload')
+ } finally {
+ setIsUploadingPendingFiles(false)
+ }
+ }
 
-    if (!name) {
-      toast.error('Name is required')
-      return
-    }
+ async function saveEditedBundleChildren(parentTsid: string, parent: NewItem) {
+ const children = bundleChildren
+ .map((child) => normalizeBundleChild(child))
+ .filter((child): child is NormalizedBundleChild => child !== null)
 
-    if (buyPriceValue === null) {
-      toast.error('Enter a valid buy price')
-      return
-    }
+ for (const child of children) {
+ const updates: ItemUpdate = {
+  buy_price: child.buy_price ?? 0,
+  category: child.category,
+  condition: child.condition,
+  name: child.name,
+  status: child.status,
+ }
 
-    if (!form.bought_at) {
-      toast.error('Date bought is required')
-      return
-    }
+ if (child.tsid) {
+  await updateItem.mutateAsync({ tsid: child.tsid, updates })
+ } else {
+  const newChild = toNewBundleChild(child)
+  await addItem.mutateAsync({
+  ...newChild,
+  buy_price: newChild.buy_price ?? 0,
+  bundle_id: parentTsid,
+  bought_at: parent.bought_at,
+  is_bundle_parent: false,
+  platform: parent.platform,
+  sell_price: null,
+  sold_at: null,
+  notes: null,
+  })
+ }
+ }
+ }
 
-    const boughtAt = toSupabaseTimestamp(form.bought_at)
-    const soldAt =
-      showSellFields && form.sold_at ? toSupabaseTimestamp(form.sold_at) : null
+ function normalizeBundleChildren() {
+ return bundleChildren
+ .map((child) => normalizeBundleChild(child))
+ .filter((child): child is NormalizedBundleChild => child !== null)
+ .map(toNewBundleChild)
+ }
 
-    if (!boughtAt) {
-      toast.error('Use date format dd/MM/yyyy for date bought')
-      return
-    }
+ function normalizeBundleChild(
+ child: BundleChildForm,
+ ): NormalizedBundleChild | null {
+ const name = child.name.trim()
 
-    if (showSellFields && form.sold_at && !soldAt) {
-      toast.error('Use date format dd/MM/yyyy for date sold')
-      return
-    }
+ if (!name) {
+ return null
+ }
 
-    if (form.status === 'sold' && sellPriceValue === null) {
-      toast.error('Enter a valid sell price when an item is sold')
-      return
-    }
+ const splitCost = parseMoneyInput(child.buy_price)
 
-    const payload: NewItem = {
-      name,
-      category,
-      condition: form.condition,
-      buy_price: buyPriceValue,
-      sell_price: showSellFields ? sellPriceValue : null,
-      platform: form.platform.trim(),
-      status: form.status,
-      bought_at: boughtAt,
-      sold_at: soldAt,
-      notes: form.notes.trim() || null,
-    }
+ return {
+ localId: child.id,
+ tsid: child.tsid,
+ name,
+ category: child.category.trim(),
+ condition: child.condition,
+ status: child.status,
+ buy_price: splitCost ?? 0,
+ notes: null,
+ }
+ }
 
-    try {
-      if (mode === 'edit' && item) {
-        const updates: ItemUpdate = { ...payload }
+ async function handleDelete() {
+ if (!item) {
+ return
+ }
 
-        if (isBundle || item.is_bundle_parent) {
-          updates.is_bundle_parent = isBundle
-        }
+ try {
+ await deleteItem.mutateAsync(item.tsid)
+ onOpenChange(false)
+ } catch {
+ return
+ }
+ }
 
-        await updateItem.mutateAsync({
-          tsid: item.tsid,
-          updates,
-        })
+ return (
+ <>
+ <SheetHeader>
+  <SheetTitle>{mode === 'edit' ? 'Edit Item' : 'Add Item'}</SheetTitle>
+  <SheetDescription>
+  Capture purchase details, listing status, and resale performance.
+  </SheetDescription>
+ </SheetHeader>
 
-        if (isBundle) {
-          await saveEditedBundleChildren(item.tsid, payload)
-        }
-      } else if (isBundle) {
-        const createdItem = await addBundle.mutateAsync({
-          parent: payload,
-          children: normalizeBundleChildren(),
-        })
-        await uploadPendingFiles(createdItem.tsid)
-      } else {
-        const createdItem = await addItem.mutateAsync(payload)
-        await uploadPendingFiles(createdItem.tsid)
-      }
+ <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+  <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
+  <div className="rounded-lg border border-accent/25 bg-accent-soft p-4 border-accent/30 bg-accent/10">
+  <p className="text-sm font-medium text-accent ">
+   Profit Preview
+  </p>
+  <div className="mt-3 grid grid-cols-2 gap-3">
+   <SummaryValue
+   label="Profit"
+   value={profit === null ? '--' : formatCurrency(profit)}
+   />
+   <SummaryValue
+   label="ROI"
+   value={roi === null ? '--' : `${roi.toFixed(1)}%`}
+   />
+  </div>
+  </div>
 
-      onOpenChange(false)
-    } catch {
-      return
-    }
-  }
+  <Field label="Name" required>
+  <input
+   className={inputClassName}
+   value={form.name}
+   onChange={(event) => updateField('name', event.target.value)}
+   required
+  />
+  </Field>
 
-  async function uploadPendingFiles(itemId: string) {
-    if (pendingFiles.length === 0) {
-      return
-    }
+  <Field label="Category">
+  <SuggestionCombobox
+   label="Category"
+   options={categories}
+   value={form.category}
+   onChange={(value) => updateField('category', value)}
+   placeholder="Type or select a category"
+  />
+  </Field>
 
-    setIsUploadingPendingFiles(true)
-    setPendingFileError('')
+  <div className="grid gap-4 sm:grid-cols-2">
+  <Field label="Condition">
+   <select
+   className={inputClassName}
+   value={form.condition}
+   onChange={(event) =>
+   updateField('condition', event.target.value)
+   }
+   >
+   {conditionOptions.map((condition) => (
+   <option key={condition} value={condition}>
+    {condition}
+   </option>
+   ))}
+   </select>
+  </Field>
 
-    try {
-      for (const pendingFile of pendingFiles) {
-        await uploadItemFile(itemId, pendingFile)
-      }
+  <Field label="Seller">
+   <SuggestionCombobox
+   label="Seller"
+   options={platforms}
+   value={form.platform}
+   onChange={(value) => updateField('platform', value)}
+   placeholder="Type or select a seller"
+   />
+  </Field>
+  </div>
 
-      setPendingFiles([])
-      void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
-      toast.success(pendingFiles.length === 1 ? 'File uploaded' : 'Files uploaded')
-    } catch (uploadError) {
-      const message = getErrorMessage(uploadError, 'Unable to upload files')
-      setPendingFileError(`Item was created, but files could not upload: ${message}`)
-      toast.warning('Item was created, but files could not upload')
-    } finally {
-      setIsUploadingPendingFiles(false)
-    }
-  }
+  <div className="grid gap-4 sm:grid-cols-2">
+  <Field label="Buy Price" required>
+   <input
+   className={inputClassName}
+   type="text"
+   inputMode="decimal"
+   value={form.buy_price}
+   onChange={(event) =>
+   updateField('buy_price', event.target.value)
+   }
+   required
+   />
+  </Field>
 
-  async function saveEditedBundleChildren(parentTsid: string, parent: NewItem) {
-    const children = bundleChildren
-      .map((child) => normalizeBundleChild(child))
-      .filter((child): child is NormalizedBundleChild => child !== null)
+  {showSellFields ? (
+   <Field label="Sell Price" required={form.status === 'sold'}>
+   <input
+   className={inputClassName}
+   type="text"
+   inputMode="decimal"
+   value={form.sell_price}
+   onChange={(event) =>
+    updateField('sell_price', event.target.value)
+   }
+   required={form.status === 'sold'}
+   />
+   </Field>
+  ) : null}
+  </div>
 
-    for (const child of children) {
-      const updates: ItemUpdate = {
-        buy_price: child.buy_price ?? 0,
-        category: child.category,
-        condition: child.condition,
-        name: child.name,
-        status: child.status,
-      }
+  <div className="grid gap-4 sm:grid-cols-2">
+  <Field label="Status">
+   <select
+   className={inputClassName}
+   value={form.status}
+   onChange={(event) =>
+   updateField('status', event.target.value as ItemStatus)
+   }
+   >
+   {statuses.map((status) => (
+   <option key={status} value={status}>
+    {getStatusLabel(status)}
+   </option>
+   ))}
+   </select>
+  </Field>
 
-      if (child.tsid) {
-        await updateItem.mutateAsync({ tsid: child.tsid, updates })
-      } else {
-        const newChild = toNewBundleChild(child)
-        await addItem.mutateAsync({
-          ...newChild,
-          buy_price: newChild.buy_price ?? 0,
-          bundle_id: parentTsid,
-          bought_at: parent.bought_at,
-          is_bundle_parent: false,
-          platform: parent.platform,
-          sell_price: null,
-          sold_at: null,
-          notes: null,
-        })
-      }
-    }
-  }
+  <Field label="Date Bought" required>
+   <DatePickerInput
+   value={form.bought_at}
+   onChange={(value) => updateField('bought_at', value)}
+   required
+   />
+  </Field>
+  </div>
 
-  function normalizeBundleChildren() {
-    return bundleChildren
-      .map((child) => normalizeBundleChild(child))
-      .filter((child): child is NormalizedBundleChild => child !== null)
-      .map(toNewBundleChild)
-  }
+  {showSellFields ? (
+  <Field label="Date Sold">
+   <DatePickerInput
+   value={form.sold_at}
+   onChange={(value) => updateField('sold_at', value)}
+   />
+  </Field>
+  ) : null}
 
-  function normalizeBundleChild(
-    child: BundleChildForm,
-  ): NormalizedBundleChild | null {
-    const name = child.name.trim()
+  <Field label="Notes">
+  <textarea
+   className={`${inputClassName} min-h-28 resize-none`}
+   value={form.notes}
+   onChange={(event) => updateField('notes', event.target.value)}
+  />
+  </Field>
 
-    if (!name) {
-      return null
-    }
+  <label className="flex items-center justify-between gap-4 rounded-lg border border-border-base bg-surface p-4 bg-surface-2/60">
+  <span>
+   <span className="block text-sm font-semibold text-base ">
+   This is a bundle
+   </span>
+   <span className="mt-1 block text-sm text-muted ">
+   Track multiple items bought together under one total price.
+   </span>
+  </span>
+  <input
+   type="checkbox"
+   className="h-5 w-5 rounded border-border-base text-accent focus:ring-accent"
+   checked={isBundle}
+   onChange={(event) => {
+   setIsBundle(event.target.checked)
+   if (event.target.checked && bundleChildren.length === 0) {
+   setBundleChildren([createEmptyBundleChild()])
+   }
+   }}
+  />
+  </label>
 
-    const splitCost = parseMoneyInput(child.buy_price)
+  {isBundle ? (
+  <BundleItemsSection
+   categoryOptions={categories}
+   childrenForms={bundleChildren}
+   conditionOptions={conditionOptions}
+   onAdd={addBundleChild}
+   onRemove={removeBundleChild}
+   onUpdate={updateBundleChild}
+  />
+  ) : null}
 
-    return {
-      localId: child.id,
-      tsid: child.tsid,
-      name,
-      category: child.category.trim(),
-      condition: child.condition,
-      status: child.status,
-      buy_price: splitCost ?? 0,
-      notes: null,
-    }
-  }
+  {mode === 'edit' && item ? (
+  <ItemFilesSection itemId={item.tsid} />
+  ) : (
+  <PendingItemFilesSection
+   disabled={isSubmitting}
+   error={pendingFileError}
+   files={pendingFiles}
+   isUploading={isUploadingPendingFiles}
+   onFilesChange={setPendingFiles}
+  />
+  )}
 
-  async function handleDelete() {
-    if (!item) {
-      return
-    }
+  {mode === 'edit' ? (
+  <DeletePanel
+   confirming={confirmDelete}
+   deleting={isDeleting}
+   onCancel={() => setConfirmDelete(false)}
+   onConfirm={handleDelete}
+   onStart={() => setConfirmDelete(true)}
+  />
+  ) : null}
+  </div>
 
-    try {
-      await deleteItem.mutateAsync(item.tsid)
-      onOpenChange(false)
-    } catch {
-      return
-    }
-  }
-
-  return (
-    <>
-      <SheetHeader>
-        <SheetTitle>{mode === 'edit' ? 'Edit Item' : 'Add Item'}</SheetTitle>
-        <SheetDescription>
-          Capture purchase details, listing status, and resale performance.
-        </SheetDescription>
-      </SheetHeader>
-
-      <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
-          <div className="rounded-lg border border-violet-200 bg-violet-50 p-4 dark:border-violet-500/30 dark:bg-violet-500/10">
-            <p className="text-sm font-medium text-violet-700 dark:text-violet-300">
-              Profit Preview
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <SummaryValue
-                label="Profit"
-                value={profit === null ? '--' : formatCurrency(profit)}
-              />
-              <SummaryValue
-                label="ROI"
-                value={roi === null ? '--' : `${roi.toFixed(1)}%`}
-              />
-            </div>
-          </div>
-
-          <Field label="Name" required>
-            <input
-              className={inputClassName}
-              value={form.name}
-              onChange={(event) => updateField('name', event.target.value)}
-              required
-            />
-          </Field>
-
-          <Field label="Category">
-            <SuggestionCombobox
-              label="Category"
-              options={categories}
-              value={form.category}
-              onChange={(value) => updateField('category', value)}
-              placeholder="Type or select a category"
-            />
-          </Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Condition">
-              <select
-                className={inputClassName}
-                value={form.condition}
-                onChange={(event) =>
-                  updateField('condition', event.target.value)
-                }
-              >
-                {conditionOptions.map((condition) => (
-                  <option key={condition} value={condition}>
-                    {condition}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Seller">
-              <SuggestionCombobox
-                label="Seller"
-                options={platforms}
-                value={form.platform}
-                onChange={(value) => updateField('platform', value)}
-                placeholder="Type or select a seller"
-              />
-            </Field>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Buy Price" required>
-              <input
-                className={inputClassName}
-                type="text"
-                inputMode="decimal"
-                value={form.buy_price}
-                onChange={(event) =>
-                  updateField('buy_price', event.target.value)
-                }
-                required
-              />
-            </Field>
-
-            {showSellFields ? (
-              <Field label="Sell Price" required={form.status === 'sold'}>
-                <input
-                  className={inputClassName}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.sell_price}
-                  onChange={(event) =>
-                    updateField('sell_price', event.target.value)
-                  }
-                  required={form.status === 'sold'}
-                />
-              </Field>
-            ) : null}
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Status">
-              <select
-                className={inputClassName}
-                value={form.status}
-                onChange={(event) =>
-                  updateField('status', event.target.value as ItemStatus)
-                }
-              >
-                {statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {getStatusLabel(status)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Date Bought" required>
-              <DatePickerInput
-                value={form.bought_at}
-                onChange={(value) => updateField('bought_at', value)}
-                required
-              />
-            </Field>
-          </div>
-
-          {showSellFields ? (
-            <Field label="Date Sold">
-              <DatePickerInput
-                value={form.sold_at}
-                onChange={(value) => updateField('sold_at', value)}
-              />
-            </Field>
-          ) : null}
-
-          <Field label="Notes">
-            <textarea
-              className={`${inputClassName} min-h-28 resize-none`}
-              value={form.notes}
-              onChange={(event) => updateField('notes', event.target.value)}
-            />
-          </Field>
-
-          <label className="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-            <span>
-              <span className="block text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                This is a bundle
-              </span>
-              <span className="mt-1 block text-sm text-zinc-500 dark:text-zinc-400">
-                Track multiple items bought together under one total price.
-              </span>
-            </span>
-            <input
-              type="checkbox"
-              className="h-5 w-5 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
-              checked={isBundle}
-              onChange={(event) => {
-                setIsBundle(event.target.checked)
-                if (event.target.checked && bundleChildren.length === 0) {
-                  setBundleChildren([createEmptyBundleChild()])
-                }
-              }}
-            />
-          </label>
-
-          {isBundle ? (
-            <BundleItemsSection
-              categoryOptions={categories}
-              childrenForms={bundleChildren}
-              conditionOptions={conditionOptions}
-              onAdd={addBundleChild}
-              onRemove={removeBundleChild}
-              onUpdate={updateBundleChild}
-            />
-          ) : null}
-
-          {mode === 'edit' && item ? (
-            <ItemFilesSection itemId={item.tsid} />
-          ) : (
-            <PendingItemFilesSection
-              disabled={isSubmitting}
-              error={pendingFileError}
-              files={pendingFiles}
-              isUploading={isUploadingPendingFiles}
-              onFilesChange={setPendingFiles}
-            />
-          )}
-
-          {mode === 'edit' ? (
-            <DeletePanel
-              confirming={confirmDelete}
-              deleting={isDeleting}
-              onCancel={() => setConfirmDelete(false)}
-              onConfirm={handleDelete}
-              onStart={() => setConfirmDelete(true)}
-            />
-          ) : null}
-        </div>
-
-        <SheetFooter>
-          <button
-            type="button"
-            className="rounded-lg border border-zinc-200 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-950/25 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : null}
-            {mode === 'edit' ? 'Save Changes' : 'Add Item'}
-          </button>
-        </SheetFooter>
-      </form>
-    </>
-  )
+  <SheetFooter>
+  <button
+  type="button"
+  className="rounded-lg border border-border-base px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2 hover:bg-surface-2"
+  onClick={() => onOpenChange(false)}
+  >
+  Cancel
+  </button>
+  <button
+  type="submit"
+  className="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-fg shadow-lg shadow-accent/20 transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+  disabled={isSubmitting}
+  >
+  {isSubmitting ? (
+   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+  ) : null}
+  {mode === 'edit' ? 'Save Changes' : 'Add Item'}
+  </button>
+  </SheetFooter>
+ </form>
+ </>
+ )
 }
 
 function DatePickerInput({
-  onChange,
-  required,
-  value,
+ onChange,
+ required,
+ value,
 }: {
-  onChange: (value: string) => void
-  required?: boolean
-  value: string
+ onChange: (value: string) => void
+ required?: boolean
+ value: string
 }) {
-  const nativeInputRef = useRef<HTMLInputElement | null>(null)
-  const nativeValue = formatNativeDateValue(value)
+ const nativeInputRef = useRef<HTMLInputElement | null>(null)
+ const nativeValue = formatNativeDateValue(value)
 
-  function openDatePicker() {
-    const nativeInput = nativeInputRef.current
+ function openDatePicker() {
+ const nativeInput = nativeInputRef.current
 
-    if (!nativeInput) {
-      return
-    }
+ if (!nativeInput) {
+ return
+ }
 
-    try {
-      if (typeof nativeInput.showPicker === 'function') {
-        nativeInput.showPicker()
-        return
-      }
+ try {
+ if (typeof nativeInput.showPicker === 'function') {
+  nativeInput.showPicker()
+  return
+ }
 
-      nativeInput.click()
-      nativeInput.focus()
-    } catch {
-      nativeInput.click()
-      nativeInput.focus()
-    }
+ nativeInput.click()
+ nativeInput.focus()
+ } catch {
+ nativeInput.click()
+ nativeInput.focus()
+ }
+ }
+
+ function normalizeValue() {
+ const normalizedValue = formatDateInputValue(toSupabaseTimestamp(value))
+
+ if (normalizedValue) {
+ onChange(normalizedValue)
+ }
+ }
+
+ return (
+ <div className="relative flex gap-2">
+ <input
+  className={inputClassName}
+  inputMode="numeric"
+  onBlur={normalizeValue}
+  onChange={(event) => onChange(event.target.value)}
+  onClick={openDatePicker}
+  onFocus={openDatePicker}
+  placeholder="dd/MM/yyyy"
+  required={required}
+  value={value}
+ />
+ <input
+  ref={nativeInputRef}
+  className="pointer-events-none absolute bottom-0 right-0 h-px w-px opacity-0"
+  type="date"
+  tabIndex={-1}
+  value={nativeValue}
+  onChange={(event) => {
+  const nextValue = formatDateInputFromNativeValue(event.target.value)
+
+  if (nextValue) {
+  onChange(nextValue)
   }
-
-  function normalizeValue() {
-    const normalizedValue = formatDateInputValue(toSupabaseTimestamp(value))
-
-    if (normalizedValue) {
-      onChange(normalizedValue)
-    }
-  }
-
-  return (
-    <div className="relative flex gap-2">
-      <input
-        className={inputClassName}
-        inputMode="numeric"
-        onBlur={normalizeValue}
-        onChange={(event) => onChange(event.target.value)}
-        onClick={openDatePicker}
-        onFocus={openDatePicker}
-        placeholder="dd/MM/yyyy"
-        required={required}
-        value={value}
-      />
-      <input
-        ref={nativeInputRef}
-        className="pointer-events-none absolute bottom-0 right-0 h-px w-px opacity-0"
-        type="date"
-        tabIndex={-1}
-        value={nativeValue}
-        onChange={(event) => {
-          const nextValue = formatDateInputFromNativeValue(event.target.value)
-
-          if (nextValue) {
-            onChange(nextValue)
-          }
-        }}
-        aria-hidden="true"
-      />
-    </div>
-  )
+  }}
+  aria-hidden="true"
+ />
+ </div>
+ )
 }
 
 function PendingItemFilesSection({
-  disabled,
-  error,
-  files,
-  isUploading,
-  onFilesChange,
+ disabled,
+ error,
+ files,
+ isUploading,
+ onFilesChange,
 }: {
-  disabled: boolean
-  error: string
-  files: File[]
-  isUploading: boolean
-  onFilesChange: (files: File[]) => void
+ disabled: boolean
+ error: string
+ files: File[]
+ isUploading: boolean
+ onFilesChange: (files: File[]) => void
 }) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
+ const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  function addFiles(nextFiles: File[]) {
-    if (nextFiles.length === 0) {
-      return
-    }
+ function addFiles(nextFiles: File[]) {
+ if (nextFiles.length === 0) {
+ return
+ }
 
-    onFilesChange([...files, ...nextFiles])
-  }
+ onFilesChange([...files, ...nextFiles])
+ }
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    addFiles(Array.from(event.target.files ?? []))
-    event.target.value = ''
-  }
+ function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+ addFiles(Array.from(event.target.files ?? []))
+ event.target.value = ''
+ }
 
-  function handlePaste(event: ClipboardEvent<HTMLElement>) {
-    const pastedFiles = getImageFilesFromClipboard(event.nativeEvent)
+ function handlePaste(event: ClipboardEvent<HTMLElement>) {
+ const pastedFiles = getImageFilesFromClipboard(event.nativeEvent)
 
-    if (pastedFiles.length === 0) {
-      return
-    }
+ if (pastedFiles.length === 0) {
+ return
+ }
 
-    event.preventDefault()
-    addFiles(pastedFiles)
-  }
+ event.preventDefault()
+ addFiles(pastedFiles)
+ }
 
-  function removeFile(index: number) {
-    onFilesChange(files.filter((_, fileIndex) => fileIndex !== index))
-  }
+ function removeFile(index: number) {
+ onFilesChange(files.filter((_, fileIndex) => fileIndex !== index))
+ }
 
-  return (
-    <section
-      className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 outline-none transition focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-500/10 focus:border-violet-300 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-white/[0.03]"
-      onPaste={handlePaste}
-      tabIndex={0}
-    >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
-            Files
-          </h3>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Files will upload after the item is created.
-          </p>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-            You can also paste screenshots or copied images here.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
-        >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Upload className="h-4 w-4" aria-hidden="true" />
-          )}
-          {isUploading ? 'Uploading...' : 'Add Files'}
-        </button>
-      </div>
+ return (
+ <section
+ className="rounded-lg border border-border-base bg-surface p-4 outline-none transition focus-within:border-accent/35 focus-within:ring-4 focus-within:ring-accent/10 focus:border-accent/35 focus:ring-4 focus:ring-accent/10 bg-surface-2/60"
+ onPaste={handlePaste}
+ tabIndex={0}
+ >
+ <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+  <h3 className="text-sm font-semibold text-base ">
+  Files
+  </h3>
+  <p className="mt-1 text-sm text-muted ">
+  Files will upload after the item is created.
+  </p>
+  <p className="mt-1 text-xs text-muted ">
+  You can also paste screenshots or copied images here.
+  </p>
+  </div>
+  <button
+  type="button"
+  className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+  onClick={() => fileInputRef.current?.click()}
+  disabled={disabled}
+  >
+  {isUploading ? (
+  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+  ) : (
+  <Upload className="h-4 w-4" aria-hidden="true" />
+  )}
+  {isUploading ? 'Uploading...' : 'Add Files'}
+  </button>
+ </div>
 
-      <input
-        ref={fileInputRef}
-        className="sr-only"
-        type="file"
-        multiple
-        onChange={handleFileChange}
-      />
+ <input
+  ref={fileInputRef}
+  className="sr-only"
+  type="file"
+  multiple
+  onChange={handleFileChange}
+ />
 
-      {error ? (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-          {error}
-        </div>
-      ) : null}
+ {error ? (
+  <div className="mt-4 rounded-lg border border-accent/25 bg-accent-soft px-3 py-2 text-sm text-accent border-accent/30 bg-accent/10 ">
+  {error}
+  </div>
+ ) : null}
 
-      <div className="mt-4 space-y-3">
-        {files.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-6 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-400">
-            No files selected yet.
-          </div>
-        ) : (
-          files.map((file, index) => (
-            <PendingItemFileRow
-              key={`${file.name}-${file.lastModified}-${index}`}
-              file={file}
-              disabled={disabled}
-              onRemove={() => removeFile(index)}
-            />
-          ))
-        )}
-      </div>
-    </section>
-  )
+ <div className="mt-4 space-y-3">
+  {files.length === 0 ? (
+  <div className="rounded-lg border border-dashed border-border-base bg-card px-3 py-6 text-center text-sm text-muted ">
+  No files selected yet.
+  </div>
+  ) : (
+  files.map((file, index) => (
+  <PendingItemFileRow
+   key={`${file.name}-${file.lastModified}-${index}`}
+   file={file}
+   disabled={disabled}
+   onRemove={() => removeFile(index)}
+  />
+  ))
+  )}
+ </div>
+ </section>
+ )
 }
 
 function PendingItemFileRow({
-  disabled,
-  file,
-  onRemove,
+ disabled,
+ file,
+ onRemove,
 }: {
-  disabled: boolean
-  file: File
-  onRemove: () => void
+ disabled: boolean
+ file: File
+ onRemove: () => void
 }) {
-  const isImage = file.type.startsWith('image/')
+ const isImage = file.type.startsWith('image/')
 
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-[#0a0a0f]">
-      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
-        {isImage ? (
-          <ImageIcon className="h-6 w-6" aria-hidden="true" />
-        ) : (
-          <FileText className="h-6 w-6" aria-hidden="true" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-zinc-950 dark:text-white">
-          {file.name}
-        </p>
-        <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
-          {isImage ? 'image' : file.type || 'file'} - {formatFileSize(file.size)}
-        </p>
-      </div>
-      <button
-        type="button"
-        className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
-        onClick={onRemove}
-        disabled={disabled}
-        aria-label={`Remove ${file.name}`}
-      >
-        <Trash2 className="h-4 w-4" aria-hidden="true" />
-      </button>
-    </div>
-  )
+ return (
+ <div className="flex items-center gap-3 rounded-lg border border-border-base bg-card p-3 ">
+ <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted bg-surface-2 ">
+  {isImage ? (
+  <ImageIcon className="h-6 w-6" aria-hidden="true" />
+  ) : (
+  <FileText className="h-6 w-6" aria-hidden="true" />
+  )}
+ </div>
+ <div className="min-w-0 flex-1">
+  <p className="truncate text-sm font-medium text-base ">
+  {file.name}
+  </p>
+  <p className="mt-1 truncate text-xs text-muted ">
+  {isImage ? 'image' : file.type || 'file'} - {formatFileSize(file.size)}
+  </p>
+ </div>
+ <button
+  type="button"
+  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative disabled:cursor-not-allowed disabled:opacity-60 hover:bg-negative/10 hover:text-negative"
+  onClick={onRemove}
+  disabled={disabled}
+  aria-label={`Remove ${file.name}`}
+ >
+  <Trash2 className="h-4 w-4" aria-hidden="true" />
+ </button>
+ </div>
+ )
 }
 
 function ItemFilesSection({ itemId }: { itemId: string }) {
-  const queryClient = useQueryClient()
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [files, setFiles] = useState<ItemFile[]>([])
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [lightboxImages, setLightboxImages] = useState<LightboxImage[]>([])
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
-  const imageFiles = useMemo(
-    () => files.filter((file) => file.file_type === 'image'),
-    [files],
-  )
+ const queryClient = useQueryClient()
+ const fileInputRef = useRef<HTMLInputElement | null>(null)
+ const [files, setFiles] = useState<ItemFile[]>([])
+ const [error, setError] = useState('')
+ const [isLoading, setIsLoading] = useState(true)
+ const [lightboxImages, setLightboxImages] = useState<LightboxImage[]>([])
+ const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
+ const [isUploading, setIsUploading] = useState(false)
+ const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
+ const imageFiles = useMemo(
+ () => files.filter((file) => file.file_type === 'image'),
+ [files],
+ )
 
-  useEffect(() => {
-    let mounted = true
+ useEffect(() => {
+ let mounted = true
 
-    async function loadFiles() {
-      setIsLoading(true)
-      setError('')
+ async function loadFiles() {
+ setIsLoading(true)
+ setError('')
 
-      try {
-        const itemFiles = await getItemFiles(itemId)
+ try {
+  const itemFiles = await getItemFiles(itemId)
 
-        if (mounted) {
-          setFiles(itemFiles)
-        }
-      } catch (loadError) {
-        if (mounted) {
-          setError(getErrorMessage(loadError, 'Unable to load item files'))
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void loadFiles()
-
-    return () => {
-      mounted = false
-    }
-  }, [itemId])
-
-  async function refreshFiles() {
-    const itemFiles = await getItemFiles(itemId)
-    setFiles(itemFiles)
+  if (mounted) {
+  setFiles(itemFiles)
   }
-
-  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = Array.from(event.target.files ?? [])
-
-    if (selectedFiles.length === 0) {
-      return
-    }
-
-    await uploadFiles(selectedFiles)
-    event.target.value = ''
+ } catch (loadError) {
+  if (mounted) {
+  setError(getErrorMessage(loadError, 'Unable to load item files'))
   }
-
-  async function handlePaste(event: ClipboardEvent<HTMLElement>) {
-    const pastedFiles = getImageFilesFromClipboard(event.nativeEvent)
-
-    if (pastedFiles.length === 0) {
-      return
-    }
-
-    event.preventDefault()
-    await uploadFiles(pastedFiles)
+ } finally {
+  if (mounted) {
+  setIsLoading(false)
   }
+ }
+ }
 
-  async function uploadFiles(selectedFiles: File[]) {
-    let uploadedAny = false
+ void loadFiles()
 
-    setIsUploading(true)
-    setError('')
+ return () => {
+ mounted = false
+ }
+ }, [itemId])
 
-    try {
-      for (const selectedFile of selectedFiles) {
-        await uploadItemFile(itemId, selectedFile)
-        uploadedAny = true
-      }
+ async function refreshFiles() {
+ const itemFiles = await getItemFiles(itemId)
+ setFiles(itemFiles)
+ }
 
-      await refreshFiles()
-      void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
-      toast.success(selectedFiles.length === 1 ? 'File uploaded' : 'Files uploaded')
-    } catch (uploadError) {
-      if (uploadedAny) {
-        await refreshFiles()
-        void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
-      }
+ async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+ const selectedFiles = Array.from(event.target.files ?? [])
 
-      setError(getErrorMessage(uploadError, 'Unable to upload files'))
-    } finally {
-      setIsUploading(false)
-    }
-  }
+ if (selectedFiles.length === 0) {
+ return
+ }
 
-  async function handleDelete(file: ItemFile) {
-    setDeletingFileId(file.id)
-    setError('')
+ await uploadFiles(selectedFiles)
+ event.target.value = ''
+ }
 
-    try {
-      await deleteItemFile(file.id, file.file_path)
-      await refreshFiles()
-      void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
-      toast.success('File deleted')
-    } catch (deleteError) {
-      setError(getErrorMessage(deleteError, 'Unable to delete file'))
-    } finally {
-      setDeletingFileId(null)
-    }
-  }
+ async function handlePaste(event: ClipboardEvent<HTMLElement>) {
+ const pastedFiles = getImageFilesFromClipboard(event.nativeEvent)
 
-  async function handleOpenLightbox(file: ItemFile) {
-    const imageIndex = imageFiles.findIndex((imageFile) => imageFile.id === file.id)
+ if (pastedFiles.length === 0) {
+ return
+ }
 
-    if (imageIndex === -1) {
-      return
-    }
+ event.preventDefault()
+ await uploadFiles(pastedFiles)
+ }
 
-    setSelectedImageIndex(imageIndex)
-    setError('')
+ async function uploadFiles(selectedFiles: File[]) {
+ let uploadedAny = false
 
-    try {
-      const signedImages = await Promise.all(
-        imageFiles.map(async (imageFile) => ({
-          alt: imageFile.original_name || getFileNameFromPath(imageFile.file_path),
-          src: await getSignedItemFileUrl(imageFile.file_path),
-        })),
-      )
+ setIsUploading(true)
+ setError('')
 
-      setLightboxImages(signedImages)
-    } catch (lightboxError) {
-      setSelectedImageIndex(null)
-      setLightboxImages([])
-      setError(getErrorMessage(lightboxError, 'Unable to open image preview'))
-    }
-  }
+ try {
+ for (const selectedFile of selectedFiles) {
+  await uploadItemFile(itemId, selectedFile)
+  uploadedAny = true
+ }
 
-  function handleCloseLightbox() {
-    setSelectedImageIndex(null)
-    setLightboxImages([])
-  }
+ await refreshFiles()
+ void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
+ toast.success(selectedFiles.length === 1 ? 'File uploaded' : 'Files uploaded')
+ } catch (uploadError) {
+ if (uploadedAny) {
+  await refreshFiles()
+  void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
+ }
 
-  return (
-    <>
-      <section
-        className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 outline-none transition focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-500/10 focus:border-violet-300 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-white/[0.03]"
-        onPaste={handlePaste}
-        tabIndex={0}
-      >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
-            Files
-          </h3>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Photos, receipts, and reference documents for this item.
-          </p>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-            You can also paste screenshots or copied images here.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Upload className="h-4 w-4" aria-hidden="true" />
-          )}
-          {isUploading ? 'Uploading...' : 'Upload Files'}
-        </button>
-      </div>
+ setError(getErrorMessage(uploadError, 'Unable to upload files'))
+ } finally {
+ setIsUploading(false)
+ }
+ }
 
-      <input
-        ref={fileInputRef}
-        className="sr-only"
-        type="file"
-        multiple
-        onChange={handleFileChange}
-      />
+ async function handleDelete(file: ItemFile) {
+ setDeletingFileId(file.id)
+ setError('')
 
-      {error ? (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
-          {error}
-        </div>
-      ) : null}
+ try {
+ await deleteItemFile(file.id, file.file_path)
+ await refreshFiles()
+ void queryClient.invalidateQueries({ queryKey: ['item-image-thumbnails'] })
+ toast.success('File deleted')
+ } catch (deleteError) {
+ setError(getErrorMessage(deleteError, 'Unable to delete file'))
+ } finally {
+ setDeletingFileId(null)
+ }
+ }
 
-      <div className="mt-4 space-y-3">
-        {isLoading ? (
-          <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-3 text-sm text-zinc-500 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-400">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            Loading files...
-          </div>
-        ) : files.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-6 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-400">
-            No files uploaded yet.
-          </div>
-        ) : (
-          files.map((file) => (
-            <ItemFileRow
-              key={file.id}
-              file={file}
-              isDeleting={deletingFileId === file.id}
-              onOpen={() => handleOpenLightbox(file)}
-              onDelete={() => handleDelete(file)}
-            />
-          ))
-        )}
-      </div>
-      </section>
-      <ImageLightbox
-        key={selectedImageIndex ?? 'closed'}
-        images={lightboxImages}
-        initialIndex={selectedImageIndex ?? 0}
-        open={selectedImageIndex !== null}
-        onClose={handleCloseLightbox}
-      />
-    </>
-  )
+ async function handleOpenLightbox(file: ItemFile) {
+ const imageIndex = imageFiles.findIndex((imageFile) => imageFile.id === file.id)
+
+ if (imageIndex === -1) {
+ return
+ }
+
+ setSelectedImageIndex(imageIndex)
+ setError('')
+
+ try {
+ const signedImages = await Promise.all(
+  imageFiles.map(async (imageFile) => ({
+  alt: imageFile.original_name || getFileNameFromPath(imageFile.file_path),
+  src: await getSignedItemFileUrl(imageFile.file_path),
+  })),
+ )
+
+ setLightboxImages(signedImages)
+ } catch (lightboxError) {
+ setSelectedImageIndex(null)
+ setLightboxImages([])
+ setError(getErrorMessage(lightboxError, 'Unable to open image preview'))
+ }
+ }
+
+ function handleCloseLightbox() {
+ setSelectedImageIndex(null)
+ setLightboxImages([])
+ }
+
+ return (
+ <>
+ <section
+  className="rounded-lg border border-border-base bg-surface p-4 outline-none transition focus-within:border-accent/35 focus-within:ring-4 focus-within:ring-accent/10 focus:border-accent/35 focus:ring-4 focus:ring-accent/10 bg-surface-2/60"
+  onPaste={handlePaste}
+  tabIndex={0}
+ >
+ <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+  <h3 className="text-sm font-semibold text-base ">
+  Files
+  </h3>
+  <p className="mt-1 text-sm text-muted ">
+  Photos, receipts, and reference documents for this item.
+  </p>
+  <p className="mt-1 text-xs text-muted ">
+  You can also paste screenshots or copied images here.
+  </p>
+  </div>
+  <button
+  type="button"
+  className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+  onClick={() => fileInputRef.current?.click()}
+  disabled={isUploading}
+  >
+  {isUploading ? (
+  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+  ) : (
+  <Upload className="h-4 w-4" aria-hidden="true" />
+  )}
+  {isUploading ? 'Uploading...' : 'Upload Files'}
+  </button>
+ </div>
+
+ <input
+  ref={fileInputRef}
+  className="sr-only"
+  type="file"
+  multiple
+  onChange={handleFileChange}
+ />
+
+ {error ? (
+  <div className="mt-4 rounded-lg border border-negative/25 bg-negative/10 px-3 py-2 text-sm text-negative border-negative/30 bg-negative/10 ">
+  {error}
+  </div>
+ ) : null}
+
+ <div className="mt-4 space-y-3">
+  {isLoading ? (
+  <div className="flex items-center gap-2 rounded-lg border border-border-base bg-card px-3 py-3 text-sm text-muted ">
+  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+  Loading files...
+  </div>
+  ) : files.length === 0 ? (
+  <div className="rounded-lg border border-dashed border-border-base bg-card px-3 py-6 text-center text-sm text-muted ">
+  No files uploaded yet.
+  </div>
+  ) : (
+  files.map((file) => (
+  <ItemFileRow
+   key={file.id}
+   file={file}
+   isDeleting={deletingFileId === file.id}
+   onOpen={() => handleOpenLightbox(file)}
+   onDelete={() => handleDelete(file)}
+  />
+  ))
+  )}
+ </div>
+ </section>
+ <ImageLightbox
+  key={selectedImageIndex ?? 'closed'}
+  images={lightboxImages}
+  initialIndex={selectedImageIndex ?? 0}
+  open={selectedImageIndex !== null}
+  onClose={handleCloseLightbox}
+ />
+ </>
+ )
 }
 
 function ItemFileRow({
-  file,
-  isDeleting,
-  onDelete,
-  onOpen,
+ file,
+ isDeleting,
+ onDelete,
+ onOpen,
 }: {
-  file: ItemFile
-  isDeleting: boolean
-  onDelete: () => void
-  onOpen: () => void
+ file: ItemFile
+ isDeleting: boolean
+ onDelete: () => void
+ onOpen: () => void
 }) {
-  const isImage = file.file_type === 'image'
-  const displayName = file.original_name || getFileNameFromPath(file.file_path)
+ const isImage = file.file_type === 'image'
+ const displayName = file.original_name || getFileNameFromPath(file.file_path)
 
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-[#0a0a0f]">
-      {isImage ? (
-        <button
-          type="button"
-          className="rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#0a0a0f]"
-          onClick={onOpen}
-          aria-label={`Open ${displayName}`}
-        >
-          <SignedImageThumbnail filePath={file.file_path} alt={displayName} />
-        </button>
-      ) : (
-        <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
-          <FileText className="h-6 w-6" aria-hidden="true" />
-        </div>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-zinc-950 dark:text-white">
-          {displayName}
-        </p>
-        <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
-          {isImage ? 'image' : file.mime_type || file.file_type}
-          {file.size_bytes ? ` - ${formatFileSize(file.size_bytes)}` : ''}
-        </p>
-      </div>
-      <button
-        type="button"
-        className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
-        onClick={onDelete}
-        disabled={isDeleting}
-        aria-label={`Delete ${displayName}`}
-      >
-        {isDeleting ? (
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-        )}
-      </button>
-    </div>
-  )
+ return (
+ <div className="flex items-center gap-3 rounded-lg border border-border-base bg-card p-3 ">
+ {isImage ? (
+  <button
+  type="button"
+  className="rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface focus:ring-offset-surface"
+  onClick={onOpen}
+  aria-label={`Open ${displayName}`}
+  >
+  <SignedImageThumbnail filePath={file.file_path} alt={displayName} />
+  </button>
+ ) : (
+  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted bg-surface-2 ">
+  <FileText className="h-6 w-6" aria-hidden="true" />
+  </div>
+ )}
+ <div className="min-w-0 flex-1">
+  <p className="truncate text-sm font-medium text-base ">
+  {displayName}
+  </p>
+  <p className="mt-1 truncate text-xs text-muted ">
+  {isImage ? 'image' : file.mime_type || file.file_type}
+  {file.size_bytes ? ` - ${formatFileSize(file.size_bytes)}` : ''}
+  </p>
+ </div>
+ <button
+  type="button"
+  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative disabled:cursor-not-allowed disabled:opacity-60 hover:bg-negative/10 hover:text-negative"
+  onClick={onDelete}
+  disabled={isDeleting}
+  aria-label={`Delete ${displayName}`}
+ >
+  {isDeleting ? (
+  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+  ) : (
+  <Trash2 className="h-4 w-4" aria-hidden="true" />
+  )}
+ </button>
+ </div>
+ )
 }
 
 function SignedImageThumbnail({
-  alt,
-  filePath,
+ alt,
+ filePath,
 }: {
-  alt: string
-  filePath: string
+ alt: string
+ filePath: string
 }) {
-  const [signedUrl, setSignedUrl] = useState('')
-  const [failed, setFailed] = useState(false)
+ const [signedUrl, setSignedUrl] = useState('')
+ const [failed, setFailed] = useState(false)
 
-  useEffect(() => {
-    let mounted = true
+ useEffect(() => {
+ let mounted = true
 
-    async function loadSignedUrl() {
-      setFailed(false)
-      setSignedUrl('')
+ async function loadSignedUrl() {
+ setFailed(false)
+ setSignedUrl('')
 
-      try {
-        const url = await getSignedItemFileUrl(filePath)
+ try {
+  const url = await getSignedItemFileUrl(filePath)
 
-        if (mounted) {
-          setSignedUrl(url)
-        }
-      } catch {
-        if (mounted) {
-          setFailed(true)
-        }
-      }
-    }
-
-    void loadSignedUrl()
-
-    return () => {
-      mounted = false
-    }
-  }, [filePath])
-
-  if (failed || !signedUrl) {
-    return (
-      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
-        <ImageIcon className="h-6 w-6" aria-hidden="true" />
-      </div>
-    )
+  if (mounted) {
+  setSignedUrl(url)
   }
+ } catch {
+  if (mounted) {
+  setFailed(true)
+  }
+ }
+ }
 
-  return (
-    <img
-      className="h-14 w-14 shrink-0 rounded-lg object-cover"
-      src={signedUrl}
-      alt={alt}
-    />
-  )
+ void loadSignedUrl()
+
+ return () => {
+ mounted = false
+ }
+ }, [filePath])
+
+ if (failed || !signedUrl) {
+ return (
+ <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted bg-surface-2 ">
+  <ImageIcon className="h-6 w-6" aria-hidden="true" />
+ </div>
+ )
+ }
+
+ return (
+ <img
+ className="h-14 w-14 shrink-0 rounded-lg object-cover"
+ src={signedUrl}
+ alt={alt}
+ />
+ )
 }
 
 function SummaryValue({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">{label}</p>
-      <p className="text-xl font-semibold">{value}</p>
-    </div>
-  )
+ return (
+ <div>
+ <p className="text-xs text-muted ">{label}</p>
+ <p className="text-xl font-semibold">{value}</p>
+ </div>
+ )
 }
 
 function getPreviewProfit({
-  bundleChildSell,
-  buyPrice,
-  isBundle,
-  isBundleChild,
-  sellPrice,
+ bundleChildSell,
+ buyPrice,
+ isBundle,
+ isBundleChild,
+ sellPrice,
 }: {
-  bundleChildSell: number
-  buyPrice: number | null
-  isBundle: boolean
-  isBundleChild: boolean
-  sellPrice: number | null
+ bundleChildSell: number
+ buyPrice: number | null
+ isBundle: boolean
+ isBundleChild: boolean
+ sellPrice: number | null
 }) {
-  if (isBundle) {
-    return (sellPrice ?? 0) + bundleChildSell - (buyPrice ?? 0)
-  }
+ if (isBundle) {
+ return (sellPrice ?? 0) + bundleChildSell - (buyPrice ?? 0)
+ }
 
-  if (isBundleChild) {
-    return sellPrice ?? 0
-  }
+ if (isBundleChild) {
+ return sellPrice ?? 0
+ }
 
-  return calcProfit(buyPrice, sellPrice)
+ return calcProfit(buyPrice, sellPrice)
 }
 
 function BundleItemsSection({
-  categoryOptions,
-  childrenForms,
-  conditionOptions,
-  onAdd,
-  onRemove,
-  onUpdate,
+ categoryOptions,
+ childrenForms,
+ conditionOptions,
+ onAdd,
+ onRemove,
+ onUpdate,
 }: {
-  categoryOptions: string[]
-  childrenForms: BundleChildForm[]
-  conditionOptions: string[]
-  onAdd: () => void
-  onRemove: (id: string) => void
-  onUpdate: <K extends keyof BundleChildForm>(
-    id: string,
-    key: K,
-    value: BundleChildForm[K],
-  ) => void
+ categoryOptions: string[]
+ childrenForms: BundleChildForm[]
+ conditionOptions: string[]
+ onAdd: () => void
+ onRemove: (id: string) => void
+ onUpdate: <K extends keyof BundleChildForm>(
+ id: string,
+ key: K,
+ value: BundleChildForm[K],
+ ) => void
 }) {
-  return (
-    <section className="rounded-lg border border-violet-200 bg-violet-50/70 p-4 dark:border-violet-500/30 dark:bg-violet-500/10">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
-            Bundle Items
-          </h3>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Child items inherit platform and date bought from the parent.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
-          onClick={onAdd}
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Add
-        </button>
-      </div>
+ return (
+ <section className="rounded-lg border border-accent/25 bg-accent-soft/70 p-4 border-accent/30 bg-accent/10">
+ <div className="flex items-center justify-between gap-3">
+  <div>
+  <h3 className="text-sm font-semibold text-base ">
+  Bundle Items
+  </h3>
+  <p className="mt-1 text-sm text-muted ">
+  Child items inherit platform and date bought from the parent.
+  </p>
+  </div>
+  <button
+  type="button"
+  className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-fg transition hover:bg-accent/90"
+  onClick={onAdd}
+  >
+  <Plus className="h-4 w-4" aria-hidden="true" />
+  Add
+  </button>
+ </div>
 
-      <div className="mt-4 space-y-3">
-        {childrenForms.map((child) => (
-          <div
-            key={child.id}
-            className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-[#0a0a0f]"
-          >
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                <Link2 className="h-4 w-4 text-violet-500" aria-hidden="true" />
-                {child.tsid ? 'Bundle child' : 'New child item'}
-              </div>
-              {!child.tsid ? (
-                <button
-                  type="button"
-                  className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-300"
-                  onClick={() => onRemove(child.id)}
-                  aria-label="Remove child item"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
-              ) : null}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input
-                className={inputClassName}
-                value={child.name}
-                onChange={(event) =>
-                  onUpdate(child.id, 'name', event.target.value)
-                }
-                placeholder="Name"
-              />
-              <SuggestionCombobox
-                label="Child category"
-                options={categoryOptions}
-                value={child.category}
-                onChange={(value) => onUpdate(child.id, 'category', value)}
-                placeholder="Category"
-              />
-              <select
-                className={inputClassName}
-                value={child.condition}
-                onChange={(event) =>
-                  onUpdate(child.id, 'condition', event.target.value)
-                }
-              >
-                {conditionOptions.map((condition) => (
-                  <option key={condition} value={condition}>
-                    {condition}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={inputClassName}
-                value={child.status}
-                onChange={(event) =>
-                  onUpdate(child.id, 'status', event.target.value as ItemStatus)
-                }
-              >
-                {statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {getStatusLabel(status)}
-                  </option>
-                ))}
-              </select>
-              <input
-                className={inputClassName}
-                type="text"
-                inputMode="decimal"
-                value={child.buy_price}
-                onChange={(event) =>
-                  onUpdate(child.id, 'buy_price', event.target.value)
-                }
-                placeholder="Split cost, optional"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
+ <div className="mt-4 space-y-3">
+  {childrenForms.map((child) => (
+  <div
+  key={child.id}
+  className="rounded-lg border border-border-base bg-card p-3 "
+  >
+  <div className="mb-3 flex items-center justify-between gap-3">
+   <div className="flex items-center gap-2 text-sm font-medium text-base ">
+   <Link2 className="h-4 w-4 text-accent" aria-hidden="true" />
+   {child.tsid ? 'Bundle child' : 'New child item'}
+   </div>
+   {!child.tsid ? (
+   <button
+   type="button"
+   className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative hover:bg-negative/10 hover:text-negative"
+   onClick={() => onRemove(child.id)}
+   aria-label="Remove child item"
+   >
+   <Trash2 className="h-4 w-4" aria-hidden="true" />
+   </button>
+   ) : null}
+  </div>
+  <div className="grid gap-3 sm:grid-cols-2">
+   <input
+   className={inputClassName}
+   value={child.name}
+   onChange={(event) =>
+   onUpdate(child.id, 'name', event.target.value)
+   }
+   placeholder="Name"
+   />
+   <SuggestionCombobox
+   label="Child category"
+   options={categoryOptions}
+   value={child.category}
+   onChange={(value) => onUpdate(child.id, 'category', value)}
+   placeholder="Category"
+   />
+   <select
+   className={inputClassName}
+   value={child.condition}
+   onChange={(event) =>
+   onUpdate(child.id, 'condition', event.target.value)
+   }
+   >
+   {conditionOptions.map((condition) => (
+   <option key={condition} value={condition}>
+    {condition}
+   </option>
+   ))}
+   </select>
+   <select
+   className={inputClassName}
+   value={child.status}
+   onChange={(event) =>
+   onUpdate(child.id, 'status', event.target.value as ItemStatus)
+   }
+   >
+   {statuses.map((status) => (
+   <option key={status} value={status}>
+    {getStatusLabel(status)}
+   </option>
+   ))}
+   </select>
+   <input
+   className={inputClassName}
+   type="text"
+   inputMode="decimal"
+   value={child.buy_price}
+   onChange={(event) =>
+   onUpdate(child.id, 'buy_price', event.target.value)
+   }
+   placeholder="Split cost, optional"
+   />
+  </div>
+  </div>
+  ))}
+ </div>
+ </section>
+ )
 }
 
 function SuggestionCombobox({
-  label,
-  onChange,
-  options,
-  placeholder,
-  value,
+ label,
+ onChange,
+ options,
+ placeholder,
+ value,
 }: {
-  label: string
-  onChange: (value: string) => void
-  options: string[]
-  placeholder: string
-  value: string
+ label: string
+ onChange: (value: string) => void
+ options: string[]
+ placeholder: string
+ value: string
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [open, setOpen] = useState(false)
-  const [highlightedIndex, setHighlightedIndex] = useState(0)
-  const filteredOptions = options.filter((option) => optionMatches(option, value))
-  const exactMatch = options.some(
-    (option) => option.toLowerCase() === value.trim().toLowerCase(),
-  )
-  const showCustomOption = Boolean(value.trim() && !exactMatch)
-  const visibleOptions = showCustomOption
-    ? [`Use "${value.trim()}"`, ...filteredOptions]
-    : filteredOptions
+ const containerRef = useRef<HTMLDivElement | null>(null)
+ const [open, setOpen] = useState(false)
+ const [highlightedIndex, setHighlightedIndex] = useState(0)
+ const filteredOptions = options.filter((option) => optionMatches(option, value))
+ const exactMatch = options.some(
+ (option) => option.toLowerCase() === value.trim().toLowerCase(),
+ )
+ const showCustomOption = Boolean(value.trim() && !exactMatch)
+ const visibleOptions = showCustomOption
+ ? [`Use "${value.trim()}"`, ...filteredOptions]
+ : filteredOptions
 
-  useEffect(() => {
-    if (!open) {
-      return
-    }
+ useEffect(() => {
+ if (!open) {
+ return
+ }
 
-    function handlePointerDown(event: MouseEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
+ function handlePointerDown(event: MouseEvent) {
+ if (!containerRef.current?.contains(event.target as Node)) {
+  setOpen(false)
+ }
+ }
 
-    document.addEventListener('mousedown', handlePointerDown)
+ document.addEventListener('mousedown', handlePointerDown)
 
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown)
-    }
-  }, [open])
+ return () => {
+ document.removeEventListener('mousedown', handlePointerDown)
+ }
+ }, [open])
 
-  function selectOption(option: string) {
-    if (showCustomOption && option === visibleOptions[0]) {
-      onChange(value.trim())
-    } else {
-      onChange(option)
-    }
+ function selectOption(option: string) {
+ if (showCustomOption && option === visibleOptions[0]) {
+ onChange(value.trim())
+ } else {
+ onChange(option)
+ }
 
-    setOpen(false)
-  }
+ setOpen(false)
+ }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      setOpen(true)
-      setHighlightedIndex((currentIndex) =>
-        Math.min(currentIndex + 1, Math.max(visibleOptions.length - 1, 0)),
-      )
-      return
-    }
+ function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+ if (event.key === 'ArrowDown') {
+ event.preventDefault()
+ setOpen(true)
+ setHighlightedIndex((currentIndex) =>
+  Math.min(currentIndex + 1, Math.max(visibleOptions.length - 1, 0)),
+ )
+ return
+ }
 
-    if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      setOpen(true)
-      setHighlightedIndex((currentIndex) => Math.max(currentIndex - 1, 0))
-      return
-    }
+ if (event.key === 'ArrowUp') {
+ event.preventDefault()
+ setOpen(true)
+ setHighlightedIndex((currentIndex) => Math.max(currentIndex - 1, 0))
+ return
+ }
 
-    if (event.key === 'Enter' && open && visibleOptions[highlightedIndex]) {
-      event.preventDefault()
-      selectOption(visibleOptions[highlightedIndex])
-      return
-    }
+ if (event.key === 'Enter' && open && visibleOptions[highlightedIndex]) {
+ event.preventDefault()
+ selectOption(visibleOptions[highlightedIndex])
+ return
+ }
 
-    if (event.key === 'Escape') {
-      setOpen(false)
-    }
-  }
+ if (event.key === 'Escape') {
+ setOpen(false)
+ }
+ }
 
-  return (
-    <div ref={containerRef} className="relative">
-      <input
-        className={inputClassName}
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value)
-          setHighlightedIndex(0)
-          setOpen(true)
-        }}
-        onFocus={() => {
-          setHighlightedIndex(0)
-          setOpen(true)
-        }}
-        onClick={() => {
-          setHighlightedIndex(0)
-          setOpen(true)
-        }}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={open}
-        aria-label={label}
-      />
-      {open ? (
-        <div className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-zinc-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-[#0a0a0f]">
-          {visibleOptions.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400">
-              No suggestions yet.
-            </div>
-          ) : (
-            visibleOptions.map((option, index) => (
-              <button
-                key={`${option}-${index}`}
-                type="button"
-                className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${
-                  highlightedIndex === index
-                    ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200'
-                    : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-white/10'
-                }`}
-                onMouseEnter={() => setHighlightedIndex(index)}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => selectOption(option)}
-              >
-                {option}
-              </button>
-            ))
-          )}
-        </div>
-      ) : null}
-    </div>
-  )
+ return (
+ <div ref={containerRef} className="relative">
+ <input
+  className={inputClassName}
+  value={value}
+  onChange={(event) => {
+  onChange(event.target.value)
+  setHighlightedIndex(0)
+  setOpen(true)
+  }}
+  onFocus={() => {
+  setHighlightedIndex(0)
+  setOpen(true)
+  }}
+  onClick={() => {
+  setHighlightedIndex(0)
+  setOpen(true)
+  }}
+  onKeyDown={handleKeyDown}
+  placeholder={placeholder}
+  role="combobox"
+  aria-autocomplete="list"
+  aria-expanded={open}
+  aria-label={label}
+ />
+ {open ? (
+  <div className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-border-base bg-card p-1 shadow-xl ">
+  {visibleOptions.length === 0 ? (
+  <div className="px-3 py-2 text-sm text-muted ">
+   No suggestions yet.
+  </div>
+  ) : (
+  visibleOptions.map((option, index) => (
+   <button
+   key={`${option}-${index}`}
+   type="button"
+   className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${
+   highlightedIndex === index
+    ? 'bg-accent-soft text-accent bg-accent/15 '
+    : 'text-base hover:bg-surface-2 hover:bg-surface-2'
+   }`}
+   onMouseEnter={() => setHighlightedIndex(index)}
+   onMouseDown={(event) => event.preventDefault()}
+   onClick={() => selectOption(option)}
+   >
+   {option}
+   </button>
+  ))
+  )}
+  </div>
+ ) : null}
+ </div>
+ )
 }
 
 function DeletePanel({
-  confirming,
-  deleting,
-  onCancel,
-  onConfirm,
-  onStart,
+ confirming,
+ deleting,
+ onCancel,
+ onConfirm,
+ onStart,
 }: {
-  confirming: boolean
-  deleting: boolean
-  onCancel: () => void
-  onConfirm: () => void
-  onStart: () => void
+ confirming: boolean
+ deleting: boolean
+ onCancel: () => void
+ onConfirm: () => void
+ onStart: () => void
 }) {
-  return (
-    <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-500/30 dark:bg-red-500/10">
-      {confirming ? (
-        <div>
-          <p className="text-sm font-medium text-red-700 dark:text-red-300">
-            Delete this item?
-          </p>
-          <p className="mt-1 text-sm text-red-600/80 dark:text-red-200/80">
-            This action cannot be undone.
-          </p>
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-70"
-              onClick={onConfirm}
-              disabled={deleting}
-            >
-              {deleting ? 'Deleting...' : 'Confirm Delete'}
-            </button>
-            <button
-              type="button"
-              className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-500/30 dark:text-red-200 dark:hover:bg-red-500/10"
-              onClick={onCancel}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="flex items-center gap-2 text-sm font-semibold text-red-700 transition hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
-          onClick={onStart}
-        >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-          Delete Item
-        </button>
-      )}
-    </div>
-  )
+ return (
+ <div className="rounded-lg border border-negative/25 bg-negative/10 p-4 border-negative/30 bg-negative/10">
+ {confirming ? (
+  <div>
+  <p className="text-sm font-medium text-negative ">
+  Delete this item?
+  </p>
+  <p className="mt-1 text-sm text-negative/80">
+  This action cannot be undone.
+  </p>
+  <div className="mt-4 flex gap-2">
+  <button
+   type="button"
+   className="rounded-lg bg-negative px-3 py-2 text-sm font-semibold text-accent-fg transition hover:bg-negative/90 disabled:opacity-70"
+   onClick={onConfirm}
+   disabled={deleting}
+  >
+   {deleting ? 'Deleting...' : 'Confirm Delete'}
+  </button>
+  <button
+   type="button"
+   className="rounded-lg border border-negative/25 px-3 py-2 text-sm font-semibold text-negative transition hover:bg-negative/15 border-negative/30 hover:bg-negative/10"
+   onClick={onCancel}
+  >
+   Cancel
+  </button>
+  </div>
+  </div>
+ ) : (
+  <button
+  type="button"
+  className="flex items-center gap-2 text-sm font-semibold text-negative transition hover:text-negative hover:text-negative"
+  onClick={onStart}
+  >
+  <Trash2 className="h-4 w-4" aria-hidden="true" />
+  Delete Item
+  </button>
+ )}
+ </div>
+ )
 }
 
 function Field({
-  children,
-  label,
-  required,
+ children,
+ label,
+ required,
 }: {
-  children: ReactNode
-  label: string
-  required?: boolean
+ children: ReactNode
+ label: string
+ required?: boolean
 }) {
-  return (
-    <label className="block">
-      <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        {label}
-        {required ? <span className="text-violet-600"> *</span> : null}
-      </span>
-      <span className="mt-2 block">{children}</span>
-    </label>
-  )
+ return (
+ <label className="block">
+ <span className="text-sm font-medium text-base ">
+  {label}
+  {required ? <span className="text-accent"> *</span> : null}
+ </span>
+ <span className="mt-2 block">{children}</span>
+ </label>
+ )
 }
 
 function getInitialState(item?: Item | null): FormState {
-  return {
-    name: item?.name ?? '',
-    category: item?.category ?? '',
-    condition: item?.condition ?? 'Good',
-    buy_price: item?.buy_price === undefined ? '' : String(item.buy_price),
-    sell_price:
-      item?.sell_price === null || item?.sell_price === undefined
-        ? ''
-        : String(item.sell_price),
-    platform: item?.platform ?? '',
-    status: item?.status ?? 'holding',
-    bought_at: formatDateInputValue(item?.bought_at) || formatTodayDateInputValue(),
-    sold_at: formatDateInputValue(item?.sold_at),
-    notes: item?.notes ?? '',
-  }
+ return {
+ name: item?.name ?? '',
+ category: item?.category ?? '',
+ condition: item?.condition ?? 'Good',
+ buy_price: item?.buy_price === undefined ? '' : String(item.buy_price),
+ sell_price:
+ item?.sell_price === null || item?.sell_price === undefined
+  ? ''
+  : String(item.sell_price),
+ platform: item?.platform ?? '',
+ status: item?.status ?? 'holding',
+ bought_at: formatDateInputValue(item?.bought_at) || formatTodayDateInputValue(),
+ sold_at: formatDateInputValue(item?.sold_at),
+ notes: item?.notes ?? '',
+ }
 }
 
 function getInitialBundleChildren(
-  item: Item | null | undefined,
-  items: Item[],
+ item: Item | null | undefined,
+ items: Item[],
 ): BundleChildForm[] {
-  if (!item?.is_bundle_parent) {
-    return []
-  }
+ if (!item?.is_bundle_parent) {
+ return []
+ }
 
-  return items
-    .filter((child) => child.bundle_id === item.tsid)
-    .map((child) => ({
-      id: child.tsid,
-      tsid: child.tsid,
-      name: child.name,
-      category: child.category,
-      condition: child.condition,
-      status: child.status,
-      buy_price: child.buy_price > 0 ? String(child.buy_price) : '',
-    }))
+ return items
+ .filter((child) => child.bundle_id === item.tsid)
+ .map((child) => ({
+ id: child.tsid,
+ tsid: child.tsid,
+ name: child.name,
+ category: child.category,
+ condition: child.condition,
+ status: child.status,
+ buy_price: child.buy_price > 0 ? String(child.buy_price) : '',
+ }))
 }
 
 function createEmptyBundleChild(): BundleChildForm {
-  return {
-    id: crypto.randomUUID(),
-    name: '',
-    category: '',
-    condition: 'Good',
-    status: 'holding',
-    buy_price: '',
-  }
+ return {
+ id: crypto.randomUUID(),
+ name: '',
+ category: '',
+ condition: 'Good',
+ status: 'holding',
+ buy_price: '',
+ }
 }
 
 function toNewBundleChild(child: NormalizedBundleChild): NewBundleChild {
-  return {
-    buy_price: child.buy_price,
-    category: child.category,
-    condition: child.condition,
-    name: child.name,
-    notes: child.notes,
-    status: child.status,
-  }
+ return {
+ buy_price: child.buy_price,
+ category: child.category,
+ condition: child.condition,
+ name: child.name,
+ notes: child.notes,
+ status: child.status,
+ }
 }
 
 function uniqueValues(values: string[]) {
-  const valuesByLowercase = new Map<string, string>()
+ const valuesByLowercase = new Map<string, string>()
 
-  for (const value of values) {
-    const trimmedValue = value.trim()
+ for (const value of values) {
+ const trimmedValue = value.trim()
 
-    if (!trimmedValue) {
-      continue
-    }
+ if (!trimmedValue) {
+ continue
+ }
 
-    const normalizedValue = trimmedValue.toLowerCase()
+ const normalizedValue = trimmedValue.toLowerCase()
 
-    if (!valuesByLowercase.has(normalizedValue)) {
-      valuesByLowercase.set(normalizedValue, trimmedValue)
-    }
-  }
+ if (!valuesByLowercase.has(normalizedValue)) {
+ valuesByLowercase.set(normalizedValue, trimmedValue)
+ }
+ }
 
-  return Array.from(valuesByLowercase.values()).sort((a, b) =>
-    a.localeCompare(b),
-  )
+ return Array.from(valuesByLowercase.values()).sort((a, b) =>
+ a.localeCompare(b),
+ )
 }
 
 function optionMatches(option: string, query: string) {
-  const normalizedOption = option.toLowerCase()
-  const normalizedQuery = query.trim().toLowerCase()
+ const normalizedOption = option.toLowerCase()
+ const normalizedQuery = query.trim().toLowerCase()
 
-  if (!normalizedQuery) {
-    return true
-  }
+ if (!normalizedQuery) {
+ return true
+ }
 
-  return normalizedOption.includes(normalizedQuery)
+ return normalizedOption.includes(normalizedQuery)
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback
+ return error instanceof Error ? error.message : fallback
 }
 
 function getFileNameFromPath(filePath: string) {
-  return filePath.split('/').pop() || 'File'
+ return filePath.split('/').pop() || 'File'
 }
 
 function formatFileSize(sizeBytes: number) {
-  if (sizeBytes < 1024 * 1024) {
-    return `${Math.max(1, Math.round(sizeBytes / 1024))} KB`
-  }
+ if (sizeBytes < 1024 * 1024) {
+ return `${Math.max(1, Math.round(sizeBytes / 1024))} KB`
+ }
 
-  return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`
+ return `${(sizeBytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 const inputClassName =
-  'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#0a0a0f] dark:text-zinc-50 dark:focus:border-violet-400'
+ 'w-full rounded-lg border border-border-base bg-card px-3 py-2.5 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '

@@ -1,0 +1,174 @@
+/* ── THEME: Midnight Indigo (default) ── */
+[data-theme="midnight"] {
+  --accent: 220 70% 55%;
+  --accent-soft: 220 70% 92%;
+  --accent-fg: 0 0% 100%;
+  --surface: 220 20% 97%;
+  --surface-2: 220 15% 92%;
+  --border: 220 15% 85%;
+  --text: 220 25% 12%;
+  --text-muted: 220 15% 45%;
+  --positive: 158 60% 38%;
+  --negative: 4 75% 52%;
+  --card-bg: 0 0% 100%;
+  --sidebar-bg: 220 30% 16%;
+  --sidebar-text: 220 20% 85%;
+  --sidebar-accent: 220 70% 65%;
+}
+
+.dark[data-theme="midnight"] {
+  --accent: 220 75% 62%;
+  --accent-soft: 220 40% 20%;
+  --accent-fg: 0 0% 100%;
+  --surface: 222 25% 8%;
+  --surface-2: 222 22% 12%;
+  --border: 222 20% 18%;
+  --text: 220 20% 90%;
+  --text-muted: 220 15% 55%;
+  --positive: 158 55% 48%;
+  --negative: 4 70% 58%;
+  --card-bg: 222 22% 11%;
+  --sidebar-bg: 222 28% 6%;
+  --sidebar-text: 220 20% 80%;
+  --sidebar-accent: 220 75% 68%;
+}
+
+/* ── THEME: Emerald ── */
+[data-theme="emerald"] {
+  --accent: 158 64% 38%;
+  --accent-soft: 158 60% 90%;
+  --accent-fg: 0 0% 100%;
+  --surface: 150 15% 96%;
+  --surface-2: 150 12% 91%;
+  --border: 150 12% 84%;
+  --text: 150 25% 10%;
+  --text-muted: 150 10% 42%;
+  --positive: 158 64% 35%;
+  --negative: 4 75% 52%;
+  --card-bg: 0 0% 100%;
+  --sidebar-bg: 158 35% 14%;
+  --sidebar-text: 150 20% 85%;
+  --sidebar-accent: 158 60% 55%;
+}
+
+.dark[data-theme="emerald"] {
+  --accent: 158 58% 48%;
+  --accent-soft: 158 35% 16%;
+  --accent-fg: 0 0% 100%;
+  --surface: 160 18% 7%;
+  --surface-2: 160 15% 11%;
+  --border: 160 15% 16%;
+  --text: 150 18% 88%;
+  --text-muted: 150 10% 52%;
+  --positive: 158 55% 48%;
+  --negative: 4 70% 58%;
+  --card-bg: 160 15% 10%;
+  --sidebar-bg: 160 22% 5%;
+  --sidebar-text: 150 18% 78%;
+  --sidebar-accent: 158 58% 55%;
+}
+
+/* ── THEME: Amber ── */
+[data-theme="amber"] {
+  --accent: 32 95% 44%;
+  --accent-soft: 38 95% 90%;
+  --accent-fg: 0 0% 100%;
+  --surface: 36 20% 96%;
+  --surface-2: 36 15% 91%;
+  --border: 36 15% 84%;
+  --text: 30 30% 10%;
+  --text-muted: 30 15% 42%;
+  --positive: 158 60% 38%;
+  --negative: 4 75% 52%;
+  --card-bg: 0 0% 100%;
+  --sidebar-bg: 25 35% 14%;
+  --sidebar-text: 36 20% 85%;
+  --sidebar-accent: 38 90% 58%;
+}
+
+.dark[data-theme="amber"] {
+  --accent: 38 90% 52%;
+  --accent-soft: 32 45% 18%;
+  --accent-fg: 30 30% 8%;
+  --surface: 28 18% 7%;
+  --surface-2: 28 15% 11%;
+  --border: 28 15% 17%;
+  --text: 36 18% 88%;
+  --text-muted: 30 10% 52%;
+  --positive: 158 55% 48%;
+  --negative: 4 70% 58%;
+  --card-bg: 28 15% 10%;
+  --sidebar-bg: 28 22% 5%;
+  --sidebar-text: 36 18% 78%;
+  --sidebar-accent: 38 90% 58%;
+}
+
+/* ── THEME: Rose ── */
+[data-theme="rose"] {
+  --accent: 346 75% 50%;
+  --accent-soft: 346 75% 92%;
+  --accent-fg: 0 0% 100%;
+  --surface: 346 15% 96%;
+  --surface-2: 346 12% 91%;
+  --border: 346 12% 84%;
+  --text: 346 25% 10%;
+  --text-muted: 346 10% 42%;
+  --positive: 158 60% 38%;
+  --negative: 4 75% 52%;
+  --card-bg: 0 0% 100%;
+  --sidebar-bg: 346 30% 14%;
+  --sidebar-text: 346 18% 85%;
+  --sidebar-accent: 346 70% 65%;
+}
+
+.dark[data-theme="rose"] {
+  --accent: 346 70% 60%;
+  --accent-soft: 346 35% 18%;
+  --accent-fg: 0 0% 100%;
+  --surface: 350 18% 7%;
+  --surface-2: 350 15% 11%;
+  --border: 350 15% 17%;
+  --text: 346 18% 88%;
+  --text-muted: 346 10% 52%;
+  --positive: 158 55% 48%;
+  --negative: 4 70% 58%;
+  --card-bg: 350 15% 10%;
+  --sidebar-bg: 350 22% 5%;
+  --sidebar-text: 346 18% 78%;
+  --sidebar-accent: 346 70% 65%;
+}
+
+/* ── THEME: Slate ── */
+[data-theme="slate"] {
+  --accent: 215 25% 35%;
+  --accent-soft: 215 20% 90%;
+  --accent-fg: 0 0% 100%;
+  --surface: 215 15% 96%;
+  --surface-2: 215 12% 90%;
+  --border: 215 12% 83%;
+  --text: 215 25% 10%;
+  --text-muted: 215 12% 42%;
+  --positive: 158 60% 35%;
+  --negative: 4 72% 50%;
+  --card-bg: 0 0% 100%;
+  --sidebar-bg: 215 25% 14%;
+  --sidebar-text: 215 15% 82%;
+  --sidebar-accent: 215 40% 62%;
+}
+
+.dark[data-theme="slate"] {
+  --accent: 215 35% 62%;
+  --accent-soft: 215 20% 18%;
+  --accent-fg: 0 0% 100%;
+  --surface: 218 20% 7%;
+  --surface-2: 218 18% 11%;
+  --border: 218 16% 17%;
+  --text: 215 16% 88%;
+  --text-muted: 215 10% 52%;
+  --positive: 158 52% 48%;
+  --negative: 4 68% 56%;
+  --card-bg: 218 18% 10%;
+  --sidebar-bg: 218 24% 5%;
+  --sidebar-text: 215 16% 76%;
+  --sidebar-accent: 215 45% 65%;
+}
