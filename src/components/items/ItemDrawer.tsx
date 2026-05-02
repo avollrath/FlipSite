@@ -450,7 +450,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   <div className="grid gap-4 sm:grid-cols-2">
   <Field label="Condition">
    <select
-   className={inputClassName}
+   className={inputClassName + ' pr-10'}
    value={form.condition}
    onChange={(event) =>
    updateField('condition', event.target.value)
@@ -508,7 +508,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   <div className="grid gap-4 sm:grid-cols-2">
   <Field label="Status">
    <select
-   className={inputClassName}
+   className={inputClassName + ' pr-10'}
    value={form.status}
    onChange={(event) =>
    updateField('status', event.target.value as ItemStatus)
@@ -1303,7 +1303,7 @@ function BundleItemsSection({
    placeholder="Category"
    />
    <select
-   className={inputClassName}
+   className={inputClassName + ' pr-10'}
    value={child.condition}
    onChange={(event) =>
    onUpdate(child.id, 'condition', event.target.value)
@@ -1316,7 +1316,7 @@ function BundleItemsSection({
    ))}
    </select>
    <select
-   className={inputClassName}
+   className={inputClassName + ' pr-10'}
    value={child.status}
    onChange={(event) =>
    onUpdate(child.id, 'status', event.target.value as ItemStatus)

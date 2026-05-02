@@ -291,6 +291,6 @@ function ThemeSwatch({
 
 const inputClassName =
  'h-11 w-full rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted read-only:bg-surface-2 focus:border-accent focus:ring-4 focus:ring-accent/10'
-const selectClassName = `${inputClassName} truncate pr-9`
+const selectClassName = `${inputClassName} truncate pr-10`
 const secondaryIconButtonClassName =
  'grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border-base bg-card text-muted transition hover:bg-surface-2 hover:text-base'

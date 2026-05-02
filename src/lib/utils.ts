@@ -171,3 +171,6 @@ export function getStatusLabel(status: ItemStatus) {
 
   return labels[status]
 }
+
+export const selectTriggerClass =
+  'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-base bg-surface px-3 pr-9 text-sm focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50'

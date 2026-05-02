@@ -89,7 +89,7 @@ export function Dashboard() {
         <label className="w-full sm:w-44">
           <span className="sr-only">Filter dashboard by year</span>
           <select
-            className="h-11 w-full rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10"
+            className="h-11 w-full rounded-lg border border-border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10"
             value={selectedYear}
             onChange={(event) => setSelectedYear(event.target.value)}
           >
