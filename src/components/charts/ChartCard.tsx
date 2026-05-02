@@ -1,0 +1,36 @@
+import type { ReactNode } from 'react'
+
+type ChartCardProps = {
+  children: ReactNode
+  emptyText?: string
+  hasData?: boolean
+  legend?: ReactNode
+  title: string
+}
+
+export function ChartCard({
+  children,
+  emptyText = 'Add more sold items to unlock this chart.',
+  hasData = true,
+  legend,
+  title,
+}: ChartCardProps) {
+  return (
+    <article className="rounded-xl border border-border-base bg-card p-5 shadow-sm">
+      <h3 className="mb-4 text-sm font-semibold text-base">{title}</h3>
+      {hasData ? (
+        <>
+          {children}
+          {legend ? <div className="mt-3">{legend}</div> : null}
+        </>
+      ) : (
+        <div className="grid h-[220px] place-items-center rounded-lg border border-dashed border-border-base bg-surface-2/50 text-center">
+          <div>
+            <p className="text-sm font-semibold text-base">No data yet</p>
+            <p className="mt-1 max-w-xs text-xs text-muted">{emptyText}</p>
+          </div>
+        </div>
+      )}
+    </article>
+  )
+}
