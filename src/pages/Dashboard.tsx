@@ -390,11 +390,10 @@ function TopFlipsChart({
             dataKey="name"
             fontSize={11}
             stroke="hsl(var(--text-muted))"
-            tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
-            tickFormatter={(value) => truncateLabel(String(value), 20)}
+            tick={<CustomTopFlipYTick />}
             tickLine={false}
             type="category"
-            width={130}
+            width={160}
           />
           <Tooltip content={<CurrencyTooltip />} cursor={{ fill: 'transparent' }} />
           <Bar
@@ -419,6 +418,35 @@ function TopFlipsChart({
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>
+  )
+}
+
+function CustomTopFlipYTick({
+  x,
+  y,
+  payload,
+}: {
+  payload?: { value?: string }
+  x?: number
+  y?: number
+}) {
+  const maxChars = 22
+  const value = payload?.value ?? ''
+  const label =
+    value.length > maxChars ? `${value.slice(0, maxChars)}…` : value
+
+  return (
+    <text
+      x={x}
+      y={y}
+      dy={4}
+      textAnchor="end"
+      fontSize={11}
+      fill="hsl(var(--text-muted))"
+      style={{ whiteSpace: 'nowrap' }}
+    >
+      {label}
+    </text>
   )
 }
 
@@ -822,7 +850,4 @@ function formatChartLabel(value: string) {
   return /^\d{4}-\d{2}$/.test(value) ? formatMonthKey(value) : value
 }
 
-function truncateLabel(value: string, maxLength: number) {
-  return value.length > maxLength ? `${value.slice(0, maxLength - 3)}...` : value
-}
 
