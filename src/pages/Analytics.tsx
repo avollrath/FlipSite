@@ -30,6 +30,7 @@ import {
 import { ChartCard } from '@/components/charts/ChartCard'
 import { KPICard } from '@/components/charts/KPICard'
 import { useItems } from '@/hooks/useItems'
+import { formatMonthKey, toMonthKey } from '@/lib/dateUtils'
 import { useTheme } from '@/lib/theme'
 import {
   calculateItemProfit,
@@ -304,7 +305,11 @@ export function Analytics() {
             <BarChart data={monthlyData}>
               <ChartGradients colors={colors} idSuffix="analytics-revenue" />
               <ChartGrid />
-              <ChartXAxis dataKey="label" rotate={monthlyData.length > 6} />
+              <ChartXAxis
+                dataKey="label"
+                rotate={monthlyData.length > 6}
+                tickFormatter={formatMonthKey}
+              />
               <ChartYAxis />
               <ReferenceLine
                 y={average(monthlyData.map((entry) => entry.revenue ?? 0))}
@@ -338,7 +343,11 @@ export function Analytics() {
             <BarChart data={monthlyData}>
               <ChartGradients colors={colors} idSuffix="analytics-monthly-profit" />
               <ChartGrid />
-              <ChartXAxis dataKey="label" rotate={monthlyData.length > 6} />
+              <ChartXAxis
+                dataKey="label"
+                rotate={monthlyData.length > 6}
+                tickFormatter={formatMonthKey}
+              />
               <ChartYAxis />
               <ReferenceLine
                 y={average(monthlyData.map((entry) => entry.profit ?? 0))}
@@ -894,10 +903,12 @@ function ChartXAxis({
   dataKey,
   preserve,
   rotate = false,
+  tickFormatter,
 }: {
   dataKey: string
   preserve?: boolean
   rotate?: boolean
+  tickFormatter?: (value: string) => string
 }) {
   return (
     <XAxis
@@ -909,6 +920,9 @@ function ChartXAxis({
       stroke="hsl(var(--text-muted))"
       textAnchor={rotate ? 'end' : 'middle'}
       tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
+      tickFormatter={(value) =>
+        tickFormatter ? tickFormatter(String(value)) : String(value)
+      }
       tickLine={false}
       tickMargin={8}
       angle={rotate ? -35 : 0}
@@ -937,7 +951,7 @@ function CurrencyTooltip({ active, label, payload }: TooltipProps) {
 
   return (
     <div className="rounded-lg border border-border-base bg-card px-3 py-2 text-xs text-muted shadow-lg">
-      {label ? <p className="mb-1 text-xs text-muted">{label}</p> : null}
+      {label ? <p className="mb-1 text-xs text-muted">{formatChartLabel(label)}</p> : null}
       {payload.map((entry) => (
         <p key={entry.name} className="text-xs">
           <span style={{ color: entry.color }}>{entry.name}: </span>
@@ -1084,7 +1098,7 @@ function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
       continue
     }
 
-    const label = monthLabel(soldAt)
+    const label = toMonthKey(soldAt)
     const current = monthlyData.get(label) ?? { profit: 0, revenue: 0 }
     current.profit = sumCurrency([current.profit, calculateItemProfit(item, items)])
     current.revenue = sumCurrency([current.revenue, calculateItemSellValue(item, items)])
@@ -1094,7 +1108,7 @@ function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
   return Array.from(monthlyData, ([label, values]) => ({
     label,
     ...values,
-  })).sort((a, b) => monthValue(a.label) - monthValue(b.label))
+  })).sort((a, b) => a.label.localeCompare(b.label))
 }
 
 function buildProfitBreakdown(items: Item[], getLabel: (item: Item) => string): ChartDatum[] {
@@ -1334,17 +1348,6 @@ function truncateText(value: string, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, maxLength).trimEnd()}...` : value
 }
 
-function monthLabel(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
-}
-
-function monthValue(value: string) {
-  return new Date(`${value} 1`).getTime()
-}
-
 function shortDate(value: string | null) {
   if (!value) {
     return ''
@@ -1358,6 +1361,10 @@ function shortDate(value: string | null) {
 
 function dateValue(value: string | null) {
   return value ? new Date(value).getTime() : 0
+}
+
+function formatChartLabel(value: string) {
+  return /^\d{4}-\d{2}$/.test(value) ? formatMonthKey(value) : value
 }
 
 function referenceLabel(value: string) {

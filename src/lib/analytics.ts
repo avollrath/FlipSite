@@ -6,6 +6,7 @@ import {
   isKeepingItem,
   sumCurrency,
 } from '@/lib/utils'
+import { toMonthKey } from '@/lib/dateUtils'
 import type { Item } from '@/types'
 
 export type ChartDatum = {
@@ -44,7 +45,7 @@ export function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
       continue
     }
 
-    const label = monthLabel(soldAt)
+    const label = toMonthKey(soldAt)
     const current = monthlyData.get(label) ?? { profit: 0, revenue: 0 }
     current.profit = sumCurrency([current.profit, calculateItemProfit(item, items)])
     current.revenue = sumCurrency([current.revenue, revenue])
@@ -54,7 +55,7 @@ export function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
   return Array.from(monthlyData, ([label, values]) => ({
     label,
     ...values,
-  })).sort((a, b) => monthValue(a.label) - monthValue(b.label))
+  })).sort((a, b) => a.label.localeCompare(b.label))
 }
 
 export function buildCategoryStats(items: Item[]): CategoryStat[] {
@@ -103,17 +104,6 @@ function getEffectiveSoldAt(item: Item, items: Item[]) {
   }
 
   return childSoldDates.sort((a, b) => dateValue(b) - dateValue(a))[0] ?? null
-}
-
-function monthLabel(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
-}
-
-function monthValue(value: string) {
-  return new Date(`${value} 1`).getTime()
 }
 
 function dateValue(value: string | null) {

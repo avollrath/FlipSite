@@ -27,6 +27,7 @@ import {
 import { ChartCard } from '@/components/charts/ChartCard'
 import { KPICard } from '@/components/charts/KPICard'
 import { useItems } from '@/hooks/useItems'
+import { formatMonthKey, toMonthKey } from '@/lib/dateUtils'
 import { useTheme } from '@/lib/theme'
 import {
   calculateItemProfit,
@@ -259,7 +260,11 @@ export function Dashboard() {
               <BarChart barCategoryGap="30%" barGap={2} data={chartData.monthlyVolume}>
                 <ChartGradients colors={chartColors} idSuffix="dashboard-monthly-volume" />
                 <ChartGrid />
-                <ChartXAxis dataKey="month" rotate={chartData.monthlyVolume.length > 6} />
+                <ChartXAxis
+                  dataKey="month"
+                  rotate={chartData.monthlyVolume.length > 6}
+                  tickFormatter={formatMonthKey}
+                />
                 <ChartYAxis />
                 <Tooltip content={<CurrencyTooltip />} cursor={{ fill: 'transparent' }} />
                 <Bar
@@ -483,10 +488,12 @@ function ChartXAxis({
   dataKey,
   preserve,
   rotate = false,
+  tickFormatter,
 }: {
   dataKey: string
   preserve?: boolean
   rotate?: boolean
+  tickFormatter?: (value: string) => string
 }) {
   return (
     <XAxis
@@ -499,6 +506,9 @@ function ChartXAxis({
       stroke="hsl(var(--text-muted))"
       textAnchor={rotate ? 'end' : 'middle'}
       tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
+      tickFormatter={(value) =>
+        tickFormatter ? tickFormatter(String(value)) : String(value)
+      }
       tickLine={false}
       tickMargin={8}
     />
@@ -526,7 +536,7 @@ function CurrencyTooltip({ active, label, payload }: ChartTooltipProps) {
 
   return (
     <div className="rounded-lg border border-border-base bg-card px-3 py-2 text-xs text-muted shadow-lg">
-      {label ? <p className="mb-1 text-xs text-muted">{label}</p> : null}
+      {label ? <p className="mb-1 text-xs text-muted">{formatChartLabel(label)}</p> : null}
       {payload.map((entry) => (
         <p key={entry.name} className="text-xs">
           <span style={{ color: entry.color }}>{entry.name}: </span>
@@ -681,7 +691,7 @@ function buildChartData(items: Item[]) {
 
   const monthlyVolume = Array.from(
     aggregateItems.reduce((map, item) => {
-      const boughtMonth = monthLabel(item.bought_at)
+      const boughtMonth = toMonthKey(item.bought_at)
       const buyBucket = map.get(boughtMonth) ?? {
         buy: 0,
         month: boughtMonth,
@@ -694,7 +704,7 @@ function buildChartData(items: Item[]) {
       const soldAt = getEffectiveSoldAt(item, items)
 
       if (sellValue > 0 && soldAt) {
-        const soldMonth = monthLabel(soldAt)
+        const soldMonth = toMonthKey(soldAt)
         const sellBucket = map.get(soldMonth) ?? {
           buy: 0,
           month: soldMonth,
@@ -707,7 +717,7 @@ function buildChartData(items: Item[]) {
       return map
     }, new Map<string, { buy: number; month: string; sell: number }>()),
     ([, value]) => value,
-  ).sort((a, b) => monthValue(a.month) - monthValue(b.month))
+  ).sort((a, b) => a.month.localeCompare(b.month))
 
   return {
     cumulativeProfit,
@@ -818,19 +828,12 @@ function shortDate(value: string | null) {
   }).format(new Date(value))
 }
 
-function monthLabel(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
-}
-
-function monthValue(value: string) {
-  return new Date(`${value} 1`).getTime()
-}
-
 function dateValue(value: string | null) {
   return value ? new Date(value).getTime() : 0
+}
+
+function formatChartLabel(value: string) {
+  return /^\d{4}-\d{2}$/.test(value) ? formatMonthKey(value) : value
 }
 
 function compactCurrency(value: number) {
