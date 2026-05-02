@@ -63,6 +63,7 @@ import {
  getStatusLabel,
  parseMoneyInput,
 } from '@/lib/utils'
+import { loadSettings } from '@/lib/settings'
 import type { Item, ItemStatus } from '@/types'
 
 type ItemDrawerProps = {
@@ -1558,17 +1559,19 @@ function Field({
 }
 
 function getInitialState(item?: Item | null): FormState {
+ const defaults = item ? null : loadSettings()
+
  return {
  name: item?.name ?? '',
- category: item?.category ?? '',
- condition: item?.condition ?? 'Good',
+ category: item?.category ?? defaults?.defaultCategory ?? '',
+ condition: item?.condition ?? defaults?.defaultCondition ?? 'Good',
  buy_price: item?.buy_price === undefined ? '' : String(item.buy_price),
  sell_price:
  item?.sell_price === null || item?.sell_price === undefined
   ? ''
   : String(item.sell_price),
- platform: item?.platform ?? '',
- status: item?.status ?? 'holding',
+ platform: item?.platform ?? defaults?.defaultPlatform ?? '',
+ status: item?.status ?? defaults?.defaultStatus ?? 'holding',
  bought_at: formatDateInputValue(item?.bought_at) || formatTodayDateInputValue(),
  sold_at: formatDateInputValue(item?.sold_at),
  notes: item?.notes ?? '',

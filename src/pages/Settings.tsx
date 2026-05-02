@@ -1,11 +1,13 @@
 import { Check, Clipboard, MonitorCog, ShieldAlert, UserRound } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
+import { useItems } from '@/hooks/useItems'
 import {
+ clearSettings,
  defaultSettings,
  loadSettings,
- saveSettings,
+ saveSetting,
  type FlipSiteSettings,
 } from '@/lib/settings'
 import { themeOptions, useTheme, type ThemeName } from '@/lib/theme'
@@ -18,21 +20,52 @@ const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 export function Settings() {
  const { user } = useAuth()
  const { mode, setMode, setTheme, theme } = useTheme()
+ const { data: items = [] } = useItems()
  const [settings, setSettings] = useState<FlipSiteSettings>(() => loadSettings())
  const [copied, setCopied] = useState(false)
+ const [saved, setSaved] = useState(false)
+ const savedTimerRef = useRef<number | null>(null)
 
- useEffect(() => {
- saveSettings(settings)
- }, [settings])
+ const platforms = useMemo(
+ () => uniqueValues(items.map((item) => item.platform)),
+ [items],
+ )
+ const categories = useMemo(
+ () => uniqueValues(items.map((item) => item.category)),
+ [items],
+ )
 
  function updateSetting<K extends keyof FlipSiteSettings>(
  key: K,
  value: FlipSiteSettings[K],
  ) {
- setSettings((currentSettings) => ({
- ...currentSettings,
+ const nextSettings = {
+ ...settings,
  [key]: value,
- }))
+ }
+
+ setSettings(nextSettings)
+ saveSetting(key, value)
+ showSaved()
+ }
+
+ function resetDefaults() {
+ clearSettings()
+ setSettings(defaultSettings)
+ showSaved()
+ }
+
+ function showSaved() {
+ setSaved(true)
+
+ if (savedTimerRef.current) {
+ window.clearTimeout(savedTimerRef.current)
+ }
+
+ savedTimerRef.current = window.setTimeout(() => {
+ setSaved(false)
+ savedTimerRef.current = null
+ }, 1500)
  }
 
  async function copyUserId() {
@@ -124,24 +157,22 @@ export function Settings() {
   description="Stored locally in this browser. Defaults apply to new items only."
  >
   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-  <Field label="Default seller">
-  <input
-   className={inputClassName}
-   value={settings.defaultPlatform}
-   onChange={(event) =>
-   updateSetting('defaultPlatform', event.target.value)
-   }
+  <Field label="Default platform">
+  <SettingsCombobox
+   id="default-platform"
+   options={platforms}
    placeholder="Optional"
+   value={settings.defaultPlatform}
+   onChange={(value) => updateSetting('defaultPlatform', value)}
   />
   </Field>
   <Field label="Default category">
-  <input
-   className={inputClassName}
-   value={settings.defaultCategory}
-   onChange={(event) =>
-   updateSetting('defaultCategory', event.target.value)
-   }
+  <SettingsCombobox
+   id="default-category"
+   options={categories}
    placeholder="Optional"
+   value={settings.defaultCategory}
+   onChange={(value) => updateSetting('defaultCategory', value)}
   />
   </Field>
   <Field label="Default condition">
@@ -175,13 +206,18 @@ export function Settings() {
   </select>
   </Field>
   </div>
+  <div className="mt-4 flex items-center gap-3">
   <button
-  type="button"
-  className="mt-4 rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2 hover:bg-surface-2"
-  onClick={() => setSettings(defaultSettings)}
+   type="button"
+   className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+   onClick={resetDefaults}
   >
-  Reset defaults
+   Reset defaults
   </button>
+  {saved ? (
+   <span className="text-xs text-muted transition-opacity">✓ Saved</span>
+  ) : null}
+  </div>
  </Panel>
 
  <Panel
@@ -244,6 +280,37 @@ function Field({
  )
 }
 
+function SettingsCombobox({
+ id,
+ onChange,
+ options,
+ placeholder,
+ value,
+}: {
+ id: string
+ onChange: (value: string) => void
+ options: string[]
+ placeholder: string
+ value: string
+}) {
+ return (
+ <>
+ <input
+  className={inputClassName}
+  list={`${id}-options`}
+  value={value}
+  onChange={(event) => onChange(event.target.value)}
+  placeholder={placeholder}
+ />
+ <datalist id={`${id}-options`}>
+  {options.map((option) => (
+  <option key={option} value={option} />
+  ))}
+ </datalist>
+ </>
+ )
+}
+
 function ThemeSwatch({
  active,
  label,
@@ -294,3 +361,14 @@ const inputClassName =
 const selectClassName = `${inputClassName} truncate pr-10`
 const secondaryIconButtonClassName =
  'grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border-base bg-card text-muted transition hover:bg-surface-2 hover:text-base'
+
+function uniqueValues(values: Array<string | null | undefined>) {
+ return Array.from(
+ new Map(
+  values
+  .map((value) => value?.trim())
+  .filter((value): value is string => Boolean(value))
+  .map((value) => [value.toLowerCase(), value]),
+ ).values(),
+ ).sort((first, second) => first.localeCompare(second))
+}
