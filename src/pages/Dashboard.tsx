@@ -27,6 +27,7 @@ import {
 import { ChartCard } from '@/components/charts/ChartCard'
 import { KPICard } from '@/components/charts/KPICard'
 import { useItems } from '@/hooks/useItems'
+import { formatCompactCurrency, getChartColors } from '@/lib/chartUtils'
 import { formatMonthKey, toMonthKey } from '@/lib/dateUtils'
 import { useTheme } from '@/lib/theme'
 import {
@@ -61,9 +62,7 @@ export function Dashboard() {
   const { mode, theme } = useTheme()
   const [selectedYear, setSelectedYear] = useState('all')
   const chartColors = useMemo(() => {
-    void mode
-    void theme
-    return getChartColors()
+    return getChartColors(theme, mode === 'dark')
   }, [mode, theme])
 
   const years = useMemo(() => getAvailableYears(items), [items])
@@ -381,7 +380,7 @@ function TopFlipsChart({
             fontSize={11}
             stroke="hsl(var(--text-muted))"
             tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
-            tickFormatter={(value) => compactCurrency(Number(value))}
+            tickFormatter={(value) => formatCompactCurrency(Number(value))}
             tickLine={false}
             type="number"
           />
@@ -522,7 +521,7 @@ function ChartYAxis() {
       fontSize={11}
       stroke="hsl(var(--text-muted))"
       tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
-      tickFormatter={(value) => compactCurrency(Number(value))}
+      tickFormatter={(value) => formatCompactCurrency(Number(value))}
       tickLine={false}
       width={48}
     />
@@ -836,55 +835,7 @@ function formatChartLabel(value: string) {
   return /^\d{4}-\d{2}$/.test(value) ? formatMonthKey(value) : value
 }
 
-function compactCurrency(value: number) {
-  const formatted = new Intl.NumberFormat('fi-FI', {
-    maximumFractionDigits: Math.abs(value) >= 1000 ? 1 : 0,
-    notation: Math.abs(value) >= 1000 ? 'compact' : 'standard',
-  }).format(value)
-
-  return `${formatted}€`
-}
-
 function truncateLabel(value: string, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, maxLength - 3)}...` : value
 }
 
-function getChartColors() {
-  const accent = getCSSVar('--accent')
-  const positive = getCSSVar('--positive')
-  const negative = getCSSVar('--negative')
-  const accentHsl = parseHsl(
-    getComputedStyle(document.documentElement).getPropertyValue('--accent'),
-  )
-  const pie = Array.from({ length: 6 }, (_, index) =>
-    accentHsl
-      ? `hsl(${(accentHsl.h + index * 40) % 360} ${accentHsl.s}% ${accentHsl.l}%)`
-      : accent,
-  )
-
-  return {
-    accent,
-    negative,
-    pie,
-    positive,
-  }
-}
-
-const getCSSVar = (variable: string) =>
-  `hsl(${getComputedStyle(document.documentElement).getPropertyValue(variable).trim()})`
-
-function parseHsl(value: string) {
-  const match = /(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/.exec(
-    value.trim(),
-  )
-
-  if (!match) {
-    return null
-  }
-
-  return {
-    h: Number(match[1]),
-    l: Number(match[3]),
-    s: Number(match[2]),
-  }
-}

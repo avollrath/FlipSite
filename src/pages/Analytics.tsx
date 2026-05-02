@@ -30,6 +30,7 @@ import {
 import { ChartCard } from '@/components/charts/ChartCard'
 import { KPICard } from '@/components/charts/KPICard'
 import { useItems } from '@/hooks/useItems'
+import { formatCompactCurrency, getChartColors } from '@/lib/chartUtils'
 import { formatMonthKey, toMonthKey } from '@/lib/dateUtils'
 import { useTheme } from '@/lib/theme'
 import {
@@ -89,9 +90,7 @@ export function Analytics() {
   const { data: items = [], isLoading } = useItems()
   const { mode, theme } = useTheme()
   const colors = useMemo(() => {
-    void mode
-    void theme
-    return getChartColors()
+    return getChartColors(theme, mode === 'dark')
   }, [mode, theme])
   const [datePreset, setDatePreset] = useState<DatePreset>('all')
   const [customFrom, setCustomFrom] = useState('')
@@ -747,7 +746,7 @@ function DurationProfitChart({
             name="Profit (€)"
             stroke="hsl(var(--text-muted))"
             tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
-            tickFormatter={(value) => compactCurrency(Number(value))}
+            tickFormatter={(value) => formatCompactCurrency(Number(value))}
             tickLine={false}
             type="number"
             width={48}
@@ -937,7 +936,7 @@ function ChartYAxis() {
       fontSize={11}
       stroke="hsl(var(--text-muted))"
       tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }}
-      tickFormatter={(value) => compactCurrency(Number(value))}
+      tickFormatter={(value) => formatCompactCurrency(Number(value))}
       tickLine={false}
       width={48}
     />
@@ -1375,27 +1374,6 @@ function referenceLabel(value: string) {
     value,
   }
 }
-
-function compactCurrency(value: number) {
-  const formatted = new Intl.NumberFormat('fi-FI', {
-    maximumFractionDigits: Math.abs(value) >= 1000 ? 1 : 0,
-    notation: Math.abs(value) >= 1000 ? 'compact' : 'standard',
-  }).format(value)
-
-  return `${formatted}€`
-}
-
-function getChartColors() {
-  return {
-    accent: getCSSVar('--accent'),
-    muted: getCSSVar('--text-muted'),
-    negative: getCSSVar('--negative'),
-    positive: getCSSVar('--positive'),
-  }
-}
-
-const getCSSVar = (variable: string) =>
-  `hsl(${getComputedStyle(document.documentElement).getPropertyValue(variable).trim()})`
 
 const filterControlClassName =
   'h-10 min-w-40 max-w-56 rounded-lg border border-border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10'
