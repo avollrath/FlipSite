@@ -514,7 +514,7 @@ function MultiSelect({
 
   return (
     <details className="group relative">
-      <summary className="grid cursor-pointer list-none gap-1 text-xs font-medium text-muted">
+      <summary className="grid cursor-pointer list-none gap-1 text-xs font-medium text-muted [&::-webkit-details-marker]:hidden">
         {label}
         <span className={`${filterControlClassName} flex items-center justify-between gap-2 pr-10`}>
           <span className="truncate">{summary}</span>
