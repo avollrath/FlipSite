@@ -114,6 +114,7 @@ export function Items() {
  queryBundleFilter,
  )
  const [inventoryOnly, setInventoryOnly] = useState(queryInventoryOnly)
+ const [hasImage, setHasImage] = useState(false)
  const [focusedItemId] = useState(queryItemId)
  const [expandedBundles, setExpandedBundles] = useState<Set<string>>(
  () => new Set(),
@@ -304,6 +305,17 @@ export function Items() {
  },
  })
 
+ const displayedItems = useMemo(() => {
+ if (viewMode !== 'gallery' || !hasImage) {
+ return visibleItems
+ }
+
+ return visibleItems.filter((item) => {
+ const imageUrl = thumbnailByItemId.get(item.tsid)?.signed_url
+ return Boolean(imageUrl?.trim())
+ })
+ }, [hasImage, thumbnailByItemId, viewMode, visibleItems])
+
  useEffect(() => {
  localStorage.setItem('flipsite-items-view', viewMode)
  }, [viewMode])
@@ -346,6 +358,14 @@ export function Items() {
  }))
  }
 
+ function updateViewMode(nextViewMode: ViewMode) {
+ if (nextViewMode !== 'gallery') {
+ setHasImage(false)
+ }
+
+ setViewMode(nextViewMode)
+ }
+
  function toggleBundle(tsid: string) {
  setExpandedBundles((current) => {
  const next = new Set(current)
@@ -370,7 +390,7 @@ export function Items() {
  }
 
  function exportVisibleItems() {
- const rows = visibleItems.map((item) => {
+ const rows = displayedItems.map((item) => {
  const isKeeper = isKeepingItem(item)
  const profit = calculateItemProfit(item, items)
  const roi = calculateItemROI(item, items)
@@ -408,7 +428,7 @@ export function Items() {
    type="button"
    className="inline-flex items-center justify-center gap-2 rounded-lg border border-border-base bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60 hover:bg-surface-2"
    onClick={exportVisibleItems}
-   disabled={visibleItems.length === 0}
+   disabled={displayedItems.length === 0}
   >
    <Download className="h-4 w-4" aria-hidden="true" />
    Export CSV
@@ -437,7 +457,7 @@ export function Items() {
    placeholder="Search items"
   />
   </label>
-  <ViewToggle value={viewMode} onChange={setViewMode} />
+  <ViewToggle value={viewMode} onChange={updateViewMode} />
   {viewMode === 'gallery' ? (
   <GallerySortControl
    sort={sort}
@@ -496,6 +516,17 @@ export function Items() {
   />
   Bundles only
   </label>
+  {viewMode === 'gallery' ? (
+  <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
+  <input
+   type="checkbox"
+   className="h-4 w-4 rounded border-border-base text-accent focus:ring-accent"
+   checked={hasImage}
+   onChange={(event) => setHasImage(event.target.checked)}
+  />
+  Has image
+  </label>
+  ) : null}
   <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
   <input
    type="checkbox"
@@ -517,7 +548,7 @@ export function Items() {
   {viewMode === 'gallery' ? (
   <GalleryView
    allItems={items}
-   items={visibleItems}
+   items={displayedItems}
    onEdit={openEditDrawer}
    thumbnailByItemId={thumbnailByItemId}
   />
@@ -587,7 +618,7 @@ export function Items() {
   </>
   )}
 
-  {visibleItems.length === 0 ? <NoResults /> : null}
+  {displayedItems.length === 0 ? <NoResults /> : null}
   </>
  )}
 
