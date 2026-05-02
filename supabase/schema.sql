@@ -153,3 +153,89 @@ using (
 --
 -- Optional destructive cleanup after verifying buy_platform was populated:
 -- ALTER TABLE items DROP COLUMN IF EXISTS platform;
+
+-- ============================================================
+-- MIGRATION: Buy/Sell platform split
+-- Applied automatically by Codex
+-- ============================================================
+ALTER TABLE items ADD COLUMN IF NOT EXISTS buy_platform text;
+ALTER TABLE items ADD COLUMN IF NOT EXISTS sell_platform text;
+UPDATE items SET buy_platform = platform WHERE platform IS NOT NULL AND buy_platform IS NULL;
+
+-- ============================================================
+-- MIGRATION: Profiles table
+-- Applied automatically by Codex
+-- ============================================================
+CREATE TABLE IF NOT EXISTS profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username text,
+  avatar_url text,
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can view own profile'
+  ) THEN
+    CREATE POLICY "Users can view own profile" ON profiles
+      FOR SELECT USING (auth.uid() = id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can update own profile'
+  ) THEN
+    CREATE POLICY "Users can update own profile" ON profiles
+      FOR UPDATE USING (auth.uid() = id);
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can insert own profile'
+  ) THEN
+    CREATE POLICY "Users can insert own profile" ON profiles
+      FOR INSERT WITH CHECK (auth.uid() = id);
+  END IF;
+END $$;
+
+-- ============================================================
+-- MIGRATION: Avatars storage bucket
+-- Applied automatically by Codex
+-- ============================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Avatar upload policy'
+  ) THEN
+    CREATE POLICY "Avatar upload policy" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (bucket_id = 'avatars' AND name LIKE auth.uid()::text || '/%');
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Avatar update policy'
+  ) THEN
+    CREATE POLICY "Avatar update policy" ON storage.objects
+      FOR UPDATE TO authenticated
+      USING (bucket_id = 'avatars' AND name LIKE auth.uid()::text || '/%');
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Avatar public read policy'
+  ) THEN
+    CREATE POLICY "Avatar public read policy" ON storage.objects
+      FOR SELECT TO public
+      USING (bucket_id = 'avatars');
+  END IF;
+END $$;

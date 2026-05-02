@@ -1,15 +1,24 @@
 import {
  Check,
  Clipboard,
+ Camera,
  MonitorCog,
  ShieldAlert,
  Type as TypeIcon,
  UserRound,
 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import {
+ useEffect,
+ useMemo,
+ useRef,
+ useState,
+ type ChangeEvent,
+} from 'react'
 import { toast } from 'sonner'
+import { AvatarCropper } from '@/components/ui/AvatarCropper'
 import { useAuth } from '@/hooks/useAuth'
 import { useItems } from '@/hooks/useItems'
+import { useProfile } from '@/hooks/useProfile'
 import {
  clearSettings,
  defaultSettings,
@@ -31,12 +40,24 @@ const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 
 export function Settings() {
  const { user } = useAuth()
+ const {
+ profile,
+ updateProfile,
+ uploadAvatar,
+ isSaving: isProfileSaving,
+ isUploading: isAvatarUploading,
+ } = useProfile()
  const { font, mode, setFont, setMode, setTheme, theme } = useTheme()
  const { data: items = [] } = useItems()
  const [settings, setSettings] = useState<FlipSiteSettings>(() => loadSettings())
  const [copied, setCopied] = useState(false)
  const [saved, setSaved] = useState(false)
+ const [profileSaved, setProfileSaved] = useState(false)
+ const [draftUsername, setDraftUsername] = useState<string | null>(null)
+ const [cropImageSrc, setCropImageSrc] = useState('')
+ const avatarInputRef = useRef<HTMLInputElement | null>(null)
  const savedTimerRef = useRef<number | null>(null)
+ const profileSavedTimerRef = useRef<number | null>(null)
 
  const platforms = useMemo(
  () =>
@@ -48,6 +69,18 @@ export function Settings() {
  const categories = useMemo(
  () => uniqueValues(items.map((item) => item.category)),
  [items],
+ )
+ const username = draftUsername ?? profile?.username ?? ''
+ const avatarUrl = getAvatarUrl(profile?.avatar_url, profile?.updated_at)
+ const fallbackInitial = (username || user?.email || 'U')[0].toUpperCase()
+
+ useEffect(
+ () => () => {
+  if (cropImageSrc) {
+  URL.revokeObjectURL(cropImageSrc)
+  }
+ },
+ [cropImageSrc],
  )
 
  function updateSetting<K extends keyof FlipSiteSettings>(
@@ -83,6 +116,64 @@ export function Settings() {
  }, 1500)
  }
 
+ function showProfileSaved() {
+ setProfileSaved(true)
+
+ if (profileSavedTimerRef.current) {
+ window.clearTimeout(profileSavedTimerRef.current)
+ }
+
+ profileSavedTimerRef.current = window.setTimeout(() => {
+ setProfileSaved(false)
+ profileSavedTimerRef.current = null
+ }, 1500)
+ }
+
+ async function saveProfile() {
+ try {
+ await updateProfile({ username: username.trim() || null })
+ setDraftUsername(null)
+ showProfileSaved()
+ toast.success('Profile saved')
+ } catch (error) {
+ toast.error(error instanceof Error ? error.message : 'Unable to save profile')
+ }
+ }
+
+ function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
+ const file = event.target.files?.[0]
+ event.target.value = ''
+
+ if (!file) {
+ return
+ }
+
+ if (cropImageSrc) {
+ URL.revokeObjectURL(cropImageSrc)
+ }
+
+ setCropImageSrc(URL.createObjectURL(file))
+ }
+
+ function closeCropper() {
+ if (cropImageSrc) {
+ URL.revokeObjectURL(cropImageSrc)
+ }
+
+ setCropImageSrc('')
+ }
+
+ async function handleCropComplete(blob: Blob) {
+ try {
+ await uploadAvatar(blob)
+ closeCropper()
+ showProfileSaved()
+ toast.success('Avatar updated')
+ } catch (error) {
+ toast.error(error instanceof Error ? error.message : 'Unable to upload avatar')
+ }
+ }
+
  async function copyUserId() {
  if (!user?.id) {
  return
@@ -106,11 +197,71 @@ export function Settings() {
   <Panel
   icon={UserRound}
   title="Profile"
+  description="Your name and avatar."
+  >
+  <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+   <button
+   type="button"
+   className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-accent/20 text-accent transition hover:opacity-80"
+   onClick={() => avatarInputRef.current?.click()}
+   aria-label="Upload profile image"
+   >
+   {avatarUrl ? (
+    <img
+    src={avatarUrl}
+    alt="Profile avatar"
+    className="h-full w-full object-cover"
+    />
+   ) : (
+    <span className="grid h-full w-full place-items-center text-2xl font-semibold">
+    {fallbackInitial}
+    </span>
+   )}
+   <span className="absolute inset-0 grid place-items-center bg-black/35 text-white opacity-0 transition group-hover:opacity-100">
+    <Camera className="h-6 w-6" aria-hidden="true" />
+   </span>
+   </button>
+   <input
+   ref={avatarInputRef}
+   className="sr-only"
+   type="file"
+   accept="image/*"
+   onChange={handleAvatarFileChange}
+   />
+   <div className="min-w-0 flex-1 space-y-4">
+   <Field label="Username">
+    <input
+    className={inputClassName}
+    value={username}
+    maxLength={30}
+    onChange={(event) => setDraftUsername(event.target.value)}
+    placeholder="Your display name"
+    />
+   </Field>
+   <div>
+    <span className="text-sm font-medium text-base ">Email</span>
+    <p className="mt-2 truncate text-sm text-muted">{user?.email ?? ''}</p>
+   </div>
+   <div className="flex items-center gap-3">
+    <button
+    type="button"
+    className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+    onClick={saveProfile}
+    disabled={isProfileSaving || isAvatarUploading}
+    >
+    {isProfileSaving ? 'Saving...' : 'Save'}
+    </button>
+    {profileSaved ? <span className="text-xs text-muted">✓ Saved</span> : null}
+   </div>
+   </div>
+  </div>
+  </Panel>
+
+  <Panel
+  icon={UserRound}
+  title="Account"
   description="Basic account information for this signed-in user."
   >
-  <Field label="Email">
-  <input className={inputClassName} value={user?.email ?? ''} readOnly />
-  </Field>
   <Field label="User ID">
   <div className="flex gap-2">
    <input className={inputClassName} value={user?.id ?? ''} readOnly />
@@ -265,6 +416,14 @@ export function Settings() {
   Import / Export page to download a CSV backup first.
   </p>
  </Panel>
+
+ {cropImageSrc ? (
+ <AvatarCropper
+  imageSrc={cropImageSrc}
+  onCancel={closeCropper}
+  onComplete={handleCropComplete}
+ />
+ ) : null}
  </section>
  )
 }
@@ -451,4 +610,12 @@ function uniqueValues(values: Array<string | null | undefined>) {
   .map((value) => [value.toLowerCase(), value]),
  ).values(),
  ).sort((first, second) => first.localeCompare(second))
+}
+
+function getAvatarUrl(avatarUrl: string | null | undefined, updatedAt: string | null | undefined) {
+ if (!avatarUrl) {
+ return ''
+ }
+
+ return updatedAt ? `${avatarUrl}?t=${encodeURIComponent(updatedAt)}` : avatarUrl
 }

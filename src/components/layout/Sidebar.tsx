@@ -11,6 +11,7 @@ import {
 import { NavLink } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
+import { useProfile } from '@/hooks/useProfile'
 
 const navItems = [
  { label: 'Dashboard', href: '/', icon: Gauge },
@@ -23,6 +24,10 @@ const navItems = [
 
 export function Sidebar() {
  const { signOut, user } = useAuth()
+ const { profile } = useProfile()
+ const avatarUrl = getAvatarUrl(profile?.avatar_url, profile?.updated_at)
+ const displayName = profile?.username ?? user?.email?.split('@')[0] ?? 'User'
+ const fallbackInitial = (displayName || user?.email || 'U')[0].toUpperCase()
 
  async function handleSignOut() {
  try {
@@ -63,17 +68,47 @@ export function Sidebar() {
   ))}
  </nav>
 
- <div className="mt-auto rounded-lg border border-border-base bg-card/[0.04] p-4">
-  <p className="truncate text-sm font-medium text-white/60">{user?.email}</p>
+ <div className="mt-auto flex flex-col gap-3 border-t border-white/10 pt-4">
+  <div className="flex min-w-0 items-center gap-3">
+  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent/20">
+   {avatarUrl ? (
+   <img
+    src={avatarUrl}
+    alt="avatar"
+    className="h-full w-full object-cover"
+   />
+   ) : (
+   <span className="text-sm font-semibold text-sidebar-accent">
+    {fallbackInitial}
+   </span>
+   )}
+  </div>
+  <div className="min-w-0 flex-1">
+   <p className="truncate text-sm font-semibold leading-tight text-white">
+   {displayName}
+   </p>
+   <p className="mt-0.5 truncate text-[11px] leading-tight text-white/45">
+   {user?.email}
+   </p>
+  </div>
+  </div>
   <button
   type="button"
-  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white/50 transition hover:bg-white/15 hover:text-white/90"
+  className="flex w-fit items-center gap-2 text-xs text-white/50 transition-colors hover:text-white/90"
   onClick={handleSignOut}
   >
-  <LogOut className="h-4 w-4" aria-hidden="true" />
+  <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
   Logout
   </button>
  </div>
  </aside>
  )
+}
+
+function getAvatarUrl(avatarUrl: string | null | undefined, updatedAt: string | null | undefined) {
+ if (!avatarUrl) {
+ return ''
+ }
+
+ return updatedAt ? `${avatarUrl}?t=${encodeURIComponent(updatedAt)}` : avatarUrl
 }
