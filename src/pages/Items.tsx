@@ -1092,6 +1092,7 @@ function GalleryCard({
  <div
   className="absolute inset-0 rounded-lg"
   style={{
+  // Intentional: fixed black scrim for guaranteed contrast on any image color.
   background:
    'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0) 65%)',
   }}

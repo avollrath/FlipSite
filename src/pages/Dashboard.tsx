@@ -682,6 +682,7 @@ function buildChartData(items: Item[]) {
         month: boughtMonth,
         sell: 0,
       }
+      // Intentional: buy volume includes keepers - represents total cash spent, not just flip investment.
       buyBucket.buy = sumCurrency([buyBucket.buy, item.buy_price])
       map.set(boughtMonth, buyBucket)
 

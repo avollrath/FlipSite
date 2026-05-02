@@ -100,6 +100,7 @@ export async function compressImage(file: File) {
     canvas.width = width
     canvas.height = height
 
+    // Intentional: white canvas background for JPEG compression fallback - not theme-dependent.
     context.fillStyle = '#ffffff'
     context.fillRect(0, 0, width, height)
     context.drawImage(image, 0, 0, width, height)
