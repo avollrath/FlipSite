@@ -51,7 +51,7 @@ export function KPICard({
 
  return (
  <article
- className={`relative min-h-[100px] overflow-hidden rounded-lg border border-border-base bg-card p-5 shadow-xl shadow-border-base/40 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-2xl ${
+ className={`relative min-h-[100px] overflow-hidden rounded-lg border border-border-base bg-card p-5 shadow-xl shadow-border-base/40 backdrop-blur transition hover:shadow-2xl ${
   onClick ? 'cursor-pointer focus-visible:ring-4 focus-visible:ring-accent/20' : ''
  }`}
  {...interactiveProps}

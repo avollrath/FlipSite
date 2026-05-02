@@ -1080,7 +1080,7 @@ function GalleryCard({
  <button
  type="button"
  style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
- className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:-translate-y-0.5 hover:border-accent hover:shadow-md animate-fadeIn"
+ className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:border-accent hover:shadow-md animate-fadeIn"
  onClick={onEdit}
  >
  <ImageWithSkeleton
