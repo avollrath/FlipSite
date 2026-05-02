@@ -5,7 +5,6 @@ import {
  ChevronRight,
  Download,
  Edit3,
- Image as ImageIcon,
  Link2,
  PackageOpen,
  Plus,
@@ -16,6 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
+import { ImageWithSkeleton } from '@/components/ui/ImageWithSkeleton'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
 import { useDeleteItem, useItems } from '@/hooks/useItems'
 import {
@@ -959,11 +959,12 @@ function GalleryView({
 }) {
  return (
  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
- {items.map((item) => (
+ {items.map((item, index) => (
   <GalleryCard
   key={item.tsid}
   allItems={allItems}
   item={item}
+  index={index}
   onEdit={() => onEdit(item)}
   thumbnail={thumbnailByItemId.get(item.tsid)}
   />
@@ -975,11 +976,13 @@ function GalleryView({
 function GalleryCard({
  allItems,
  item,
+ index,
  onEdit,
  thumbnail,
 }: {
  allItems: Item[]
  item: Item
+ index: number
  onEdit: () => void
  thumbnail: ItemImageThumbnail | undefined
 }) {
@@ -992,21 +995,16 @@ function GalleryCard({
  return (
  <button
  type="button"
- className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent/35 hover:shadow-md bg-surface-2/70 hover:border-accent"
+ style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
+ className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent/35 hover:shadow-md bg-surface-2/70 hover:border-accent animate-fadeIn opacity-0"
  onClick={onEdit}
  >
- {thumbnail ? (
-  <img
-  className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-  src={thumbnail.signed_url}
-  alt=""
-  loading="lazy"
-  />
- ) : (
-  <div className="absolute inset-0 grid place-items-center text-muted ">
-  <ImageIcon className="h-10 w-10" aria-hidden="true" />
-  </div>
- )}
+ <ImageWithSkeleton
+  src={thumbnail?.signed_url}
+  alt={item.name}
+  skeletonClassName="aspect-square w-full rounded-t-lg"
+  className="group-hover:scale-105"
+ />
  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-3">
   <p className="line-clamp-2 text-sm font-semibold text-accent-fg">
   {item.name}
@@ -1026,24 +1024,13 @@ function ItemThumbnail({
  name: string
  thumbnail: ItemImageThumbnail | undefined
 }) {
- if (thumbnail) {
  return (
- <img
-  className="h-10 w-10 shrink-0 rounded-md border border-border-base object-cover "
-  src={thumbnail.signed_url}
-  alt=""
-  loading="lazy"
+ <ImageWithSkeleton
+  src={thumbnail?.signed_url}
+  alt={name}
+  skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-border-base flex-shrink-0"
+  className="rounded-md border border-border-base"
  />
- )
- }
-
- return (
- <div
- className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-dashed border-border-base bg-surface text-muted bg-surface-2/60 "
- aria-label={`${name} has no image`}
- >
- <ImageIcon className="h-4 w-4" aria-hidden="true" />
- </div>
  )
 }
 

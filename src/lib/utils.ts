@@ -1,6 +1,10 @@
 import { format } from 'date-fns'
 import type { Item, ItemStatus } from '@/types'
 
+export function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(' ')
+}
+
 export function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return new Intl.NumberFormat('fi-FI', {
