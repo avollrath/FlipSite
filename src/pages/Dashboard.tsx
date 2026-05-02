@@ -591,8 +591,8 @@ function buildKpis(dashboardItems: Item[]) {
     (item) => calculateItemSellValue(item, dashboardItems) > 0,
   )
   const childrenByBundle = getChildrenByBundle(dashboardItems)
-  const totalInvested = aggregateItems.reduce(
-    (sum, item) => sum + item.buy_price,
+  const totalInvested = flippingItems.reduce(
+    (sum, item) => sum + (item.buy_price ?? 0),
     0,
   )
   const totalRevenue = soldItems.reduce(
