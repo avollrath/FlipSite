@@ -80,7 +80,7 @@ export function KPICard({
    {title}
   </p>
   <p
-   className="mt-3 truncate text-3xl font-bold tracking-tight text-base"
+   className="mt-3 truncate text-2xl font-bold tracking-tight text-base md:text-3xl"
    title={valueTitle}
   >
    {displayValue}
