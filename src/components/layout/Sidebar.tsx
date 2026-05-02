@@ -41,9 +41,9 @@ export function Sidebar() {
 
  return (
  <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-border-base bg-sidebar p-5 md:flex">
- <NavLink to="/" className="flex items-center gap-3">
-  <Logo size={36} />
- </NavLink>
+ <div className="flex items-center justify-center px-4 py-6">
+  <Logo size={52} />
+ </div>
 
  <nav className="mt-10 space-y-2">
   {navItems.map(({ label, href, icon: Icon }) => (
