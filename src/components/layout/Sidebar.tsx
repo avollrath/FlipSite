@@ -42,7 +42,7 @@ export function Sidebar() {
  return (
  <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-border-base bg-sidebar p-5 md:flex">
  <div className="flex items-center justify-center px-4 py-6">
-  <Logo size={52} />
+        <Logo size={68} />
  </div>
 
  <nav className="mt-10 space-y-2">

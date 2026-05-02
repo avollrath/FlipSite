@@ -14,7 +14,7 @@ export function Layout() {
  <div className="min-h-screen md:pl-72">
   <header className="sticky top-0 z-30 border-b border-border-base bg-surface/85 backdrop-blur">
   <div className="flex h-16 items-center justify-between px-5 md:px-8">
-  <div className="text-xl font-semibold">FlipSite</div>
+          <div aria-hidden="true" />
   <button
    type="button"
    className="grid h-10 w-10 place-items-center rounded-lg border border-border-base bg-card text-muted shadow-sm transition hover:border-accent/40 hover:text-accent"
