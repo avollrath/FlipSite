@@ -1,6 +1,8 @@
 import {
   calculateItemProfit,
+  calculateItemROI,
   calculateItemSellValue,
+  getBuyPlatform,
   getEffectiveItemStatus,
   isAggregateItem,
   isKeepingItem,
@@ -25,8 +27,83 @@ export type CategoryStat = {
   totalSellValue: number
 }
 
+export type AnalyticsSummary = {
+  activeInventoryValue: number
+  averageProfit: number
+  averageRoi: number
+  bestFlip: { name: string; profit: number; roi: number } | null
+  soldItemsCount: number
+  totalProfit: number
+  totalRevenue: number
+  unrealisedBuyCost: number
+  unrealisedItemsCount: number
+  worstFlip: { name: string; profit: number; roi: number } | null
+}
+
+export type DurationProfitDatum = {
+  days: number
+  name: string
+  profit: number
+}
+
+export type CumulativeProfitDatum = {
+  actual: number
+  date: string
+  pace: number
+}
+
 export function getFlippingAggregateItems(items: Item[]) {
   return items.filter(isAggregateItem).filter((item) => !isKeepingItem(item))
+}
+
+export function getSoldAggregateItems(items: Item[]) {
+  return getFlippingAggregateItems(items).filter(
+    (item) =>
+      getEffectiveItemStatus(item, items) === 'sold' &&
+      calculateItemSellValue(item, items) > 0,
+  )
+}
+
+export function buildSummary(items: Item[]): AnalyticsSummary {
+  const aggregateItems = getFlippingAggregateItems(items)
+  const soldItems = getSoldAggregateItems(items)
+  const activeItems = aggregateItems.filter((item) =>
+    ['holding', 'listed'].includes(getEffectiveItemStatus(item, items)),
+  )
+  const soldStats = soldItems.map((item) => {
+    const profit = calculateItemProfit(item, items)
+    const roi = calculateItemROI(item, items) ?? 0
+
+    return { item, profit, roi }
+  })
+  const totalRevenue = sumCurrency(
+    soldItems.map((item) => calculateItemSellValue(item, items)),
+  )
+  const totalProfit = sumCurrency(soldStats.map((stat) => stat.profit))
+  const averageRoi =
+    soldStats.length > 0
+      ? soldStats.reduce((sum, stat) => sum + stat.roi, 0) / soldStats.length
+      : 0
+  const bestStat = soldStats.toSorted((a, b) => b.profit - a.profit)[0]
+  const worstStat = soldStats.toSorted((a, b) => a.profit - b.profit)[0]
+  const activeInventoryValue = sumCurrency(activeItems.map((item) => item.buy_price))
+
+  return {
+    activeInventoryValue,
+    averageProfit: soldStats.length > 0 ? totalProfit / soldStats.length : 0,
+    averageRoi,
+    bestFlip: bestStat
+      ? { name: bestStat.item.name, profit: bestStat.profit, roi: bestStat.roi }
+      : null,
+    soldItemsCount: soldItems.length,
+    totalProfit,
+    totalRevenue,
+    unrealisedBuyCost: activeInventoryValue,
+    unrealisedItemsCount: activeItems.length,
+    worstFlip: worstStat
+      ? { name: worstStat.item.name, profit: worstStat.profit, roi: worstStat.roi }
+      : null,
+  }
 }
 
 export function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
@@ -56,6 +133,97 @@ export function buildMonthlyPerformance(items: Item[]): ChartDatum[] {
     label,
     ...values,
   })).sort((a, b) => a.label.localeCompare(b.label))
+}
+
+export function buildMonthlyRevenue(items: Item[]) {
+  return buildMonthlyPerformance(items).map(({ label, revenue = 0 }) => ({
+    month: label,
+    revenue,
+  }))
+}
+
+export function buildMonthlyProfit(items: Item[]) {
+  return buildMonthlyPerformance(items).map(({ label, profit = 0 }) => ({
+    month: label,
+    profit,
+  }))
+}
+
+export function buildProfitByCategory(items: Item[]): ChartDatum[] {
+  return buildProfitBreakdown(items, (item) => item.category || 'Uncategorized')
+}
+
+export function buildProfitByPlatform(items: Item[]): ChartDatum[] {
+  return buildProfitBreakdown(items, (item) => getBuyPlatform(item) || 'Unknown')
+}
+
+export function buildTopFlips(items: Item[], count = 8) {
+  return getSoldAggregateItems(items)
+    .map((item) => ({
+      name: item.name,
+      profit: calculateItemProfit(item, items),
+    }))
+    .sort((a, b) => b.profit - a.profit)
+    .slice(0, count)
+}
+
+export function buildRoiDistribution(items: Item[]): ChartDatum[] {
+  const roisByCategory = new Map<string, number[]>()
+
+  for (const item of getSoldAggregateItems(items)) {
+    const roi = calculateItemROI(item, items)
+
+    if (roi === null) {
+      continue
+    }
+
+    const label = item.category || 'Uncategorized'
+    roisByCategory.set(label, [...(roisByCategory.get(label) ?? []), roi])
+  }
+
+  return Array.from(roisByCategory, ([label, rois]) => ({
+    label,
+    roi: average(rois),
+  })).sort((a, b) => (b.roi ?? 0) - (a.roi ?? 0))
+}
+
+export function buildDurationProfit(items: Item[]): DurationProfitDatum[] {
+  return getSoldAggregateItems(items)
+    .map((item) => {
+      const soldAt = getEffectiveSoldAt(item, items)
+      const boughtAt = item.bought_at
+
+      if (!soldAt || !boughtAt) {
+        return null
+      }
+
+      return {
+        days: Math.max(0, Math.round((dateValue(soldAt) - dateValue(boughtAt)) / 86_400_000)),
+        name: item.name,
+        profit: calculateItemProfit(item, items),
+      }
+    })
+    .filter((entry): entry is DurationProfitDatum => Boolean(entry))
+}
+
+export function buildCumulativeProfit(items: Item[]): CumulativeProfitDatum[] {
+  const soldItems = getSoldAggregateItems(items).sort(
+    (a, b) => dateValue(getEffectiveSoldAt(a, items)) - dateValue(getEffectiveSoldAt(b, items)),
+  )
+  const totalProfit = sumCurrency(
+    soldItems.map((item) => calculateItemProfit(item, items)),
+  )
+  let runningProfit = 0
+
+  return soldItems.map((item, index) => {
+    runningProfit = sumCurrency([runningProfit, calculateItemProfit(item, items)])
+
+    return {
+      actual: runningProfit,
+      date: shortDate(getEffectiveSoldAt(item, items)),
+      pace: totalProfit * ((index + 1) / soldItems.length),
+    }
+  })
 }
 
 export function buildCategoryStats(items: Item[]): CategoryStat[] {
@@ -89,7 +257,20 @@ export function buildCategoryStats(items: Item[]): CategoryStat[] {
     .sort((a, b) => a.category.localeCompare(b.category))
 }
 
-function getEffectiveSoldAt(item: Item, items: Item[]) {
+function buildProfitBreakdown(items: Item[], getLabel: (item: Item) => string): ChartDatum[] {
+  const data = new Map<string, number>()
+
+  for (const item of getSoldAggregateItems(items)) {
+    const label = getLabel(item)
+    data.set(label, sumCurrency([data.get(label) ?? 0, calculateItemProfit(item, items)]))
+  }
+
+  return Array.from(data, ([label, profit]) => ({ label, profit })).sort(
+    (a, b) => (b.profit ?? 0) - (a.profit ?? 0),
+  )
+}
+
+export function getEffectiveSoldAt(item: Item, items: Item[]) {
   if (!item.is_bundle_parent) {
     return item.sold_at
   }
@@ -108,6 +289,21 @@ function getEffectiveSoldAt(item: Item, items: Item[]) {
 
 function dateValue(value: string | null) {
   return value ? new Date(value).getTime() : 0
+}
+
+function shortDate(value: string | null) {
+  if (!value) {
+    return ''
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(value))
+}
+
+export function average(values: number[]) {
+  return values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
 }
 
 function uniqueValues(values: string[]) {

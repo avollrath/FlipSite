@@ -27,6 +27,7 @@ import {
 import { ChartCard } from '@/components/charts/ChartCard'
 import { KPICard } from '@/components/charts/KPICard'
 import { useItems } from '@/hooks/useItems'
+import { buildProfitByCategory, buildTopFlips } from '@/lib/analytics'
 import { formatCompactCurrency, getChartColors } from '@/lib/chartUtils'
 import { formatMonthKey, toMonthKey } from '@/lib/dateUtils'
 import { useTheme } from '@/lib/theme'
@@ -305,7 +306,7 @@ function ProfitBarChart({
   title,
 }: {
   colors: ChartColors
-  data: Array<{ category: string; profit: number }>
+  data: Array<{ label: string; profit?: number }>
   title: string
 }) {
   const gradientSuffix = `dashboard-${title.toLowerCase().replaceAll(' ', '-')}`
@@ -320,7 +321,7 @@ function ProfitBarChart({
         <BarChart data={data}>
           <ChartGradients colors={colors} idSuffix={gradientSuffix} />
           <ChartGrid />
-          <ChartXAxis dataKey="category" rotate={data.length > 6} />
+          <ChartXAxis dataKey="label" rotate={data.length > 6} />
           <ChartYAxis />
           <Tooltip content={<CurrencyTooltip />} cursor={{ fill: 'transparent' }} />
           <Bar
@@ -335,9 +336,9 @@ function ProfitBarChart({
           >
             {data.map((entry) => (
               <Cell
-                key={entry.category}
+                key={entry.label}
                 fill={
-                  entry.profit >= 0
+                  (entry.profit ?? 0) >= 0
                     ? `url(#gradientAccent-${gradientSuffix})`
                     : `url(#gradientNegative-${gradientSuffix})`
                 }
@@ -670,23 +671,8 @@ function buildChartData(items: Item[]) {
     }
   })
 
-  const profitByCategory = Array.from(
-    soldItems.reduce((map, item) => {
-      const category = item.category || 'Uncategorized'
-      const current = map.get(category) ?? 0
-      map.set(category, sumCurrency([current, calculateItemProfit(item, items)]))
-      return map
-    }, new Map<string, number>()),
-    ([category, profit]) => ({ category, profit }),
-  ).sort((a, b) => b.profit - a.profit)
-
-  const topFlips = soldItems
-    .map((item) => ({
-      name: item.name,
-      profit: calculateItemProfit(item, items),
-    }))
-    .sort((a, b) => b.profit - a.profit)
-    .slice(0, 8)
+  const profitByCategory = buildProfitByCategory(items)
+  const topFlips = buildTopFlips(items, 8)
 
   const monthlyVolume = Array.from(
     aggregateItems.reduce((map, item) => {
