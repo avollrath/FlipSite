@@ -241,10 +241,10 @@ export function Settings() {
     </button>
    </div>
    </div>
-   <div className="flex shrink-0 flex-col items-center gap-3">
+   <div className="flex shrink-0 flex-col items-center gap-3 border-l border-border-base pl-8">
    <button
    type="button"
-   className="group relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-2 ring-border-base"
+   className="group relative flex h-36 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-2 ring-border-base"
    onClick={() => avatarInputRef.current?.click()}
    aria-label="Upload profile image"
    disabled={isAvatarUploading}
@@ -256,7 +256,7 @@ export function Settings() {
     className="h-full w-full object-cover"
     />
    ) : (
-    <span className="text-3xl font-semibold text-accent">
+    <span className="text-4xl font-semibold text-accent">
     {fallbackInitial}
     </span>
    )}

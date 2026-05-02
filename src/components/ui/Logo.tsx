@@ -37,7 +37,7 @@ export function Logo({ className = '', size = 36 }: LogoProps) {
   const h = size
   const w = Math.round(size * 1.96)
   const rx = Math.round(size * 0.28)
-  const pad = size * 0.14
+  const pad = size * 0.26
   const logoWidth = w - pad * 2
   const logoHeight = h - pad * 2
   const { from, to } = gradientColors
