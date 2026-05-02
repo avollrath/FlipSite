@@ -97,10 +97,12 @@ export async function uploadItemFile(itemId: string, file: File) {
 }
 
 export async function getItemFiles(itemId: string) {
+  const user = await getAuthenticatedUser()
   const { data, error } = await supabase
     .from('item_files')
     .select('*')
     .eq('item_id', itemId)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -111,6 +113,7 @@ export async function getItemFiles(itemId: string) {
 }
 
 export async function deleteItemFile(fileId: string, filePath: string) {
+  const user = await getAuthenticatedUser()
   const { error: storageError } = await supabase.storage
     .from(ITEM_FILES_BUCKET)
     .remove([filePath])
@@ -123,6 +126,7 @@ export async function deleteItemFile(fileId: string, filePath: string) {
     .from('item_files')
     .delete()
     .eq('id', fileId)
+    .eq('user_id', user.id)
 
   if (deleteError) {
     throwSafeFileError(deleteError, 'Unable to delete file details. Please try again.')
@@ -145,6 +149,7 @@ export async function getFirstItemImageThumbnails(
   itemIds: string[],
   options: { size?: number } = {},
 ) {
+  const user = await getAuthenticatedUser()
   const uniqueItemIds = Array.from(new Set(itemIds)).filter(Boolean)
   const size = options.size ?? DEFAULT_THUMBNAIL_SIZE_PX
 
@@ -157,6 +162,7 @@ export async function getFirstItemImageThumbnails(
     .select('item_id,file_path,created_at')
     .in('item_id', uniqueItemIds)
     .eq('file_type', 'image')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) {
