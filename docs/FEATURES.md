@@ -1,0 +1,483 @@
+# FlipSite — Current Feature List
+Generated: 2026-05-02
+Version: current main branch
+
+---
+
+## Authentication
+- Email/password login and sign-up through Supabase Auth.
+- Protected app routes redirect unauthenticated users to `/login`.
+- Login remembers the originally requested route and returns the user there after authentication.
+- Auth state is loaded on startup with a "Checking your session" loading screen.
+- Session changes are tracked live through Supabase `onAuthStateChange`.
+- User-facing auth errors are friendly: invalid login shows "Invalid email or password"; signup failure shows a generic retry message.
+- Global toast notifications are enabled in the top-right corner.
+
+## Dashboard
+- Page title: "Inventory at a glance".
+- Year filter dropdown: `All years` plus every year found in item bought/sold dates.
+- Year filtering includes matching bundle children and relevant bundle parents so bundle context is preserved.
+- KPI cards:
+  - Total Invested: purchase cost of non-keeper aggregate items.
+  - Total Revenue: sell value from sold non-keeper items.
+  - Total Profit: revenue minus sold item costs.
+  - Avg ROI %: average ROI across sold non-keeper items.
+  - Best Flip: best sold item by ROI, clickable to open the item on the Items page.
+  - In Inventory: count of holding/listed non-keeper items, clickable to filtered inventory.
+  - Keepers: count of keeper/keeping items, clickable to keeper filter.
+  - Keeping Value: purchase value of kept items.
+  - Active Bundles: bundle parents with unsold non-keeper children, clickable to active bundles.
+- KPI cards have animated count-up values, icon badges, trend icons, accent glow backgrounds, and clickable keyboard support where actions exist.
+- Charts:
+  - Cumulative Profit Over Time area chart.
+  - Profit by Category bar chart.
+  - Top Flips horizontal bar chart with top 8 sold items by profit.
+  - Monthly Buy vs Sell Volume grouped bar chart.
+- Chart styling includes custom tooltips, semantic theme colors, gradients, horizontal grid lines only, compact euro axis labels, and HTML legends.
+- Empty/loading chart and KPI skeleton states are implemented.
+- Keeper items are excluded from revenue/profit/ROI metrics and sell-side chart values.
+- Monthly buy volume intentionally includes keepers because it represents cash spent.
+- Bundle parent profit includes child sales.
+
+## Items — List View
+- Page title: "My Items".
+- Add Item button opens the add item drawer.
+- Export CSV button exports currently displayed items.
+- Search input matches item name, category, condition, buy/sell platforms, effective status, and notes.
+- View toggle switches between list and gallery using icon-only buttons.
+- Filters:
+  - Status: All Statuses, In Inventory, Listed for Sale, Sold, Keeping.
+  - Bought from: all distinct buy platforms.
+  - Sold on: all distinct sell platforms.
+  - Category: all distinct categories.
+  - Bundles only checkbox.
+  - Inventory checkbox.
+- URL query filters supported:
+  - `?status=keeper`
+  - `?inventory=1`
+  - `?bundles=only`
+  - `?bundles=active`
+  - `?item=<id>` for focusing a specific item.
+- Desktop table columns:
+  - Name
+  - Category
+  - Condition
+  - Buy Price
+  - Sell Price
+  - Profit
+  - ROI %
+  - Bought from
+  - Sold on
+  - Status
+  - Date Bought
+  - Date Sold
+  - Actions
+- Table header sorting supports:
+  - name, category, condition, buy price, sell price, profit, ROI, bought from, sold on, status, bought date, sold date, created date.
+- Sort direction toggles when clicking the active header.
+- Item rows show first uploaded image thumbnail using signed transformed Supabase URLs.
+- Rows without images show a subtle image placeholder.
+- Bundle parents show an expand/collapse control and a bundle count badge.
+- Expanded bundles show child rows indented with a link icon.
+- Default unfiltered list groups child rows under bundle parents instead of mixing them into the top-level list.
+- Filtering/searching shows matching rows directly, including children.
+- Keeper rows show `--` for Sell Price, Profit, and ROI instead of financial flip metrics.
+- Status badges are visually styled for holding/listed/sold/keeper.
+- Row click opens the edit drawer.
+- Row action buttons edit or delete an item.
+- Delete confirmation modal requires confirmation before removing an item.
+- Mobile list view uses compact item cards with thumbnail, status, category/source, bundle controls, and metrics.
+- Empty state invites the user to add the first flip.
+- No-results state appears when filters match nothing.
+
+## Items — Gallery View
+- Gallery view persists in `localStorage` under `flipsite-items-view`.
+- Responsive card grid:
+  - 2 columns on small screens.
+  - 3 columns on small/tablet.
+  - 4, 5, and 6 columns at larger breakpoints.
+- Gallery cards use the first uploaded image as the card image via transformed signed URL around 420px.
+- Cards without an image show the shared image placeholder.
+- Card overlay uses a fixed black gradient scrim for guaranteed text contrast on any image.
+- Card text includes:
+  - item name, clamped to two lines.
+  - price, showing sell value when effectively sold and buy price otherwise.
+- Status badge appears at the top-right over a dark translucent backdrop.
+- Bundle badge appears at the top-left for bundle parents.
+- Clicking a card opens the existing item drawer.
+- Gallery-specific sort control supports:
+  - Bought date
+  - Sold date
+  - Name
+  - Category
+  - Condition
+  - Buy price
+  - Sell price
+  - Profit
+  - ROI %
+  - Bought from
+  - Sold on
+  - Status
+  - Created date
+- Gallery sort direction control supports Asc and Desc.
+- Gallery uses the same sorting logic as list/table view.
+- "Has image" filter appears only in gallery view and filters to items with a signed thumbnail URL.
+- Switching back to list view resets the "Has image" filter.
+
+## Item Add / Edit Drawer
+- Opens in a right-side sheet with title `Add Item` or `Edit Item`.
+- Fields:
+  - Name, required.
+  - Category combobox with existing category suggestions and free text.
+  - Condition select: New, Like New, Good, Fair, Poor, plus existing saved condition values.
+  - Bought from combobox with combined existing buy/sell platform suggestions and free text.
+  - Buy Price, required.
+  - Sell Price, shown when status is listed or sold; required for sold items.
+  - Sold on combobox, shown when status is listed or sold.
+  - Status select: holding, listed, sold, keeper.
+  - Date Bought, required.
+  - Date Sold, shown when status is listed or sold.
+  - Notes textarea.
+  - This is a bundle checkbox.
+- Price inputs accept comma, dot, and euro suffix formats such as `3.85`, `3,85`, `3.85€`, and `3,85€`.
+- Date UI displays German-style `dd/MM/yyyy` values.
+- Date input supports manual typing and hidden native date picker opening on focus/click where supported.
+- Dates are converted to ISO timestamps before saving to Supabase.
+- Invalid prices and dates show clear validation toasts.
+- Profit Preview panel shows current projected profit and ROI.
+- Add mode reads default buy platform, category, condition, and status from local settings.
+- Add mode initializes date bought to today.
+- Edit mode preloads the existing item and existing bundle children.
+- Status changes away from listed/sold clear sell price, sold date, and sold platform.
+- Submit buttons show loading state.
+- Edit mode includes an inline delete panel with a two-step confirm flow.
+
+## Bundles
+- Any item can be marked as a bundle parent.
+- Bundle parent has a single purchase price and can have multiple child items.
+- Bundle child fields:
+  - Name.
+  - Category combobox.
+  - Condition select.
+  - Status select.
+  - Optional split cost.
+- Add button creates additional child forms.
+- New child forms can be removed before saving.
+- Existing bundle children appear in edit mode.
+- New bundle children inherit parent bought date and bought-from platform.
+- Bundle children are inserted with `bundle_id` pointing to the parent and `is_bundle_parent: false`.
+- Bundle parent profit calculation includes parent sell price plus child sell prices minus parent buy price.
+- Bundle child profit calculation is its sell price when treated as part of a bundle.
+- Effective bundle parent status becomes sold when every child is sold.
+- Database schema includes a trigger that prevents bundle children from referencing a parent owned by another user.
+- Active bundle detection counts bundle parents with unsold child items.
+
+## Analytics
+- Page title: "Performance" with subtitle "Performance by the numbers".
+- Sticky filter bar affects every KPI and chart.
+- Date range filter:
+  - All time
+  - This year
+  - Last 12 months
+  - Last 6 months
+  - Last 3 months
+  - Custom range
+- Custom range shows native date inputs for From and To.
+- Multi-select filters:
+  - Category with all distinct item categories.
+  - Bought from with all distinct buy platforms.
+  - Sold on with all distinct sell platforms.
+  - Status: Sold, Holding, Listed, Keeping.
+- Active filters badge shows the number of active filters and includes a Clear action.
+- Filtering preserves bundle context by including children for matched aggregate items.
+- KPI cards:
+  - Total Revenue: total from all sales.
+  - Total Profit: what was earned after costs.
+  - Profit per Flip: total profit divided by sold item count.
+  - Average ROI %: average return on each sale.
+  - Best Flip: truncated item name with full name in tooltip; subtitle includes profit and ROI.
+  - Biggest Loss: truncated item name with full name in tooltip; subtitle shows loss amount.
+  - Sold Items: completed flips count.
+  - Tied-Up Cash: buy cost of holding/listed items.
+  - Unsold Items: count of holding/listed items and spent amount.
+- Section headings:
+  - Performance by the numbers.
+  - What's Sitting Unsold.
+  - Monthly Breakdown.
+  - Digging Deeper.
+- Charts:
+  - Monthly Revenue bar chart with average reference line.
+  - Monthly Profit bar chart with positive/negative bars and average reference line.
+  - Profit by Category bar chart sorted descending.
+  - Profit by Platform bar chart sorted descending using bought-from platform.
+  - Best Categories to Flip horizontal ROI distribution chart.
+  - Does Waiting Pay Off? scatter plot with days held vs profit.
+  - Profit Over Time area chart with "Your profit" and dashed "Steady pace" line.
+- Scatter tooltip shows item name and "Held X days - earned Y".
+- Chart empty states show an icon and "No data for selected filters".
+- Analytics excludes keeper items from profit/revenue/ROI calculations.
+- Analytics uses bundle-aware aggregate items to avoid double counting children.
+
+## Categories
+- Page title: "Categories".
+- Category stats are derived from all current items.
+- Search input filters categories by name.
+- Category table columns:
+  - Category.
+  - Items.
+  - Sold.
+  - Holding / Listed.
+  - Buy Value.
+  - Sell Value.
+  - Profit.
+- Buy value includes aggregate category items, including keepers.
+- Sell value and profit exclude keeper items.
+- Rename Category panel:
+  - Source category select.
+  - New category name input.
+  - Rename button.
+  - Confirmation prompt before bulk update.
+- Merge Categories panel:
+  - Source category select.
+  - Target category select.
+  - Merge button.
+  - Confirmation prompt before bulk update.
+- Rename/merge updates all matching `items.category` rows for the current user.
+- Exact same source and target strings are blocked; capitalization-only renames are allowed.
+- Data refreshes after category updates.
+- Empty and loading states are shown in the table.
+
+## Import / Export
+- Page title: "Import & Export".
+- Export CSV panel:
+  - Exports all current user items as `flipsite-items.csv`.
+  - Export fields include name, category, condition, buy_price, sell_price, buy_platform, sell_platform, status, bought_at, sold_at, notes, bundle_id, and is_bundle_parent.
+  - Legacy platform data is exported through the current buy/sell platform helpers where applicable.
+- CSV template download:
+  - Downloads `flipsite-import-template.csv`.
+  - Example row includes `01/05/2026`, comma decimal money, holding status, buy platform, and optional sell platform.
+- Import CSV panel:
+  - Accepts `.csv` and `text/csv` uploads.
+  - Parses CSV client-side.
+  - Shows selected file name.
+  - Shows preview before import.
+- Import validation requires:
+  - name
+  - category
+  - condition
+  - buy_price
+  - buy_platform or legacy platform
+  - status
+  - bought_at
+- Import validation checks valid money values, status values, bought date, and sold date.
+- Import preview table shows row number, name, category, buy value, status, bought date, and validation result.
+- Valid rows can be appended to Supabase with `Import Valid Rows`.
+- Import does not overwrite existing data.
+- ⚠️ partial: import can pass through `bundle_id` and `is_bundle_parent`, but it does not reconstruct bundle relationships automatically.
+
+## Settings — Profile & Account
+- Full-width profile/account card paired with Danger Zone on desktop.
+- Username input:
+  - Maximum length 30 characters.
+  - Saves to the `profiles` table.
+  - Empty username saves as null.
+  - Shows a temporary saved indicator.
+- Email is displayed read-only.
+- "Signed in as" line repeats the current email.
+- Sign out link is available inside the panel.
+- Large 144px circular avatar control:
+  - Shows current avatar image if present.
+  - Falls back to first username/email initial.
+  - Camera overlay appears on hover.
+  - Accepts image file uploads.
+- Avatar cropper modal:
+  - Uses circular 1:1 crop.
+  - Centers an initial crop on load.
+  - Provides Cancel and Crop & Save buttons.
+  - Compresses cropped image to WebP around 400px max edge.
+- Avatar uploads to public Supabase Storage bucket `avatars` at `{user_id}/avatar.webp`.
+- Profile records store `username`, `avatar_url`, and `updated_at`.
+- Avatar URLs include `updated_at` cache-busting query params in Settings and Sidebar.
+
+## Settings — Appearance
+- Light/dark mode segmented toggle.
+- Dark/light mode is independent from color theme.
+- Theme picker with visual swatches.
+- Available themes:
+  - Midnight Drop.
+  - Forest Glass.
+  - Golden Hour.
+  - Cold Brew.
+  - Neon Petal.
+  - Cyberpunk.
+  - Cassette Futurism.
+  - Colorful 80s.
+- Theme swatches preview sidebar, card, and accent colors.
+- Active theme shows accent ring and check icon.
+- Theme selection applies instantly and persists in localStorage.
+
+## Settings — Typography
+- Font picker with preview swatches.
+- Available fonts:
+  - Inter.
+  - DM Sans.
+  - Plus Jakarta.
+  - JetBrains Mono.
+  - Michroma.
+  - Electrolize.
+- Each font swatch previews `AaBbCc` and `12345` in that font.
+- Active font shows accent ring and check icon.
+- Font selection applies instantly app-wide through `data-font` and CSS variable `--font-family`.
+- Font choice persists in localStorage under `font`.
+
+## Settings — Defaults
+- Defaults apply only to newly created items.
+- Defaults are stored locally in the browser.
+- Default buy platform:
+  - Text input with datalist suggestions from existing buy/sell platforms.
+  - Saves immediately.
+- Default category:
+  - Text input with datalist suggestions from existing categories.
+  - Saves immediately.
+- Default condition select:
+  - New.
+  - Like New.
+  - Good.
+  - Fair.
+  - Poor.
+- Default status select:
+  - In Inventory.
+  - Listed for Sale.
+  - Sold.
+  - Keeping.
+- Reset defaults clears default platform, category, condition, and status keys.
+- Temporary saved indicator appears after changes.
+- Legacy settings key migration is supported by `loadSettings`.
+
+## Settings — Danger Zone
+- Danger Zone panel explains that account deletion is intentionally unavailable in the app.
+- Advises users to export inventory before deleting or migrating data.
+- Points users to the Import / Export page for CSV backups.
+- No destructive account deletion feature is implemented.
+
+## Navigation & Layout
+- Desktop sidebar navigation links:
+  - Dashboard.
+  - Items.
+  - Analytics.
+  - Categories.
+  - Import / Export.
+  - Settings.
+- Mobile bottom navigation links:
+  - Dashboard.
+  - Items.
+  - Analytics.
+  - Categories.
+  - Import.
+  - Settings.
+- Sidebar includes a large theme-aware FlipSite logo.
+- Sidebar user section:
+  - Centered avatar.
+  - Username or email prefix.
+  - Email address.
+  - Subtle logout button.
+- Header bar includes a dark/light toggle and intentionally no repeated page title or wordmark.
+- Main content has page transition animation keyed by route path.
+- Responsive layout uses fixed desktop sidebar and mobile bottom navigation.
+
+## Theming
+- Theme is applied to the `<html>` element through `data-theme`.
+- Dark mode is applied independently through the `.dark` class.
+- Font is applied through `data-font`.
+- Stored theme, mode, and font are applied before first render to reduce flash.
+- Semantic CSS variables cover accent, surface, card, border, base text, muted text, positive, negative, sidebar background, sidebar text, and sidebar accent.
+- Tailwind theme uses semantic color tokens such as `bg-card`, `bg-surface`, `text-base`, `text-muted`, `text-accent`, `text-positive`, and `text-negative`.
+- Native select arrows are replaced globally with controlled CSS chevrons for consistent spacing.
+- Focus-visible styling is globally applied to buttons, links, inputs, selects, and textareas.
+- Charts read theme CSS variables at render time and update with theme/mode changes.
+- The logo gradient derives from the current accent hue but forces dark gradient shades so white logo paths remain readable.
+
+## Performance & UX Details
+- TanStack Query caches items, profile data, and item thumbnails.
+- Item thumbnails are loaded through transformed signed URLs rather than full-size originals.
+- Gallery thumbnails request larger transformed images than list thumbnails.
+- Image loading uses skeleton shimmer and fallback placeholders.
+- Item image lightbox prevents body scrolling while open.
+- Keyboard support:
+  - Lightbox Escape closes.
+  - Lightbox ArrowLeft/ArrowRight moves between images.
+  - Combobox ArrowDown/ArrowUp moves highlighted suggestion.
+  - Combobox Enter selects highlighted suggestion.
+  - Combobox Escape closes suggestions.
+  - Clickable KPI cards support Enter/Space activation.
+- Clipboard paste areas are focusable via `tabIndex={0}`.
+- File upload sections reuse normal upload loading/error states for pasted images.
+- Money aggregates use cent-rounded `sumCurrency` helper.
+- Month bucketing uses stable `yyyy-MM` keys and formats labels only at render time.
+- Toast notifications are used for add, update, delete, upload, import, profile, auth, and sign-out outcomes.
+- CSV helpers quote values, preserve embedded quotes, handle commas, and ignore blank rows.
+- Tests cover clipboard images, image compression helpers, CSV parsing/exporting, date input helpers, item file path helpers, money parsing, keeping detection, and effective keeping status.
+
+## Data & Storage
+- Supabase client requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+- `items` table fields represented in the app:
+  - `tsid`
+  - `user_id`
+  - `name`
+  - `category`
+  - `condition`
+  - `buy_price`
+  - `sell_price`
+  - legacy optional `platform`
+  - `buy_platform`
+  - `sell_platform`
+  - `status`
+  - `bought_at`
+  - `sold_at`
+  - `notes`
+  - `created_at`
+  - `bundle_id`
+  - `is_bundle_parent`
+- `item_files` table fields represented in the app:
+  - id
+  - item_id
+  - user_id
+  - file_path
+  - file_type
+  - original_name
+  - mime_type
+  - size_bytes
+  - created_at
+- `profiles` table fields represented in the app:
+  - id
+  - username
+  - avatar_url
+  - updated_at
+- Item CRUD queries explicitly filter by current `user_id`.
+- Item file queries explicitly filter by current `user_id`.
+- Categories bulk updates filter by current `user_id`.
+- Items, item files, and profiles have RLS policies in schema.
+- Private `item-files` bucket:
+  - path convention `{user_id}/{item_id}/{timestamp}-{safe_filename}`.
+  - uses signed URLs for reads.
+  - stores compressed images and uncompressed non-image files.
+  - database row is inserted after successful storage upload.
+  - failed database insert removes the uploaded storage object.
+  - delete removes the storage object and then deletes the database row.
+- Image uploads:
+  - selected images and pasted images both go through `uploadItemFile`.
+  - image files are compressed to JPEG.
+  - long edge capped at 1600px.
+  - target max size is 200 KB.
+  - quality starts around 0.82 and steps down to a minimum quality.
+  - small images are not upscaled.
+  - output filename is a safe `.jpg` name.
+- Clipboard pasted image files:
+  - use safe `pasted-image-{timestamp}` filenames.
+  - preserve image MIME type.
+  - support multiple pasted images.
+- Public `avatars` bucket:
+  - path convention `{user_id}/avatar.webp`.
+  - uploaded with upsert.
+  - public URL saved to the profile.
+- Schema includes storage bucket setup and storage object policies for item files and avatars.
