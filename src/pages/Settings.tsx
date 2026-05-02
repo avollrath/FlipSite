@@ -195,12 +195,58 @@ export function Settings() {
   title="Profile & Account"
   description="Your identity and login details."
   >
-  <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+  <div className="flex flex-col-reverse items-start gap-6 sm:flex-row sm:gap-8">
+   <div className="flex w-full max-w-xs flex-1 flex-col gap-4">
+   <div className="flex flex-col gap-1.5">
+    <label className="text-xs font-medium uppercase tracking-wide text-muted">
+    Username
+    </label>
+    <input
+    className="h-9 w-full rounded-md border border-border-base bg-surface-2 px-3 text-sm text-base outline-none transition focus:ring-1 focus:ring-accent"
+    value={username}
+    maxLength={30}
+    onChange={(event) => setDraftUsername(event.target.value)}
+    placeholder="Your display name"
+    />
+   </div>
+   <div className="flex flex-col gap-1.5">
+    <label className="text-xs font-medium uppercase tracking-wide text-muted">
+    Email
+    </label>
+    <p className="truncate text-sm text-muted">{user?.email ?? ''}</p>
+   </div>
+   <div className="flex items-center gap-3">
+    <button
+    type="button"
+    className="h-9 rounded-md bg-accent px-4 text-sm font-medium text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+    onClick={saveProfile}
+    disabled={isProfileSaving || isAvatarUploading}
+    >
+    {isProfileSaving ? 'Saving...' : 'Save'}
+    </button>
+    {profileSaved ? <span className="text-xs text-positive">Saved</span> : null}
+   </div>
+   <div className="border-t border-border-base pt-2">
+    <p className="text-xs text-muted">
+    Signed in as {user?.email}
+    </p>
+    <button
+    type="button"
+    className="mt-1 flex items-center gap-1.5 text-xs text-muted transition hover:text-base"
+    onClick={handleSignOut}
+    >
+    <LogOut className="h-3 w-3" aria-hidden="true" />
+    Sign out
+    </button>
+   </div>
+   </div>
+   <div className="flex shrink-0 flex-col items-center gap-3">
    <button
    type="button"
-   className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-accent/20 text-accent transition hover:opacity-80"
+   className="group relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-2 ring-border-base"
    onClick={() => avatarInputRef.current?.click()}
    aria-label="Upload profile image"
+   disabled={isAvatarUploading}
    >
    {avatarUrl ? (
     <img
@@ -209,60 +255,23 @@ export function Settings() {
     className="h-full w-full object-cover"
     />
    ) : (
-    <span className="grid h-full w-full place-items-center text-2xl font-semibold">
+    <span className="text-3xl font-semibold text-accent">
     {fallbackInitial}
     </span>
    )}
-   <span className="absolute inset-0 grid place-items-center bg-black/35 text-white opacity-0 transition group-hover:opacity-100">
-    <Camera className="h-6 w-6" aria-hidden="true" />
+   <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+    <Camera className="h-6 w-6 text-white" aria-hidden="true" />
    </span>
    </button>
+   <p className="text-xs text-muted">Click to change</p>
    <input
    ref={avatarInputRef}
-   className="sr-only"
+   className="hidden"
    type="file"
    accept="image/*"
    onChange={handleAvatarFileChange}
    />
-   <div className="min-w-0 flex-1 space-y-4">
-   <Field label="Username">
-    <input
-    className={inputClassName}
-    value={username}
-    maxLength={30}
-    onChange={(event) => setDraftUsername(event.target.value)}
-    placeholder="Your display name"
-    />
-   </Field>
-   <div>
-    <span className="text-sm font-medium text-base ">Email</span>
-    <p className="mt-2 truncate text-sm text-muted">{user?.email ?? ''}</p>
    </div>
-   <div className="flex items-center gap-3">
-    <button
-    type="button"
-    className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
-    onClick={saveProfile}
-    disabled={isProfileSaving || isAvatarUploading}
-    >
-    {isProfileSaving ? 'Saving...' : 'Save'}
-    </button>
-    {profileSaved ? <span className="text-xs text-muted">✓ Saved</span> : null}
-   </div>
-   </div>
-  </div>
-  <div className="mt-5 border-t border-border-base pt-5">
-   <p className="text-sm text-muted">
-   Signed in as <span className="font-medium text-base">{user?.email}</span>
-   </p>
-   <button
-   type="button"
-   className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-accent transition hover:text-accent/80"
-   onClick={handleSignOut}
-   >
-   <LogOut className="h-4 w-4" aria-hidden="true" />
-   Sign out
-   </button>
   </div>
   </Panel>
 
