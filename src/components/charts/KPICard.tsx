@@ -18,17 +18,7 @@ type KPICardProps = {
  valueTitle?: string
 }
 
-const colorStyles = {
- amber: 'from-accent/20 to-accent/5 text-accent shadow-accent/20',
- blue: 'from-accent/20 to-accent/5 text-accent shadow-accent/20',
- green: 'from-positive/20 to-positive/5 text-positive shadow-positive/20',
- indigo: 'from-accent/20 to-accent/5 text-accent shadow-accent/20',
- rose: 'from-negative/20 to-negative/5 text-negative shadow-negative/20',
- violet: 'from-accent/20 to-accent/5 text-accent shadow-accent/20',
-}
-
 export function KPICard({
- color,
  formatter,
  icon: Icon,
  onClick,
@@ -87,7 +77,7 @@ export function KPICard({
   </p>
   </div>
   <div
-  className={`grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br shadow-lg ${colorStyles[color]}`}
+  className={`grid h-11 w-11 place-items-center rounded-lg shadow-lg ${iconColorClassName(title)}`}
   >
   <Icon className="h-5 w-5" aria-hidden="true" />
   </div>
@@ -102,6 +92,14 @@ export function KPICard({
  </div>
  </article>
  )
+}
+
+function iconColorClassName(title: string) {
+ if (title === 'Biggest Loss') {
+ return 'bg-negative/15 text-negative shadow-negative/20'
+ }
+
+ return 'bg-accent/15 text-accent shadow-accent/20'
 }
 
 function useCountUp(value: number) {

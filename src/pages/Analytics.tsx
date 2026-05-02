@@ -82,8 +82,12 @@ const statusOptions: Array<{ label: string; value: FilterStatus }> = [
 
 export function Analytics() {
   const { data: items = [], isLoading } = useItems()
-  useTheme()
-  const colors = getChartColors()
+  const { mode, theme } = useTheme()
+  const colors = useMemo(() => {
+    void mode
+    void theme
+    return getChartColors()
+  }, [mode, theme])
   const [datePreset, setDatePreset] = useState<DatePreset>('all')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
@@ -283,13 +287,13 @@ export function Analytics() {
         >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyData}>
-              <ChartGradients idSuffix="analytics-revenue" />
+              <ChartGradients colors={colors} idSuffix="analytics-revenue" />
               <ChartGrid />
               <ChartXAxis dataKey="label" rotate={monthlyData.length > 6} />
               <ChartYAxis />
               <ReferenceLine
                 y={average(monthlyData.map((entry) => entry.revenue ?? 0))}
-                stroke="hsl(var(--text-muted))"
+                stroke={colors.muted}
                 strokeDasharray="4 4"
                 label={referenceLabel('avg')}
               />
@@ -317,13 +321,13 @@ export function Analytics() {
         >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyData}>
-              <ChartGradients idSuffix="analytics-monthly-profit" />
+              <ChartGradients colors={colors} idSuffix="analytics-monthly-profit" />
               <ChartGrid />
               <ChartXAxis dataKey="label" rotate={monthlyData.length > 6} />
               <ChartYAxis />
               <ReferenceLine
                 y={average(monthlyData.map((entry) => entry.profit ?? 0))}
-                stroke="hsl(var(--text-muted))"
+                stroke={colors.muted}
                 strokeDasharray="4 4"
                 label={referenceLabel('avg')}
               />
@@ -563,7 +567,7 @@ function ProfitBarChart({
     >
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data}>
-          <ChartGradients idSuffix={gradientSuffix} />
+          <ChartGradients colors={colors} idSuffix={gradientSuffix} />
           <ChartGrid />
           <ChartXAxis dataKey="label" rotate={data.length > 6} />
           <ChartYAxis />
@@ -612,7 +616,7 @@ function RoiDistributionChart({
     >
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} layout="vertical" margin={{ right: 32 }}>
-          <ChartGradients idSuffix="analytics-roi" />
+          <ChartGradients colors={colors} idSuffix="analytics-roi" />
           <ChartGrid />
           <XAxis
             axisLine={false}
@@ -742,8 +746,8 @@ function CumulativeProfitChart({
         <AreaChart data={data}>
           <defs>
             <linearGradient id="analytics-cumulative-profit" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+              <stop offset="5%" stopColor={colors.accent} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={colors.accent} stopOpacity={0} />
             </linearGradient>
           </defs>
           <ChartGrid />
@@ -832,20 +836,26 @@ function ChartGrid() {
   )
 }
 
-function ChartGradients({ idSuffix }: { idSuffix: string }) {
+function ChartGradients({
+  colors,
+  idSuffix,
+}: {
+  colors: ReturnType<typeof getChartColors>
+  idSuffix: string
+}) {
   return (
     <defs>
       <linearGradient id={`gradientAccent-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.95} />
-        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
+        <stop offset="0%" stopColor={colors.accent} stopOpacity={0.95} />
+        <stop offset="100%" stopColor={colors.accent} stopOpacity={0.5} />
       </linearGradient>
       <linearGradient id={`gradientPositive-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="hsl(var(--positive))" stopOpacity={0.95} />
-        <stop offset="100%" stopColor="hsl(var(--positive))" stopOpacity={0.5} />
+        <stop offset="0%" stopColor={colors.positive} stopOpacity={0.95} />
+        <stop offset="100%" stopColor={colors.positive} stopOpacity={0.5} />
       </linearGradient>
       <linearGradient id={`gradientNegative-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="hsl(var(--negative))" stopOpacity={0.95} />
-        <stop offset="100%" stopColor="hsl(var(--negative))" stopOpacity={0.5} />
+        <stop offset="0%" stopColor={colors.negative} stopOpacity={0.95} />
+        <stop offset="100%" stopColor={colors.negative} stopOpacity={0.5} />
       </linearGradient>
     </defs>
   )
@@ -1336,15 +1346,16 @@ function compactCurrency(value: number) {
 }
 
 function getChartColors() {
-  const styles = getComputedStyle(document.documentElement)
-
   return {
-    accent: `hsl(${styles.getPropertyValue('--accent')})`,
-    muted: `hsl(${styles.getPropertyValue('--text-muted')})`,
-    negative: `hsl(${styles.getPropertyValue('--negative')})`,
-    positive: `hsl(${styles.getPropertyValue('--positive')})`,
+    accent: getCSSVar('--accent'),
+    muted: getCSSVar('--text-muted'),
+    negative: getCSSVar('--negative'),
+    positive: getCSSVar('--positive'),
   }
 }
+
+const getCSSVar = (variable: string) =>
+  `hsl(${getComputedStyle(document.documentElement).getPropertyValue(variable).trim()})`
 
 const filterControlClassName =
   'h-10 min-w-40 max-w-56 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10'

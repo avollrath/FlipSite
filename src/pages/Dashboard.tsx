@@ -57,9 +57,13 @@ type ChartColors = ReturnType<typeof getChartColors>
 export function Dashboard() {
   const { data: items = [], isLoading } = useItems()
   const navigate = useNavigate()
-  useTheme()
+  const { mode, theme } = useTheme()
   const [selectedYear, setSelectedYear] = useState('all')
-  const chartColors = getChartColors()
+  const chartColors = useMemo(() => {
+    void mode
+    void theme
+    return getChartColors()
+  }, [mode, theme])
 
   const years = useMemo(() => getAvailableYears(items), [items])
   const dashboardItems = useMemo(
@@ -323,7 +327,7 @@ export function Dashboard() {
           >
             <ResponsiveContainer width="100%" height={220}>
               <BarChart barCategoryGap="30%" barGap={2} data={chartData.monthlyVolume}>
-                <ChartGradients idSuffix="dashboard-monthly-volume" />
+                <ChartGradients colors={chartColors} idSuffix="dashboard-monthly-volume" />
                 <ChartGrid />
                 <ChartXAxis dataKey="month" rotate={chartData.monthlyVolume.length > 6} />
                 <ChartYAxis />
@@ -380,7 +384,7 @@ function ProfitBarChart({
     >
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data}>
-          <ChartGradients idSuffix={gradientSuffix} />
+          <ChartGradients colors={colors} idSuffix={gradientSuffix} />
           <ChartGrid />
           <ChartXAxis dataKey="category" rotate={data.length > 6} />
           <ChartYAxis />
@@ -451,20 +455,26 @@ function ChartGrid() {
   )
 }
 
-function ChartGradients({ idSuffix }: { idSuffix: string }) {
+function ChartGradients({
+  colors,
+  idSuffix,
+}: {
+  colors: ChartColors
+  idSuffix: string
+}) {
   return (
     <defs>
       <linearGradient id={`gradientAccent-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.95} />
-        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
+        <stop offset="0%" stopColor={colors.accent} stopOpacity={0.95} />
+        <stop offset="100%" stopColor={colors.accent} stopOpacity={0.5} />
       </linearGradient>
       <linearGradient id={`gradientPositive-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="hsl(var(--positive))" stopOpacity={0.95} />
-        <stop offset="100%" stopColor="hsl(var(--positive))" stopOpacity={0.5} />
+        <stop offset="0%" stopColor={colors.positive} stopOpacity={0.95} />
+        <stop offset="100%" stopColor={colors.positive} stopOpacity={0.5} />
       </linearGradient>
       <linearGradient id={`gradientNegative-${idSuffix}`} x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stopColor="hsl(var(--negative))" stopOpacity={0.95} />
-        <stop offset="100%" stopColor="hsl(var(--negative))" stopOpacity={0.5} />
+        <stop offset="0%" stopColor={colors.negative} stopOpacity={0.95} />
+        <stop offset="100%" stopColor={colors.negative} stopOpacity={0.5} />
       </linearGradient>
     </defs>
   )
@@ -871,16 +881,16 @@ function compactCurrency(value: number) {
 }
 
 function getChartColors() {
-  const styles = getComputedStyle(document.documentElement)
-  const accent = `hsl(${styles.getPropertyValue('--accent')})`
-  const positive = `hsl(${styles.getPropertyValue('--positive')})`
-  const negative = `hsl(${styles.getPropertyValue('--negative')})`
-  const sidebarAccent = `hsl(${styles.getPropertyValue('--sidebar-accent')})`
-  const accentHsl = parseHsl(styles.getPropertyValue('--accent'))
+  const accent = getCSSVar('--accent')
+  const positive = getCSSVar('--positive')
+  const negative = getCSSVar('--negative')
+  const accentHsl = parseHsl(
+    getComputedStyle(document.documentElement).getPropertyValue('--accent'),
+  )
   const pie = Array.from({ length: 6 }, (_, index) =>
     accentHsl
       ? `hsl(${(accentHsl.h + index * 40) % 360} ${accentHsl.s}% ${accentHsl.l}%)`
-      : [accent, positive, negative, sidebarAccent][index % 4],
+      : accent,
   )
 
   return {
@@ -890,6 +900,9 @@ function getChartColors() {
     positive,
   }
 }
+
+const getCSSVar = (variable: string) =>
+  `hsl(${getComputedStyle(document.documentElement).getPropertyValue(variable).trim()})`
 
 function parseHsl(value: string) {
   const match = /(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/.exec(
