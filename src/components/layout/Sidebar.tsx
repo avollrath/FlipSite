@@ -40,9 +40,9 @@ export function Sidebar() {
  }
 
  return (
- <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-border-base bg-sidebar p-5 md:flex">
+ <aside className="fixed inset-y-0 left-0 flex-col hidden p-5 border-r w-72 border-border-base bg-sidebar md:flex">
  <div className="flex items-center justify-center px-4 py-6">
-        <Logo size={68} />
+        <Logo size={96} />
  </div>
 
  <nav className="mt-10 space-y-2">
@@ -59,19 +59,19 @@ export function Sidebar() {
    }`
   }
   >
-  <Icon className="h-5 w-5 transition" aria-hidden="true" />
+  <Icon className="w-5 h-5 transition" aria-hidden="true" />
   {label}
   </NavLink>
   ))}
  </nav>
 
- <div className="mt-auto flex flex-col items-center gap-2 border-t border-white/10 pb-2 pt-4">
-  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent/20 ring-2 ring-white/10">
+ <div className="flex flex-col items-center gap-2 pt-4 pb-2 mt-auto border-t border-white/10">
+  <div className="flex items-center justify-center overflow-hidden rounded-full h-14 w-14 shrink-0 bg-accent/20 ring-2 ring-white/10">
    {avatarUrl ? (
    <img
     src={avatarUrl}
     alt="avatar"
-    className="h-full w-full object-cover"
+    className="object-cover w-full h-full"
    />
    ) : (
    <span className="text-lg font-semibold text-sidebar-accent">
@@ -80,7 +80,7 @@ export function Sidebar() {
    )}
   </div>
   <div className="flex w-full flex-col items-center gap-0.5 px-2">
-   <p className="max-w-full truncate text-center text-sm font-semibold leading-tight text-white">
+   <p className="max-w-full text-sm font-semibold leading-tight text-center text-white truncate">
    {displayName}
    </p>
    <p className="max-w-full truncate text-center text-[11px] leading-tight text-white/40">
@@ -92,7 +92,7 @@ export function Sidebar() {
   className="mt-1 flex items-center gap-1.5 text-[11px] text-white/35 transition-colors hover:text-white/70"
   onClick={handleSignOut}
   >
-  <LogOut className="h-3 w-3" aria-hidden="true" />
+  <LogOut className="w-3 h-3" aria-hidden="true" />
   Logout
   </button>
  </div>

@@ -58,11 +58,11 @@ export function Login() {
  }
 
  return (
- <main className="grid min-h-screen place-items-center bg-surface px-6 py-10 text-base ">
+ <main className="grid min-h-screen px-6 py-10 text-base place-items-center bg-surface ">
  <section className="w-full max-w-md animate-auth-card">
-  <div className="mb-8 flex flex-col items-center text-center">
+  <div className="flex flex-col items-center mb-8 text-center">
   <div className="mb-6">
-   <Logo size={48} />
+   <Logo size={96} />
   </div>
   <p className="text-3xl font-semibold">FlipSite</p>
   <p className="mt-2 text-sm text-muted ">
@@ -70,8 +70,8 @@ export function Login() {
   </p>
   </div>
 
-  <div className="rounded-lg border border-border-base bg-card p-6 shadow-xl shadow-border-base/40 ">
-  <div className="mb-6 grid grid-cols-2 rounded-lg bg-surface-2/50 p-1">
+  <div className="p-6 border rounded-lg shadow-xl border-border-base bg-card shadow-border-base/40 ">
+  <div className="grid grid-cols-2 p-1 mb-6 rounded-lg bg-surface-2/50">
   <button
    type="button"
    className={`rounded-md px-4 py-2 text-sm font-medium transition ${
@@ -96,10 +96,10 @@ export function Login() {
   </button>
   </div>
 
-  <form className="animate-auth-form space-y-4" onSubmit={handleSubmit}>
+  <form className="space-y-4 animate-auth-form" onSubmit={handleSubmit}>
   <div>
    <label
-   className="text-sm font-medium text-base "
+   className="text-sm text-base font-medium "
    htmlFor="email"
    >
    Email
@@ -108,7 +108,7 @@ export function Login() {
    id="email"
    type="email"
    autoComplete="email"
-   className="mt-2 w-full rounded-lg border border-border-base bg-card px-4 py-3 text-sm outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10 "
+   className="w-full px-4 py-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 "
    value={email}
    onChange={(event) => setEmail(event.target.value)}
    required
@@ -117,7 +117,7 @@ export function Login() {
 
   <div>
    <label
-   className="text-sm font-medium text-base "
+   className="text-sm text-base font-medium "
    htmlFor="password"
    >
    Password
@@ -128,7 +128,7 @@ export function Login() {
    autoComplete={
    mode === 'login' ? 'current-password' : 'new-password'
    }
-   className="mt-2 w-full rounded-lg border border-border-base bg-card px-4 py-3 text-sm outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10 "
+   className="w-full px-4 py-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 "
    value={password}
    onChange={(event) => setPassword(event.target.value)}
    required
@@ -139,12 +139,12 @@ export function Login() {
   <button
    type="submit"
    disabled={submitting}
-   className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-fg shadow-lg shadow-accent/20 transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+   className="flex items-center justify-center w-full gap-2 px-4 py-3 text-sm font-semibold transition rounded-lg shadow-lg bg-accent text-accent-fg shadow-accent/20 hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
   >
    {submitting ? (
-   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
    ) : (
-   <ArrowRight className="h-4 w-4" aria-hidden="true" />
+   <ArrowRight className="w-4 h-4" aria-hidden="true" />
    )}
    {mode === 'login' ? 'Login' : 'Create Account'}
   </button>
