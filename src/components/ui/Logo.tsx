@@ -49,7 +49,7 @@ export function Logo({ size = 96, className = '' }: LogoProps) {
     >
       <defs>
         {/* gradientUnits="userSpaceOnUse" so coordinates match the 263x131 viewBox */}
-        <linearGradient id={gradId} x1="0" y1="0" x2="263" y2="131" gradientUnits="userSpaceOnUse">
+        <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
           <stop offset="0%" stopColor={from} />
           <stop offset="100%" stopColor={to} />
         </linearGradient>
