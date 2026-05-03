@@ -7,15 +7,17 @@ export function cn(...classes: Array<string | false | null | undefined>) {
 
 export function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return new Intl.NumberFormat('fi-FI', {
+    return new Intl.NumberFormat('de-DE', {
       style: 'currency',
       currency: 'EUR',
+      useGrouping: false,
     }).format(0)
   }
 
-  return new Intl.NumberFormat('fi-FI', {
+  return new Intl.NumberFormat('de-DE', {
     style: 'currency',
     currency: 'EUR',
+    useGrouping: false,
   }).format(value)
 }
 
