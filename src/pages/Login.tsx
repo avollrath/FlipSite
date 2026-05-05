@@ -1,21 +1,26 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Logo } from '@/components/ui/Logo'
 import { useAuth } from '@/hooks/useAuth'
+import { demoAccountEmail } from '@/lib/demoMode'
 import { cn } from '@/lib/utils'
 
 type AuthMode = 'login' | 'signup'
 
 export function Login() {
  const { user, loading, signIn, signUp } = useAuth()
- const [mode, setMode] = useState<AuthMode>('login')
+ const navigate = useNavigate()
+ const location = useLocation()
+ const [mode, setMode] = useState<AuthMode>(() =>
+ new URLSearchParams(location.search).get('tab') === 'signup'
+  ? 'signup'
+  : 'login',
+ )
  const [email, setEmail] = useState('')
  const [password, setPassword] = useState('')
  const [submitting, setSubmitting] = useState(false)
- const navigate = useNavigate()
- const location = useLocation()
 
  const destination =
  (location.state as { from?: { pathname?: string } } | null)?.from
@@ -25,13 +30,6 @@ export function Login() {
  'Bundle-aware profit calculations',
  'Photos, receipts and files per item',
  ]
-
- useEffect(() => {
- const tab = new URLSearchParams(location.search).get('tab')
- if (tab === 'signup') {
-  setMode('signup')
- }
- }, [location.search])
 
  function changeMode(nextMode: AuthMode) {
  setMode(nextMode)
@@ -73,6 +71,23 @@ export function Login() {
   ? 'Invalid email or password'
   : 'Unable to create account. Please try again.'
  toast.error(message)
+ } finally {
+ setSubmitting(false)
+ }
+ }
+
+ async function handleDemoLogin() {
+ setSubmitting(true)
+
+ try {
+ await signIn(demoAccountEmail, 'demo1234')
+ toast.success('Demo mode ready')
+ navigate(destination, { replace: true })
+ } catch (error) {
+ if (import.meta.env.DEV) {
+  console.error(error)
+ }
+ toast.error('Unable to start demo mode. Please try again.')
  } finally {
  setSubmitting(false)
  }
@@ -209,6 +224,8 @@ export function Login() {
    <span className="text-muted">Just want to look around?</span>
    <button
     type="button"
+    onClick={handleDemoLogin}
+    disabled={submitting}
     className="font-medium text-accent hover:underline"
    >
     Try demo mode →

@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner'
 import { AvatarCropper } from '@/components/ui/AvatarCropper'
 import { useAuth } from '@/hooks/useAuth'
+import { useDemoGuard } from '@/hooks/useDemoGuard'
 import { useItems } from '@/hooks/useItems'
 import { useProfile } from '@/hooks/useProfile'
 import {
@@ -40,6 +41,7 @@ const statuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 
 export function Settings() {
  const { signOut, user } = useAuth()
+ const { isDemoMode, showDemoToast } = useDemoGuard()
  const {
  profile,
  updateProfile,
@@ -129,6 +131,11 @@ export function Settings() {
  }
 
  async function saveProfile() {
+ if (isDemoMode) {
+ showDemoToast()
+ return
+ }
+
  try {
  await updateProfile({ username: username.trim() || null })
  setDraftUsername(null)
@@ -144,6 +151,11 @@ export function Settings() {
  event.target.value = ''
 
  if (!file) {
+ return
+ }
+
+ if (isDemoMode) {
+ showDemoToast()
  return
  }
 
@@ -163,6 +175,11 @@ export function Settings() {
  }
 
  async function handleCropComplete(blob: Blob) {
+ if (isDemoMode) {
+ showDemoToast()
+ return
+ }
+
  try {
  await uploadAvatar(blob)
  closeCropper()

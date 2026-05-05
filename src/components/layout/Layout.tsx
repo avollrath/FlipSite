@@ -1,12 +1,15 @@
 import { Moon, Sun } from 'lucide-react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/lib/theme'
 
 export function Layout() {
+ const { isDemoMode } = useAuth()
  const { mode, toggleMode } = useTheme()
  const location = useLocation()
+ const navigate = useNavigate()
 
  return (
  <div className="min-h-screen bg-surface text-base transition-colors">
@@ -29,6 +32,20 @@ export function Layout() {
   </button>
   </div>
   </header>
+  {isDemoMode && (
+  <div className="flex w-full items-center justify-between gap-3 border-b border-accent/20 bg-accent/10 px-4 py-2 text-xs md:px-8">
+  <span className="font-medium text-accent">
+   You are in demo mode - data is read-only
+  </span>
+  <button
+   type="button"
+   onClick={() => navigate('/login?tab=signup')}
+   className="font-semibold text-accent hover:underline"
+  >
+   Create your account →
+  </button>
+  </div>
+  )}
   <main className="px-5 py-8 pb-28 md:px-8 md:pb-8">
   <div key={location.pathname} className="animate-page-transition">
   <Outlet />

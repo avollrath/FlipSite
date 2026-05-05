@@ -42,6 +42,7 @@ import {
  type NewBundleChild,
  type NewItem,
 } from '@/hooks/useItems'
+import { useDemoGuard } from '@/hooks/useDemoGuard'
 import {
  deleteItemFile,
  getItemFiles,
@@ -130,6 +131,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
  const addBundle = useAddBundle()
  const updateItem = useUpdateItem()
  const deleteItem = useDeleteItem()
+ const { isDemoMode, showDemoToast } = useDemoGuard()
  const [form, setForm] = useState<FormState>(() => getInitialState(item))
  const [confirmDelete, setConfirmDelete] = useState(false)
  const [isBundle, setIsBundle] = useState(Boolean(item?.is_bundle_parent))
@@ -224,6 +226,11 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
  event.preventDefault()
+
+ if (isDemoMode) {
+ showDemoToast()
+ return
+ }
 
  const name = form.name.trim()
  const category = form.category.trim()
@@ -402,6 +409,11 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
  async function handleDelete() {
  if (!item) {
+ return
+ }
+
+ if (isDemoMode) {
+ showDemoToast()
  return
  }
 
@@ -621,9 +633,17 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   <DeletePanel
    confirming={confirmDelete}
    deleting={isDeleting}
+   isDemoMode={isDemoMode}
    onCancel={() => setConfirmDelete(false)}
    onConfirm={handleDelete}
-   onStart={() => setConfirmDelete(true)}
+   onStart={() => {
+   if (isDemoMode) {
+    showDemoToast()
+    return
+   }
+
+   setConfirmDelete(true)
+   }}
   />
   ) : null}
   </div>
@@ -639,12 +659,13 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   <button
   type="submit"
   className="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-fg shadow-lg shadow-accent/20 transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
-  disabled={isSubmitting}
+  disabled={isSubmitting || isDemoMode}
+  onClick={isDemoMode ? showDemoToast : undefined}
   >
   {isSubmitting ? (
    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
   ) : null}
-  {mode === 'edit' ? 'Save Changes' : 'Add Item'}
+  {isDemoMode ? 'Sign up to add items' : mode === 'edit' ? 'Save Changes' : 'Add Item'}
   </button>
   </SheetFooter>
  </form>
@@ -1509,12 +1530,14 @@ function SuggestionCombobox({
 function DeletePanel({
  confirming,
  deleting,
+ isDemoMode,
  onCancel,
  onConfirm,
  onStart,
 }: {
  confirming: boolean
  deleting: boolean
+ isDemoMode: boolean
  onCancel: () => void
  onConfirm: () => void
  onStart: () => void
@@ -1531,12 +1554,12 @@ function DeletePanel({
   </p>
   <div className="mt-4 flex gap-2">
   <button
-   type="button"
-   className="rounded-lg bg-negative px-3 py-2 text-sm font-semibold text-accent-fg transition hover:bg-negative/90 disabled:opacity-70"
+  type="button"
+  className="rounded-lg bg-negative px-3 py-2 text-sm font-semibold text-accent-fg transition hover:bg-negative/90 disabled:opacity-70"
    onClick={onConfirm}
-   disabled={deleting}
+   disabled={deleting || isDemoMode}
   >
-   {deleting ? 'Deleting...' : 'Confirm Delete'}
+   {isDemoMode ? 'Sign up to add items' : deleting ? 'Deleting...' : 'Confirm Delete'}
   </button>
   <button
    type="button"
@@ -1552,9 +1575,10 @@ function DeletePanel({
   type="button"
   className="flex items-center gap-2 text-sm font-semibold text-negative transition hover:text-negative"
   onClick={onStart}
+  disabled={isDemoMode}
   >
   <Trash2 className="h-4 w-4" aria-hidden="true" />
-  Delete Item
+  {isDemoMode ? 'Sign up to add items' : 'Delete Item'}
   </button>
  )}
  </div>

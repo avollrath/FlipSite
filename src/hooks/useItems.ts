@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
+import { blockDemoMode, isDemoModeBlockedError } from '@/lib/demoMode'
 import { supabase } from '@/lib/supabase'
 import type { Item } from '@/types'
 
@@ -50,13 +51,17 @@ export function useItems() {
 }
 
 export function useAddItem() {
-  const { user } = useAuth()
+  const { isDemoMode, user } = useAuth()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (item: NewItem) => {
       if (!user?.id) {
         throw new Error('You must be signed in to add items')
+      }
+
+      if (isDemoMode) {
+        blockDemoMode()
       }
 
       const { data, error } = await supabase
@@ -82,6 +87,9 @@ export function useAddItem() {
       toast.success('Item added')
     },
     onError: (error) => {
+      if (isDemoModeBlockedError(error)) {
+        return
+      }
       logError(error)
       toast.error('Unable to add item. Please try again.')
     },
@@ -89,7 +97,7 @@ export function useAddItem() {
 }
 
 export function useAddBundle() {
-  const { user } = useAuth()
+  const { isDemoMode, user } = useAuth()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -102,6 +110,10 @@ export function useAddBundle() {
     }) => {
       if (!user?.id) {
         throw new Error('You must be signed in to add bundles')
+      }
+
+      if (isDemoMode) {
+        blockDemoMode()
       }
 
       const { data: parentItem, error: parentError } = await supabase
@@ -143,6 +155,9 @@ export function useAddBundle() {
       toast.success('Bundle added')
     },
     onError: (error) => {
+      if (isDemoModeBlockedError(error)) {
+        return
+      }
       logError(error)
       toast.error('Unable to add bundle. Please try again.')
     },
@@ -150,7 +165,7 @@ export function useAddBundle() {
 }
 
 export function useUpdateItem() {
-  const { user } = useAuth()
+  const { isDemoMode, user } = useAuth()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -163,6 +178,10 @@ export function useUpdateItem() {
     }) => {
       if (!user?.id) {
         throw new Error('You must be signed in to update items')
+      }
+
+      if (isDemoMode) {
+        blockDemoMode()
       }
 
       const { data, error } = await supabase
@@ -190,6 +209,9 @@ export function useUpdateItem() {
       toast.success('Item updated')
     },
     onError: (error) => {
+      if (isDemoModeBlockedError(error)) {
+        return
+      }
       logError(error)
       toast.error('Unable to update item. Please try again.')
     },
@@ -197,13 +219,17 @@ export function useUpdateItem() {
 }
 
 export function useDeleteItem() {
-  const { user } = useAuth()
+  const { isDemoMode, user } = useAuth()
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (tsid: string) => {
       if (!user?.id) {
         throw new Error('You must be signed in to delete items')
+      }
+
+      if (isDemoMode) {
+        blockDemoMode()
       }
 
       const { error } = await supabase
@@ -223,6 +249,9 @@ export function useDeleteItem() {
       toast.success('Item deleted')
     },
     onError: (error) => {
+      if (isDemoModeBlockedError(error)) {
+        return
+      }
       logError(error)
       toast.error('Unable to delete item. Please try again.')
     },

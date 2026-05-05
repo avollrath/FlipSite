@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
+import { blockDemoMode } from '@/lib/demoMode'
 import { supabase } from '@/lib/supabase'
 
 export type Profile = {
@@ -20,7 +21,7 @@ export const profileQueryKey = (userId: string | undefined) =>
   ['profile', userId] as const
 
 export function useProfile() {
-  const { user } = useAuth()
+  const { isDemoMode, user } = useAuth()
   const queryClient = useQueryClient()
   const queryKey = profileQueryKey(user?.id)
 
@@ -71,6 +72,10 @@ export function useProfile() {
         throw new Error('You must be signed in to update your profile.')
       }
 
+      if (isDemoMode) {
+        blockDemoMode()
+      }
+
       const { data: updatedProfile, error } = await supabase
         .from('profiles')
         .upsert({
@@ -97,6 +102,10 @@ export function useProfile() {
     mutationFn: async (file: Blob) => {
       if (!user?.id) {
         throw new Error('You must be signed in to upload an avatar.')
+      }
+
+      if (isDemoMode) {
+        blockDemoMode()
       }
 
       const filePath = `${user.id}/avatar.webp`

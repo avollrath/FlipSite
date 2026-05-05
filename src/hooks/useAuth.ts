@@ -8,10 +8,12 @@ import {
   type ReactNode,
 } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { isDemoModeEmail } from '@/lib/demoMode'
 import { supabase } from '@/lib/supabase'
 
 type AuthContextValue = {
   user: User | null
+  isDemoMode: boolean
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      isDemoMode: isDemoModeEmail(user?.email),
       loading,
       async signIn(email, password) {
         const { error } = await supabase.auth.signInWithPassword({

@@ -1,4 +1,5 @@
 import { compressImage } from '@/lib/compressImage'
+import { blockDemoMode, isDemoModeEmail } from '@/lib/demoMode'
 import { getFirstImagePathByItemId, getItemFilePath } from '@/lib/itemFilePaths'
 import { supabase } from '@/lib/supabase'
 
@@ -44,6 +45,10 @@ async function getAuthenticatedUser() {
 
 export async function uploadItemFile(itemId: string, file: File) {
   const user = await getAuthenticatedUser()
+  if (isDemoModeEmail(user.email)) {
+    blockDemoMode()
+  }
+
   const shouldCompress = isImageFile(file)
   let uploadFile: File
 
@@ -114,6 +119,10 @@ export async function getItemFiles(itemId: string) {
 
 export async function deleteItemFile(fileId: string, filePath: string) {
   const user = await getAuthenticatedUser()
+  if (isDemoModeEmail(user.email)) {
+    blockDemoMode()
+  }
+
   const { error: storageError } = await supabase.storage
     .from(ITEM_FILES_BUCKET)
     .remove([filePath])

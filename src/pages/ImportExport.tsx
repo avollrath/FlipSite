@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
+import { useDemoGuard } from '@/hooks/useDemoGuard'
 import { itemsQueryKey, useItems } from '@/hooks/useItems'
 import { downloadCsv, parseCsv, toCsv, type CsvRow } from '@/lib/csv'
 import { toSupabaseTimestamp } from '@/lib/dateInput'
@@ -35,6 +36,7 @@ const validStatuses: ItemStatus[] = ['holding', 'listed', 'sold', 'keeper']
 
 export function ImportExport() {
  const { user } = useAuth()
+ const { isDemoMode, showDemoToast } = useDemoGuard()
  const queryClient = useQueryClient()
  const { data: items = [] } = useItems()
  const [previewRows, setPreviewRows] = useState<ImportPreviewRow[]>([])
@@ -95,6 +97,12 @@ export function ImportExport() {
  return
  }
 
+ if (isDemoMode) {
+ showDemoToast()
+ event.target.value = ''
+ return
+ }
+
  try {
  const text = await file.text()
  const rows = parseCsv(text)
@@ -113,6 +121,11 @@ export function ImportExport() {
  async function handleImport() {
  if (!user?.id) {
  toast.error('You must be signed in to import items')
+ return
+ }
+
+ if (isDemoMode) {
+ showDemoToast()
  return
  }
 
