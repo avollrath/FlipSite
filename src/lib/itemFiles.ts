@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 const ITEM_FILES_BUCKET = 'item-files'
 const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 60
 const DEFAULT_THUMBNAIL_SIZE_PX = 80
+const DEMO_IMAGE_PATH_PREFIX = '/demo-items/'
 
 export type ItemFile = {
   id: string
@@ -143,6 +144,10 @@ export async function deleteItemFile(fileId: string, filePath: string) {
 }
 
 export async function getSignedItemFileUrl(filePath: string) {
+  if (isDemoImagePath(filePath)) {
+    return normalizeDemoImagePath(filePath)
+  }
+
   const { data, error } = await supabase.storage
     .from(ITEM_FILES_BUCKET)
     .createSignedUrl(filePath, SIGNED_URL_EXPIRES_IN_SECONDS)
@@ -182,6 +187,14 @@ export async function getFirstItemImageThumbnails(
 
   const thumbnails = await Promise.all(
     Array.from(firstImageByItemId.entries()).map(async ([itemId, filePath]) => {
+      if (isDemoImagePath(filePath)) {
+        return {
+          item_id: itemId,
+          file_path: filePath,
+          signed_url: normalizeDemoImagePath(filePath),
+        }
+      }
+
       const { data: signedUrl, error: signedUrlError } = await supabase.storage
         .from(ITEM_FILES_BUCKET)
         .createSignedUrl(filePath, SIGNED_URL_EXPIRES_IN_SECONDS, {
@@ -206,6 +219,14 @@ export async function getFirstItemImageThumbnails(
   )
 
   return thumbnails
+}
+
+function isDemoImagePath(filePath: string) {
+  return filePath.startsWith(DEMO_IMAGE_PATH_PREFIX)
+}
+
+function normalizeDemoImagePath(filePath: string) {
+  return filePath
 }
 
 function throwSafeFileError(error: unknown, message: string): never {

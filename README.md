@@ -107,6 +107,17 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 Create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the SQL editor. The schema includes all tables, RLS policies, storage setup, and the bundle ownership trigger.
 
+## Demo mode
+
+The public demo account is:
+
+```text
+Email: demo@flipsite.app
+Password: demo1234
+```
+
+Demo mode is read-only, so visitors can explore the app without changing data. The demo inventory is seeded with realistic Finnish and European marketplace items, bundle examples, believable buy/sell prices, and local demo images from `public/demo-items/`.
+
 ## Deploying
 
 Vercel. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables. `vercel.json` handles the SPA rewrite for React Router.
