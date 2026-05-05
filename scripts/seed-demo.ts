@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 
@@ -40,7 +40,7 @@ type DemoFile = {
   file_path: string
   file_type: 'image'
   original_name: string
-  mime_type: 'image/svg+xml'
+  mime_type: 'image/webp'
   size_bytes: number
 }
 
@@ -62,7 +62,6 @@ type BundleSpec = {
 
 const demoEmail = 'demo@flipsite.app'
 const demoPassword = 'demo1234'
-const demoImageVariantsPerCategory = 5
 const buyingPlatforms = [
   'Tori.fi',
   'Facebook Marketplace',
@@ -632,16 +631,18 @@ function makeItem({
 function buildDemoFiles(items: DemoItem[], userId: string) {
   return items.map<DemoFile>((item, index) => {
     const categorySlug = slugify(item.category)
-    const imageIndex = index % demoImageVariantsPerCategory + 1
+    const imageName = `${String(index + 1).padStart(3, '0')}-${slugify(item.name)}.webp`
+    const filePath = `/demo-items/${categorySlug}/${imageName}`
+    const localPath = resolve(process.cwd(), 'public', filePath.slice(1))
 
     return {
       item_id: item.tsid,
       user_id: userId,
-      file_path: `/demo-items/${categorySlug}/${categorySlug}-${imageIndex}.svg`,
+      file_path: filePath,
       file_type: 'image',
-      original_name: `${slugify(item.name)}.svg`,
-      mime_type: 'image/svg+xml',
-      size_bytes: 4096,
+      original_name: imageName,
+      mime_type: 'image/webp',
+      size_bytes: existsSync(localPath) ? statSync(localPath).size : 0,
     }
   })
 }
@@ -713,6 +714,22 @@ function validateSeed(items: DemoItem[], files: DemoFile[], userId: string) {
     const parent = items.find((item) => item.name === bundle.name)
     if (!parent?.is_bundle_parent) {
       throw new Error(`Bundle parent ${bundle.name} is missing or invalid`)
+    }
+  }
+
+  for (const file of files) {
+    const localPath = resolve(process.cwd(), 'public', file.file_path.slice(1))
+
+    if (!file.file_path.endsWith('.webp')) {
+      throw new Error(`Demo image ${file.file_path} must be a WebP file`)
+    }
+
+    if (!existsSync(localPath)) {
+      throw new Error(`Demo image file is missing: ${file.file_path}`)
+    }
+
+    if (statSync(localPath).size > 150 * 1024) {
+      throw new Error(`Demo image exceeds 150kb: ${file.file_path}`)
     }
   }
 }
