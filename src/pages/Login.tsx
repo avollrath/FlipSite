@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { ArrowRight, Check, Loader2 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Logo } from '@/components/ui/Logo'
@@ -20,6 +20,18 @@ export function Login() {
  const destination =
  (location.state as { from?: { pathname?: string } } | null)?.from
  ?.pathname ?? '/'
+ const features = [
+ 'Track what you own and what you have sold',
+ 'Bundle-aware profit calculations',
+ 'Photos, receipts and files per item',
+ ]
+
+ useEffect(() => {
+ const tab = new URLSearchParams(location.search).get('tab')
+ if (tab === 'signup') {
+  setMode('signup')
+ }
+ }, [location.search])
 
  function changeMode(nextMode: AuthMode) {
  setMode(nextMode)
@@ -67,20 +79,62 @@ export function Login() {
  }
 
  return (
- <main className="grid min-h-screen px-6 py-10 text-base place-items-center bg-surface ">
- <section className="w-full max-w-md animate-auth-card">
-  <div className="flex flex-col items-center mb-8 text-center">
-  <div className="mb-6">
-   <Logo size={96} />
+ <main className="min-h-screen text-base bg-surface lg:flex">
+ <section className="relative hidden w-1/2 overflow-hidden border-r lg:flex border-border-base bg-surface-2">
+  <div
+  className="absolute inset-0"
+  style={{
+   background:
+   'radial-gradient(circle at center, hsl(var(--accent) / 0.15), transparent 42%)',
+  }}
+  />
+  <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-12 text-center">
+  <Logo size={120} />
+  <h1 className="mt-10 text-2xl font-bold text-base">
+   Your inventory. Your numbers.
+  </h1>
+  <div className="mt-8 space-y-3 text-left">
+   {features.map((feature) => (
+   <div key={feature} className="flex items-center gap-3 text-sm text-muted">
+    <Check className="w-4 h-4 text-positive" aria-hidden="true" />
+    <span>{feature}</span>
+   </div>
+   ))}
   </div>
-  <p className="text-3xl font-semibold">FlipSite</p>
-  <p className="mt-2 text-sm text-muted ">
-  Track buys, listings, and flips from one clean workspace.
+  </div>
+  <p className="absolute text-xs bottom-6 left-8 text-muted opacity-50">
+  FlipSite 2026
   </p>
+ </section>
+
+ <section className="flex flex-col min-h-screen lg:w-1/2 bg-surface lg:bg-card">
+  <div className="relative overflow-hidden border-b lg:hidden border-border-base bg-surface-2">
+  <div
+   className="absolute inset-0"
+   style={{
+   background:
+    'radial-gradient(circle at center, hsl(var(--accent) / 0.15), transparent 58%)',
+   }}
+  />
+  <div className="relative flex flex-col items-center px-6 py-8 text-center">
+   <Logo size={72} />
+   <p className="mt-4 text-xl font-bold text-base">
+   Your inventory. Your numbers.
+   </p>
+  </div>
   </div>
 
-  <div className="p-6 border rounded-lg shadow-xl border-border-base bg-card shadow-border-base/40 ">
-  <div className="flex min-h-[36px] mb-6 border-b border-border-base">
+  <div className="flex items-center justify-center flex-1 px-6 py-10">
+  <div className="w-full max-w-[420px] animate-auth-card">
+   <div className="mb-8 text-center">
+   <div className="flex justify-center mb-6 lg:hidden">
+    <Logo size={48} />
+   </div>
+   <h2 className="text-2xl font-bold text-base">Welcome back</h2>
+   <p className="mt-2 text-sm text-muted">Sign in to your inventory</p>
+   </div>
+
+   <div className="flex min-h-[36px] mb-6 border-b border-border-base">
   <button
    type="button"
    className={tabClass(mode === 'login')}
@@ -100,7 +154,7 @@ export function Login() {
   <form className="space-y-4 animate-auth-form" onSubmit={handleSubmit}>
   <div>
    <label
-   className="text-sm text-base font-medium "
+   className="text-sm font-medium text-base"
    htmlFor="email"
    >
    Email
@@ -109,7 +163,7 @@ export function Login() {
    id="email"
    type="email"
    autoComplete="email"
-   className="w-full px-4 py-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 "
+   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
    value={email}
    onChange={(event) => setEmail(event.target.value)}
    required
@@ -118,7 +172,7 @@ export function Login() {
 
   <div>
    <label
-   className="text-sm text-base font-medium "
+   className="text-sm font-medium text-base"
    htmlFor="password"
    >
    Password
@@ -129,7 +183,7 @@ export function Login() {
    autoComplete={
    mode === 'login' ? 'current-password' : 'new-password'
    }
-   className="w-full px-4 py-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 "
+   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
    value={password}
    onChange={(event) => setPassword(event.target.value)}
    required
@@ -140,7 +194,7 @@ export function Login() {
   <button
    type="submit"
    disabled={submitting}
-   className="flex items-center justify-center w-full gap-2 px-4 py-3 text-sm font-semibold transition rounded-lg shadow-lg bg-accent text-accent-fg shadow-accent/20 hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
+   className="flex items-center justify-center w-full gap-2 px-4 text-sm font-medium transition rounded-lg h-11 bg-accent text-accent-fg hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
   >
    {submitting ? (
    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
@@ -150,6 +204,17 @@ export function Login() {
    {mode === 'login' ? 'Login' : 'Create Account'}
   </button>
   </form>
+
+   <div className="flex items-center justify-center gap-2 mt-6 text-xs">
+   <span className="text-muted">Just want to look around?</span>
+   <button
+    type="button"
+    className="font-medium text-accent hover:underline"
+   >
+    Try demo mode →
+   </button>
+  </div>
+  </div>
   </div>
  </section>
  </main>
