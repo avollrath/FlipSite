@@ -4,6 +4,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Logo } from '@/components/ui/Logo'
 import { useAuth } from '@/hooks/useAuth'
+import { cn } from '@/lib/utils'
 
 type AuthMode = 'login' | 'signup'
 
@@ -24,6 +25,14 @@ export function Login() {
  setMode(nextMode)
  setPassword('')
  }
+
+ const tabClass = (active: boolean) =>
+ cn(
+ 'flex-1 py-2 text-sm font-medium transition-colors',
+ active
+  ? 'text-accent border-b-2 border-accent'
+  : 'text-muted hover:text-[hsl(var(--text))]',
+ )
 
  if (!loading && user) {
  return <Navigate to={destination} replace />
@@ -71,25 +80,17 @@ export function Login() {
   </div>
 
   <div className="p-6 border rounded-lg shadow-xl border-border-base bg-card shadow-border-base/40 ">
-  <div className="grid grid-cols-2 p-1 mb-6 rounded-lg bg-surface-2/50">
+  <div className="flex min-h-[36px] mb-6 border-b border-border-base">
   <button
    type="button"
-   className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-   mode === 'login'
-   ? 'bg-card text-accent shadow-sm'
-   : 'text-muted hover:text-base hover:text-accent-fg'
-   }`}
+   className={tabClass(mode === 'login')}
    onClick={() => changeMode('login')}
   >
    Login
   </button>
   <button
    type="button"
-   className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-   mode === 'signup'
-   ? 'bg-card text-accent shadow-sm'
-   : 'text-muted hover:text-base hover:text-accent-fg'
-   }`}
+   className={tabClass(mode === 'signup')}
    onClick={() => changeMode('signup')}
   >
    Sign Up
