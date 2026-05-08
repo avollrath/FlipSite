@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import dashboardPreview from '@/assets/dashboard.jpg'
+import heroVideo from '@/assets/hero.webm'
 import itemsListPreview from '@/assets/items_list.jpg'
 import appPreview from '@/assets/preview.jpg'
 import { Logo } from '@/components/ui/Logo'
@@ -140,7 +141,7 @@ export function Landing() {
             <Logo size={36} />
           </a>
 
-          <div className="hidden items-center gap-8 text-sm text-white/60 md:flex">
+          <div className="hidden items-center gap-8 text-base text-white/60 md:flex">
             <a href="#features" className="transition-colors hover:text-white">
               Features
             </a>
@@ -155,13 +156,13 @@ export function Landing() {
           <div className="flex items-center gap-3">
             <a
               href="/login"
-              className="text-sm text-white/60 transition-colors hover:text-white"
+              className="text-base text-white/60 transition-colors hover:text-white"
             >
               Log in
             </a>
             <a
               href="/login?tab=signup"
-              className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg transition-colors hover:bg-accent/90"
+              className="rounded-full bg-accent px-5 py-2 text-base font-medium text-accent-fg transition-colors hover:bg-accent/90"
             >
               Sign up
             </a>
@@ -169,7 +170,17 @@ export function Landing() {
         </div>
       </nav>
 
-      <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-14 text-center">
+      <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-32 text-center">
+        <video
+          className="absolute inset-0 h-full w-full object-cover opacity-28"
+          src={heroVideo}
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-[#080810]/55" />
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -179,7 +190,7 @@ export function Landing() {
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#080810] to-transparent" />
 
-        <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium text-accent">
+        <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-5 py-2 text-sm font-medium text-accent">
           Personal inventory & resale tracker
         </div>
 
@@ -189,7 +200,7 @@ export function Landing() {
           Know what you made.
         </h1>
 
-        <p className="relative z-10 mt-6 max-w-xl text-lg text-white/50">
+        <p className="relative z-10 mt-6 max-w-2xl text-xl leading-relaxed text-white/55">
           FlipSite replaces the spreadsheet you've been maintaining for your
           inventory and resale activity - with actual structure, real numbers,
           and everything in one place.
@@ -198,13 +209,13 @@ export function Landing() {
         <div className="relative z-10 mt-10 flex flex-col items-center gap-4 sm:flex-row">
           <a
             href="/login?tab=signup"
-            className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-fg transition-colors hover:bg-accent/90"
+            className="rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-accent-fg transition-colors hover:bg-accent/90"
           >
             Get started free
           </a>
           <a
             href="#demo"
-            className="rounded-full border border-white/15 px-6 py-3 text-sm text-white/70 transition-colors hover:border-white/30 hover:text-white"
+            className="rounded-full border border-white/15 px-7 py-3.5 text-base text-white/70 transition-colors hover:border-white/30 hover:text-white"
           >
             See a demo -&gt;
           </a>
@@ -222,7 +233,7 @@ export function Landing() {
           {stats.map((stat) => (
             <div key={stat.label}>
               <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="mt-0.5 text-sm text-white/40">{stat.label}</p>
+              <p className="mt-0.5 text-base text-white/40">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -234,7 +245,7 @@ export function Landing() {
             <h2 className="text-4xl font-bold text-white">
               Everything in one place
             </h2>
-            <p className="mt-3 text-lg text-white/40">
+            <p className="mt-3 text-xl text-white/40">
               Built for how buying and selling actually works
             </p>
           </div>
@@ -247,10 +258,10 @@ export function Landing() {
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15">
                   <feature.icon className="h-5 w-5 text-accent" aria-hidden="true" />
                 </div>
-                <h3 className="mb-2 text-base font-semibold text-white">
+                <h3 className="mb-2 text-lg font-semibold text-white">
                   {feature.title}
                 </h3>
-                <p className="text-sm leading-relaxed text-white/45">
+                <p className="text-base leading-relaxed text-white/45">
                   {feature.description}
                 </p>
               </div>
@@ -276,7 +287,7 @@ export function Landing() {
                 <h3 className="mt-3 text-3xl font-bold text-white">
                   {step.title}
                 </h3>
-                <p className="mt-4 text-lg leading-relaxed text-white/45">
+                <p className="mt-4 text-xl leading-relaxed text-white/45">
                   {step.description}
                 </p>
               </div>
@@ -296,7 +307,7 @@ export function Landing() {
             }}
           >
             <h2 className="text-4xl font-bold text-white">See it in action</h2>
-            <p className="mt-4 text-lg text-white/45">
+            <p className="mt-4 text-xl text-white/45">
               Try the demo with a pre-filled inventory - no sign up needed.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -304,7 +315,7 @@ export function Landing() {
                 type="button"
                 onClick={handleDemoLogin}
                 disabled={demoLoading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-8 py-3 text-sm font-semibold text-accent-fg transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-8 py-3.5 text-base font-semibold text-accent-fg transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
               >
                 {demoLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -313,7 +324,7 @@ export function Landing() {
               </button>
               <a
                 href="/login?tab=signup"
-                className="w-full rounded-full border border-white/15 px-8 py-3 text-center text-sm text-white/70 transition-colors hover:border-white/30 hover:text-white sm:w-auto"
+                className="w-full rounded-full border border-white/15 px-8 py-3.5 text-center text-base text-white/70 transition-colors hover:border-white/30 hover:text-white sm:w-auto"
               >
                 Create free account
               </a>
@@ -325,10 +336,10 @@ export function Landing() {
       <footer className="border-t border-white/[0.08] px-6 py-12">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
           <Logo size={32} />
-          <p className="text-sm text-white/30">
+          <p className="text-base text-white/30">
             Personal inventory and resale tracker. Built by André Vollrath.
           </p>
-          <div className="flex items-center gap-6 text-sm text-white/40">
+          <div className="flex items-center gap-6 text-base text-white/40">
             <a href="/login" className="transition-colors hover:text-white/70">
               Log in
             </a>
