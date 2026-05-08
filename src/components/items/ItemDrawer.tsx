@@ -32,6 +32,7 @@ import {
  SheetHeader,
  SheetTitle,
 } from '@/components/ui/sheet'
+import { DatePickerInput } from '@/components/ui/DatePickerInput'
 import {
  useAddItem,
  useAddBundle,
@@ -52,9 +53,7 @@ import {
 } from '@/lib/itemFiles'
 import { getImageFilesFromClipboard } from '@/lib/clipboardImages'
 import {
- formatDateInputFromNativeValue,
  formatDateInputValue,
- formatNativeDateValue,
  formatTodayDateInputValue,
  toSupabaseTimestamp,
 } from '@/lib/dateInput'
@@ -560,6 +559,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
 
   <Field label="Date Bought" required>
    <DatePickerInput
+   className={inputClassName}
    value={form.bought_at}
    onChange={(value) => updateField('bought_at', value)}
    required
@@ -568,8 +568,9 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   </div>
 
   {showSellFields ? (
-  <Field label="Date Sold">
+ <Field label="Date Sold">
    <DatePickerInput
+   className={inputClassName}
    value={form.sold_at}
    onChange={(value) => updateField('sold_at', value)}
    />
@@ -670,79 +671,6 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   </SheetFooter>
  </form>
  </>
- )
-}
-
-function DatePickerInput({
- onChange,
- required,
- value,
-}: {
- onChange: (value: string) => void
- required?: boolean
- value: string
-}) {
- const nativeInputRef = useRef<HTMLInputElement | null>(null)
- const nativeValue = formatNativeDateValue(value)
-
- function openDatePicker() {
- const nativeInput = nativeInputRef.current
-
- if (!nativeInput) {
- return
- }
-
- try {
- if (typeof nativeInput.showPicker === 'function') {
-  nativeInput.showPicker()
-  return
- }
-
- nativeInput.click()
- nativeInput.focus()
- } catch {
- nativeInput.click()
- nativeInput.focus()
- }
- }
-
- function normalizeValue() {
- const normalizedValue = formatDateInputValue(toSupabaseTimestamp(value))
-
- if (normalizedValue) {
- onChange(normalizedValue)
- }
- }
-
- return (
- <div className="relative flex gap-2">
- <input
-  className={inputClassName}
-  inputMode="numeric"
-  onBlur={normalizeValue}
-  onChange={(event) => onChange(event.target.value)}
-  onClick={openDatePicker}
-  onFocus={openDatePicker}
-  placeholder="dd/MM/yyyy"
-  required={required}
-  value={value}
- />
- <input
-  ref={nativeInputRef}
-  className="pointer-events-none absolute bottom-0 right-0 h-px w-px opacity-0"
-  type="date"
-  tabIndex={-1}
-  value={nativeValue}
-  onChange={(event) => {
-  const nextValue = formatDateInputFromNativeValue(event.target.value)
-
-  if (nextValue) {
-  onChange(nextValue)
-  }
-  }}
-  aria-hidden="true"
- />
- </div>
  )
 }
 

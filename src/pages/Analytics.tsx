@@ -29,6 +29,7 @@ import {
 } from 'recharts'
 import { ChartCard } from '@/components/charts/ChartCard'
 import { KPICard } from '@/components/charts/KPICard'
+import { DatePickerInput } from '@/components/ui/DatePickerInput'
 import { useItems } from '@/hooks/useItems'
 import {
   average,
@@ -42,6 +43,7 @@ import {
   getEffectiveSoldAt,
 } from '@/lib/analytics'
 import { formatCompactCurrency, getChartColors } from '@/lib/chartUtils'
+import { toSupabaseTimestamp } from '@/lib/dateInput'
 import { formatMonthKey } from '@/lib/dateUtils'
 import { useTheme } from '@/lib/theme'
 import {
@@ -459,20 +461,18 @@ function FilterBar({
           <>
             <label className="grid gap-1 text-xs font-medium text-muted">
               From
-              <input
+              <DatePickerInput
                 className={filterControlClassName}
-                type="date"
                 value={customFrom}
-                onChange={(event) => onCustomFromChange(event.target.value)}
+                onChange={onCustomFromChange}
               />
             </label>
             <label className="grid gap-1 text-xs font-medium text-muted">
               To
-              <input
+              <DatePickerInput
                 className={filterControlClassName}
-                type="date"
                 value={customTo}
-                onChange={(event) => onCustomToChange(event.target.value)}
+                onChange={onCustomToChange}
               />
             </label>
           </>
@@ -1098,8 +1098,8 @@ function getDateRange(preset: DatePreset, customFrom: string, customTo: string) 
 
   if (preset === 'custom') {
     return {
-      from: customFrom ? startOfDay(new Date(customFrom)) : null,
-      to: customTo ? endOfDay(new Date(customTo)) : null,
+      from: parseDateRangeInput(customFrom, startOfDay),
+      to: parseDateRangeInput(customTo, endOfDay),
     }
   }
 
@@ -1138,6 +1138,12 @@ function startOfDay(date: Date) {
 function endOfDay(date: Date) {
   date.setHours(23, 59, 59, 999)
   return date
+}
+
+function parseDateRangeInput(value: string, boundary: (date: Date) => Date) {
+  const timestamp = toSupabaseTimestamp(value)
+
+  return timestamp ? boundary(new Date(timestamp)) : null
 }
 
 function matchesOption(selectedValues: string[], value: string) {
