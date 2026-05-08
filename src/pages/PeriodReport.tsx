@@ -203,34 +203,35 @@ export function PeriodReport() {
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <h1 className="text-4xl font-semibold tracking-tight">
-          Period Report
-        </h1>
+    <section>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-base">Period Report</h1>
+          <p className="mt-1 text-sm text-muted">
+            Browse your inventory and finances by time period
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-2">
-          {periodOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className={cn(
-                'rounded-full border border-transparent px-4 py-1.5 text-sm font-medium transition-colors',
-                period === option.value
-                  ? 'border-accent bg-accent text-accent-fg'
-                  : 'bg-surface-2 text-muted hover:border-border-base hover:text-[hsl(var(--text))]',
-              )}
-              onClick={() => setPeriod(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        {periodOptions.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={cn(
+              'rounded-full border border-transparent px-4 py-1.5 text-sm font-medium transition-colors',
+              period === option.value
+                ? 'border-accent bg-accent text-accent-fg'
+                : 'bg-surface-2 text-muted hover:border-border-base hover:text-[hsl(var(--text))]',
+            )}
+            onClick={() => setPeriod(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
 
         {period === 'custom' ? (
-          <div className="flex flex-wrap gap-3">
+          <div className="ml-2 flex flex-wrap items-center gap-2">
             <label className="grid gap-1 text-xs font-medium text-muted">
               From
               <DatePickerInput
@@ -239,6 +240,7 @@ export function PeriodReport() {
                 onChange={setCustomFrom}
               />
             </label>
+            <span className="mt-5 text-sm text-muted">-&gt;</span>
             <label className="grid gap-1 text-xs font-medium text-muted">
               To
               <DatePickerInput
@@ -251,7 +253,9 @@ export function PeriodReport() {
         ) : null}
       </div>
 
-      <SummaryBar summary={summary} />
+      <div className="mb-6">
+        <SummaryBar summary={summary} />
+      </div>
 
       {periodItems.length === 0 ? (
         <EmptyState />
