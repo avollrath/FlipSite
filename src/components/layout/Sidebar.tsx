@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useProfile } from '@/hooks/useProfile'
 
 const navItems = [
- { label: 'Dashboard', href: '/', icon: Gauge },
+ { label: 'Dashboard', href: '/dashboard', icon: Gauge },
  { label: 'Items', href: '/items', icon: Package },
  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
  { label: 'Period Report', href: '/report', icon: CalendarRange },
@@ -52,7 +52,7 @@ export function Sidebar() {
   <NavLink
   key={href}
   to={href}
-  end={href === '/'}
+  end={href === '/dashboard'}
   className={({ isActive }) =>
    `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
    isActive

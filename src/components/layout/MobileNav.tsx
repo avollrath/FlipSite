@@ -10,7 +10,7 @@ import {
 import { NavLink } from 'react-router-dom'
 
 const navItems = [
- { label: 'Dashboard', href: '/', icon: Gauge },
+ { label: 'Dashboard', href: '/dashboard', icon: Gauge },
  { label: 'Items', href: '/items', icon: Package },
  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
  { label: 'Report', href: '/report', icon: CalendarRange },
@@ -27,7 +27,7 @@ export function MobileNav() {
   <NavLink
   key={href}
   to={href}
-  end={href === '/'}
+  end={href === '/dashboard'}
   className={({ isActive }) =>
    `flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition ${
    isActive

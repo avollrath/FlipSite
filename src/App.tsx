@@ -16,6 +16,7 @@ import { Categories } from '@/pages/Categories'
 import { Dashboard } from '@/pages/Dashboard'
 import { ImportExport } from '@/pages/ImportExport'
 import { Items } from '@/pages/Items'
+import { Landing } from '@/pages/Landing'
 import { Login } from '@/pages/Login'
 import { PeriodReport } from '@/pages/PeriodReport'
 import { Settings } from '@/pages/Settings'
@@ -35,6 +36,20 @@ function ProtectedRoute() {
  }
 
  return <Outlet />
+}
+
+function PublicHomeRoute() {
+ const { user, loading } = useAuth()
+
+ if (loading) {
+ return <StartupLoader />
+ }
+
+ if (user) {
+ return <Navigate to="/dashboard" replace />
+ }
+
+ return <Landing />
 }
 
 function StartupLoader() {
@@ -64,10 +79,12 @@ function App() {
   <BrowserRouter>
   <Toaster richColors position="top-right" theme="system" />
   <Routes>
+   <Route path="/" element={<PublicHomeRoute />} />
+   <Route path="/landing" element={<PublicHomeRoute />} />
    <Route path="/login" element={<Login />} />
    <Route element={<ProtectedRoute />}>
    <Route element={<Layout />}>
-   <Route path="/" element={<Dashboard />} />
+   <Route path="/dashboard" element={<Dashboard />} />
    <Route path="/items" element={<Items />} />
    <Route path="/items/:itemId" element={<Items />} />
    <Route path="/analytics" element={<Analytics />} />
