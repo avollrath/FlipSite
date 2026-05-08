@@ -338,7 +338,7 @@ export function PeriodReport() {
 }
 
 function SummaryBar({ summary }: { summary: ReportSummary }) {
-  const rowOne = [
+  const resaleCards = [
     { label: 'Purchased', value: String(summary.purchased) },
     { label: 'Sold', value: String(summary.sold) },
     { label: 'Paid', value: formatCurrency(summary.totalPaid) },
@@ -353,9 +353,13 @@ function SummaryBar({ summary }: { summary: ReportSummary }) {
       value: summary.avgROI === null ? '--' : `${summary.avgROI.toFixed(1)}%`,
       valueClassName: metricTextClassName(summary.avgROI),
     },
-    { label: 'Best Flip', value: summary.bestFlip },
+    {
+      label: 'Best Flip',
+      sub: summary.bestFlipProfit ? `${summary.bestFlipProfit} profit` : undefined,
+      value: summary.bestFlip,
+    },
   ]
-  const rowTwo = [
+  const inventoryCards = [
     { label: 'Kept', value: String(summary.kept) },
     {
       label: 'Keeping Spend',
@@ -365,42 +369,71 @@ function SummaryBar({ summary }: { summary: ReportSummary }) {
     { label: 'Still Holding', value: String(summary.stillHolding) },
     { label: 'Holding Value', value: formatCurrency(summary.holdingValue) },
     { label: 'Avg Hold Time', value: summary.avgHoldTime },
-    { label: 'Total Spend', value: formatCurrency(summary.totalSpend) },
   ]
 
   return (
-    <div className="divide-y divide-border-base rounded-xl border border-border-base bg-card">
-      <div className="flex overflow-x-auto divide-x divide-border-base">
-        {rowOne.map((kpi) => (
-          <KpiPill key={kpi.label} {...kpi} />
-        ))}
+    <div className="space-y-3">
+      <div>
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-muted">
+          Resale Activity
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+          {resaleCards.map((kpi) => (
+            <SummaryCard key={kpi.label} {...kpi} />
+          ))}
+        </div>
       </div>
-      <div className="flex overflow-x-auto divide-x divide-border-base">
-        {rowTwo.map((kpi) => (
-          <KpiPill key={kpi.label} {...kpi} />
-        ))}
+
+      <div>
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-muted">
+          Inventory & Keeping
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {inventoryCards.map((kpi) => (
+            <SummaryCard key={kpi.label} {...kpi} />
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-function KpiPill({
+function SummaryCard({
   label,
+  sub,
   value,
   valueClassName,
 }: {
   label: string
+  sub?: string
   value: string
   valueClassName?: string
 }) {
   return (
-    <div className="flex min-w-[100px] flex-col gap-0.5 px-4 py-3">
-      <span className="text-[11px] font-medium uppercase tracking-wide text-muted">
-        {label}
-      </span>
-      <span className={cn('text-sm font-semibold text-base', valueClassName)}>
-        {value}
-      </span>
+    <div className="relative overflow-hidden rounded-xl border border-border-base bg-card p-4">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--accent) / 0.10) 0%, transparent 70%)',
+        }}
+      />
+      <div className="relative z-10">
+        <p className="truncate text-[11px] font-medium uppercase tracking-widest text-muted">
+          {label}
+        </p>
+        <p
+          className={cn('mt-1.5 truncate text-xl font-bold', valueClassName ?? 'text-base')}
+          title={value}
+        >
+          {value}
+        </p>
+        {sub ? (
+          <p className="mt-0.5 truncate text-xs text-muted" title={sub}>
+            {sub}
+          </p>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -776,6 +809,7 @@ type ReportSummary = {
   avgHoldTime: string
   avgROI: number | null
   bestFlip: string
+  bestFlipProfit: string
   holdingValue: number
   itemCount: number
   keepingSpend: number
@@ -786,7 +820,6 @@ type ReportSummary = {
   totalPaid: number
   totalProfit: number
   totalRevenue: number
-  totalSpend: number
 }
 
 function buildSummary(
@@ -825,8 +858,9 @@ function buildSummary(
         ? roiValues.reduce((sum, value) => sum + value, 0) / roiValues.length
         : null,
     bestFlip: bestFlip
-      ? `${truncateText(bestFlip.item.name, 18)} ${formatCurrency(bestFlip.profit)}`
+      ? truncateText(bestFlip.item.name, 20)
       : '--',
+    bestFlipProfit: bestFlip ? formatCurrency(bestFlip.profit) : '',
     holdingValue: sumCurrency(stillHoldingItems.map((item) => item.buy_price)),
     itemCount: periodItems.length,
     keepingSpend: sumCurrency(keeperItems.map((item) => item.buy_price)),
@@ -837,11 +871,6 @@ function buildSummary(
     totalPaid: sumCurrency(boughtItems.map((item) => item.buy_price)),
     totalProfit: totalRevenue - soldCost,
     totalRevenue,
-    totalSpend: sumCurrency(
-      periodItems
-        .filter((item) => isDateInRange(item.bought_at, range))
-        .map((item) => item.buy_price),
-    ),
   }
 }
 
