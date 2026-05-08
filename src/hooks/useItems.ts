@@ -15,6 +15,11 @@ export type NewItem = Omit<Item, 'tsid' | 'created_at' | 'user_id'> & {
 }
 
 export type ItemUpdate = Partial<Omit<Item, 'tsid' | 'user_id' | 'created_at'>>
+type UpdateItemMutation = {
+  syncBundleParent?: boolean
+  tsid: string
+  updates: ItemUpdate
+}
 export type NewBundleChild = {
   name: string
   category: string
@@ -170,12 +175,10 @@ export function useUpdateItem() {
 
   return useMutation({
     mutationFn: async ({
+      syncBundleParent = true,
       tsid,
       updates,
-    }: {
-      tsid: string
-      updates: ItemUpdate
-    }) => {
+    }: UpdateItemMutation) => {
       if (!user?.id) {
         throw new Error('You must be signed in to update items')
       }
@@ -198,7 +201,7 @@ export function useUpdateItem() {
 
       const updatedItem = data as Item
 
-      if (updatedItem.bundle_id) {
+      if (syncBundleParent && updatedItem.bundle_id) {
         await markBundleParentSoldIfComplete(updatedItem.bundle_id, user.id)
       }
 

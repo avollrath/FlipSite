@@ -357,7 +357,11 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
  }
 
  if (child.tsid) {
-  await updateItem.mutateAsync({ tsid: child.tsid, updates })
+  await updateItem.mutateAsync({
+  tsid: child.tsid,
+  updates,
+  syncBundleParent: false,
+  })
  } else {
   const newChild = toNewBundleChild(child)
   await addItem.mutateAsync({
