@@ -338,46 +338,69 @@ export function PeriodReport() {
 }
 
 function SummaryBar({ summary }: { summary: ReportSummary }) {
+  const rowOne = [
+    { label: 'Purchased', value: String(summary.purchased) },
+    { label: 'Sold', value: String(summary.sold) },
+    { label: 'Paid', value: formatCurrency(summary.totalPaid) },
+    { label: 'Revenue', value: formatCurrency(summary.totalRevenue) },
+    {
+      label: 'Profit',
+      value: formatCurrency(summary.totalProfit),
+      valueClassName: metricTextClassName(summary.totalProfit),
+    },
+    {
+      label: 'Avg ROI',
+      value: summary.avgROI === null ? '--' : `${summary.avgROI.toFixed(1)}%`,
+      valueClassName: metricTextClassName(summary.avgROI),
+    },
+    { label: 'Best Flip', value: summary.bestFlip },
+  ]
+  const rowTwo = [
+    { label: 'Kept', value: String(summary.kept) },
+    {
+      label: 'Keeping Spend',
+      value: formatCurrency(summary.keepingSpend),
+      valueClassName: 'text-base',
+    },
+    { label: 'Still Holding', value: String(summary.stillHolding) },
+    { label: 'Holding Value', value: formatCurrency(summary.holdingValue) },
+    { label: 'Avg Hold Time', value: summary.avgHoldTime },
+    { label: 'Total Spend', value: formatCurrency(summary.totalSpend) },
+  ]
+
   return (
-    <div className="overflow-x-auto rounded-xl border border-border-base bg-card">
-      <div className="flex min-w-max divide-x divide-border-base">
-        <SummaryPill label="Purchased" value={String(summary.bought)} />
-        <SummaryPill label="Sold" value={String(summary.sold)} />
-        <SummaryPill label="Paid" value={formatCurrency(summary.totalPaid)} />
-        <SummaryPill
-          label="Revenue"
-          value={formatCurrency(summary.totalRevenue)}
-        />
-        <SummaryPill
-          label="Profit"
-          value={formatCurrency(summary.totalProfit)}
-          tone={summary.totalProfit}
-        />
-        <SummaryPill
-          label="Avg ROI"
-          value={summary.avgROI === null ? '--' : `${summary.avgROI.toFixed(1)}%`}
-          tone={summary.avgROI}
-        />
+    <div className="divide-y divide-border-base rounded-xl border border-border-base bg-card">
+      <div className="flex overflow-x-auto divide-x divide-border-base">
+        {rowOne.map((kpi) => (
+          <KpiPill key={kpi.label} {...kpi} />
+        ))}
+      </div>
+      <div className="flex overflow-x-auto divide-x divide-border-base">
+        {rowTwo.map((kpi) => (
+          <KpiPill key={kpi.label} {...kpi} />
+        ))}
       </div>
     </div>
   )
 }
 
-function SummaryPill({
+function KpiPill({
   label,
-  tone,
   value,
+  valueClassName,
 }: {
   label: string
-  tone?: number | null
   value: string
+  valueClassName?: string
 }) {
   return (
-    <div className="px-4 py-3">
-      <p className="text-xs font-medium uppercase text-muted">{label}</p>
-      <p className={cn('mt-1 text-lg font-semibold', metricTextClassName(tone))}>
+    <div className="flex min-w-[100px] flex-col gap-0.5 px-4 py-3">
+      <span className="text-[11px] font-medium uppercase tracking-wide text-muted">
+        {label}
+      </span>
+      <span className={cn('text-sm font-semibold text-base', valueClassName)}>
         {value}
-      </p>
+      </span>
     </div>
   )
 }
@@ -750,13 +773,20 @@ function LoadingState() {
 }
 
 type ReportSummary = {
+  avgHoldTime: string
   avgROI: number | null
-  bought: number
+  bestFlip: string
+  holdingValue: number
   itemCount: number
+  keepingSpend: number
+  kept: number
+  purchased: number
   sold: number
+  stillHolding: number
   totalPaid: number
   totalProfit: number
   totalRevenue: number
+  totalSpend: number
 }
 
 function buildSummary(
@@ -767,29 +797,105 @@ function buildSummary(
   const boughtItems = periodItems.filter(
     (item) => isDateInRange(item.bought_at, range) && !isKeepingItem(item),
   )
+  const keeperItems = periodItems.filter(
+    (item) => isDateInRange(item.bought_at, range) && isKeepingItem(item),
+  )
   const soldItems = periodItems.filter(
     (item) => isDateInRange(item.sold_at, range) && !isKeepingItem(item),
   )
+  const stillHoldingItems = boughtItems.filter((item) => {
+    const status = getEffectiveItemStatus(item, allItems)
+
+    return status === 'holding' || status === 'listed'
+  })
   const roiValues = soldItems
     .map((item) => calculateItemROI(item, allItems))
     .filter((value): value is number => value !== null)
+  const bestFlip = getBestFlip(soldItems, allItems)
   const totalRevenue = sumCurrency(
     soldItems.map((item) => calculateItemSellValue(item, allItems)),
   )
   const soldCost = sumCurrency(soldItems.map((item) => item.buy_price))
+  const avgHoldDays = getAverageHoldDays(soldItems)
 
   return {
+    avgHoldTime: avgHoldDays === null ? '--' : `${Math.round(avgHoldDays)} days`,
     avgROI:
       roiValues.length > 0
         ? roiValues.reduce((sum, value) => sum + value, 0) / roiValues.length
         : null,
-    bought: boughtItems.length,
+    bestFlip: bestFlip
+      ? `${truncateText(bestFlip.item.name, 18)} ${formatCurrency(bestFlip.profit)}`
+      : '--',
+    holdingValue: sumCurrency(stillHoldingItems.map((item) => item.buy_price)),
     itemCount: periodItems.length,
+    keepingSpend: sumCurrency(keeperItems.map((item) => item.buy_price)),
+    kept: keeperItems.length,
+    purchased: boughtItems.length,
     sold: soldItems.length,
+    stillHolding: stillHoldingItems.length,
     totalPaid: sumCurrency(boughtItems.map((item) => item.buy_price)),
     totalProfit: totalRevenue - soldCost,
     totalRevenue,
+    totalSpend: sumCurrency(
+      periodItems
+        .filter((item) => isDateInRange(item.bought_at, range))
+        .map((item) => item.buy_price),
+    ),
   }
+}
+
+function getBestFlip(soldItems: Item[], allItems: Item[]) {
+  return soldItems.reduce<{
+    item: Item
+    profit: number
+    roi: number
+  } | null>((best, item) => {
+    const roi = calculateItemROI(item, allItems)
+    const profit = calculateItemProfit(item, allItems)
+
+    if (roi === null || profit === null) {
+      return best
+    }
+
+    if (!best || roi > best.roi) {
+      return { item, profit, roi }
+    }
+
+    return best
+  }, null)
+}
+
+function getAverageHoldDays(items: Item[]) {
+  const holdDays = items
+    .map((item) => {
+      if (!item.sold_at) {
+        return null
+      }
+
+      const boughtAt = new Date(item.bought_at)
+      const soldAt = new Date(item.sold_at)
+
+      if (Number.isNaN(boughtAt.getTime()) || Number.isNaN(soldAt.getTime())) {
+        return null
+      }
+
+      return Math.max(
+        0,
+        Math.round((soldAt.getTime() - boughtAt.getTime()) / 86_400_000),
+      )
+    })
+    .filter((value): value is number => value !== null)
+
+  if (holdDays.length === 0) {
+    return null
+  }
+
+  return holdDays.reduce((sum, value) => sum + value, 0) / holdDays.length
+}
+
+function truncateText(value: string, maxLength: number) {
+  return value.length > maxLength ? `${value.slice(0, maxLength).trimEnd()}...` : value
 }
 
 type DateRange = {
@@ -967,8 +1073,12 @@ function metricTextClassName(value?: number | null) {
     return ''
   }
 
-  if (value === null || value === 0) {
+  if (value === null) {
     return 'font-semibold text-muted'
+  }
+
+  if (value === 0) {
+    return 'font-semibold text-base'
   }
 
   return value > 0 ? 'font-semibold text-positive' : 'font-semibold text-negative'
