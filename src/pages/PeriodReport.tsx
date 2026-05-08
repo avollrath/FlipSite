@@ -1,0 +1,986 @@
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronRight,
+  Link2,
+} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { DatePickerInput } from '@/components/ui/DatePickerInput'
+import { ImageWithSkeleton } from '@/components/ui/ImageWithSkeleton'
+import { useItems } from '@/hooks/useItems'
+import {
+  getFirstItemImageThumbnails,
+  type ItemImageThumbnail,
+} from '@/lib/itemFiles'
+import {
+  calculateItemProfit,
+  calculateItemROI,
+  calculateItemSellValue,
+  cn,
+  formatCurrency,
+  getEffectiveItemStatus,
+  getStatusLabel,
+  isKeepingItem,
+  sumCurrency,
+} from '@/lib/utils'
+import { formatDateInputValue } from '@/lib/dateInput'
+import type { Item, ItemStatus } from '@/types'
+
+type Period =
+  | 'this-month'
+  | 'last-month'
+  | 'last-3-months'
+  | 'last-6-months'
+  | 'this-year'
+  | 'custom'
+
+type SortKey =
+  | 'name'
+  | 'category'
+  | 'status'
+  | 'bought_at'
+  | 'sold_at'
+  | 'buy_price'
+  | 'sell_price'
+  | 'profit'
+  | 'roi'
+
+type SortState = {
+  direction: 'asc' | 'desc'
+  key: SortKey
+}
+
+const periodOptions: Array<{ label: string; value: Period }> = [
+  { label: 'This month', value: 'this-month' },
+  { label: 'Last month', value: 'last-month' },
+  { label: 'Last 3 months', value: 'last-3-months' },
+  { label: 'Last 6 months', value: 'last-6-months' },
+  { label: 'This year', value: 'this-year' },
+  { label: 'Custom', value: 'custom' },
+]
+
+const columns: Array<{ key: SortKey; label: string }> = [
+  { key: 'name', label: 'Name' },
+  { key: 'category', label: 'Category' },
+  { key: 'status', label: 'Status' },
+  { key: 'bought_at', label: 'Date Bought' },
+  { key: 'sold_at', label: 'Date Sold' },
+  { key: 'buy_price', label: 'Buy Price' },
+  { key: 'sell_price', label: 'Sell Price' },
+  { key: 'profit', label: 'Profit' },
+  { key: 'roi', label: 'ROI %' },
+]
+
+const thumbnailSize = 80
+const dateInputClassName =
+  'h-10 min-w-36 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10'
+
+export function PeriodReport() {
+  const { data: items = [], isLoading } = useItems()
+  const navigate = useNavigate()
+  const [period, setPeriod] = useState<Period>(() => getInitialPeriod())
+  const [customFrom, setCustomFrom] = useState(() =>
+    formatDateInputValue(getPeriodRange('this-month').from.toISOString()),
+  )
+  const [customTo, setCustomTo] = useState(() =>
+    formatDateInputValue(getPeriodRange('this-month').to.toISOString()),
+  )
+  const [expandedBundles, setExpandedBundles] = useState<Set<string>>(
+    () => new Set(),
+  )
+  const [sort, setSort] = useState<SortState>({
+    direction: 'desc',
+    key: 'bought_at',
+  })
+  const [sortTouched, setSortTouched] = useState(false)
+
+  const range = useMemo(
+    () =>
+      period === 'custom'
+        ? getCustomRange(customFrom, customTo)
+        : getPeriodRange(period),
+    [customFrom, customTo, period],
+  )
+  const childrenByBundle = useMemo(() => groupChildrenByBundle(items), [items])
+  const periodItems = useMemo(
+    () =>
+      items.filter((item) => {
+        if (item.bundle_id && !item.is_bundle_parent) {
+          return false
+        }
+
+        return isItemActiveInRange(item, range)
+      }),
+    [items, range],
+  )
+  const summary = useMemo(
+    () => buildSummary(periodItems, items, range),
+    [items, periodItems, range],
+  )
+  const purchasedItems = useMemo(
+    () =>
+      sortItems(
+        periodItems.filter((item) => isDateInRange(item.bought_at, range)),
+        sortTouched ? sort : { direction: 'desc', key: 'bought_at' },
+        items,
+      ),
+    [items, periodItems, range, sort, sortTouched],
+  )
+  const soldItems = useMemo(
+    () =>
+      sortItems(
+        periodItems.filter(
+          (item) =>
+            isDateInRange(item.sold_at, range) &&
+            !isDateInRange(item.bought_at, range),
+        ),
+        sortTouched ? sort : { direction: 'desc', key: 'sold_at' },
+        items,
+      ),
+    [items, periodItems, range, sort, sortTouched],
+  )
+  const visibleRows = useMemo(
+    () => [
+      ...buildRows(purchasedItems, childrenByBundle, expandedBundles),
+      ...buildRows(soldItems, childrenByBundle, expandedBundles),
+    ],
+    [childrenByBundle, expandedBundles, purchasedItems, soldItems],
+  )
+  const thumbnailItemIds = useMemo(
+    () => visibleRows.map(({ item }) => item.tsid),
+    [visibleRows],
+  )
+  const { data: thumbnailByItemId = new Map<string, ItemImageThumbnail>() } =
+    useQuery({
+      queryKey: ['item-image-thumbnails', thumbnailSize, thumbnailItemIds],
+      enabled: thumbnailItemIds.length > 0,
+      staleTime: 1000 * 60 * 30,
+      queryFn: async () => {
+        const thumbnails = await getFirstItemImageThumbnails(thumbnailItemIds, {
+          size: thumbnailSize,
+        })
+
+        return new Map(
+          thumbnails.map((thumbnail) => [thumbnail.item_id, thumbnail]),
+        )
+      },
+    })
+
+  useEffect(() => {
+    localStorage.setItem('report-period', period)
+  }, [period])
+
+  function updateSort(key: SortKey) {
+    setSortTouched(true)
+    setSort((current) => ({
+      direction:
+        current.key === key && current.direction === 'desc' ? 'asc' : 'desc',
+      key,
+    }))
+  }
+
+  function toggleBundle(itemId: string) {
+    setExpandedBundles((current) => {
+      const next = new Set(current)
+      if (next.has(itemId)) {
+        next.delete(itemId)
+      } else {
+        next.add(itemId)
+      }
+      return next
+    })
+  }
+
+  function openItem(item: Item) {
+    navigate(`/items/${item.tsid}`)
+  }
+
+  if (isLoading) {
+    return <LoadingState />
+  }
+
+  return (
+    <section className="space-y-6">
+      <div>
+        <h1 className="text-4xl font-semibold tracking-tight">
+          Period Report
+        </h1>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-1 rounded-lg bg-surface-2 p-1">
+          {periodOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={cn(
+                'rounded-md px-3 py-2 text-sm font-medium text-muted transition hover:text-base',
+                period === option.value &&
+                  'bg-card text-accent shadow-sm hover:text-accent',
+              )}
+              onClick={() => setPeriod(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {period === 'custom' ? (
+          <div className="flex flex-wrap gap-3">
+            <label className="grid gap-1 text-xs font-medium text-muted">
+              From
+              <DatePickerInput
+                className={dateInputClassName}
+                value={customFrom}
+                onChange={setCustomFrom}
+              />
+            </label>
+            <label className="grid gap-1 text-xs font-medium text-muted">
+              To
+              <DatePickerInput
+                className={dateInputClassName}
+                value={customTo}
+                onChange={setCustomTo}
+              />
+            </label>
+          </div>
+        ) : null}
+      </div>
+
+      <SummaryBar summary={summary} />
+
+      {periodItems.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <>
+          <div className="hidden overflow-hidden rounded-lg border border-border-base bg-card shadow-sm md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1120px] text-left text-sm">
+                <thead className="border-b border-border-base bg-surface text-xs uppercase text-muted bg-surface-2/60">
+                  <tr>
+                    {columns.map((column) => (
+                      <th key={column.key} className="px-4 py-3 font-semibold">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 transition hover:text-accent"
+                          onClick={() => updateSort(column.key)}
+                        >
+                          {column.label}
+                          <SortIcon
+                            active={sort.key === column.key}
+                            direction={sort.direction}
+                          />
+                        </button>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <ReportSection
+                    allItems={items}
+                    childrenByBundle={childrenByBundle}
+                    expandedBundles={expandedBundles}
+                    items={purchasedItems}
+                    label="Purchased this period"
+                    onOpenItem={openItem}
+                    onToggleBundle={toggleBundle}
+                    thumbnailByItemId={thumbnailByItemId}
+                  />
+                  <ReportSection
+                    allItems={items}
+                    childrenByBundle={childrenByBundle}
+                    expandedBundles={expandedBundles}
+                    items={soldItems}
+                    label="Sold this period"
+                    onOpenItem={openItem}
+                    onToggleBundle={toggleBundle}
+                    thumbnailByItemId={thumbnailByItemId}
+                  />
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:hidden">
+            <MobileSection
+              allItems={items}
+              childrenByBundle={childrenByBundle}
+              expandedBundles={expandedBundles}
+              items={purchasedItems}
+              label="Purchased this period"
+              onOpenItem={openItem}
+              onToggleBundle={toggleBundle}
+              thumbnailByItemId={thumbnailByItemId}
+            />
+            <MobileSection
+              allItems={items}
+              childrenByBundle={childrenByBundle}
+              expandedBundles={expandedBundles}
+              items={soldItems}
+              label="Sold this period"
+              onOpenItem={openItem}
+              onToggleBundle={toggleBundle}
+              thumbnailByItemId={thumbnailByItemId}
+            />
+          </div>
+
+          <p className="text-sm text-muted">
+            Showing {periodItems.length} items
+          </p>
+        </>
+      )}
+    </section>
+  )
+}
+
+function SummaryBar({ summary }: { summary: ReportSummary }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border-base bg-card">
+      <div className="flex min-w-max divide-x divide-border-base">
+        <SummaryPill label="Purchased" value={String(summary.bought)} />
+        <SummaryPill label="Sold" value={String(summary.sold)} />
+        <SummaryPill label="Paid" value={formatCurrency(summary.totalPaid)} />
+        <SummaryPill
+          label="Revenue"
+          value={formatCurrency(summary.totalRevenue)}
+        />
+        <SummaryPill
+          label="Profit"
+          value={formatCurrency(summary.totalProfit)}
+          tone={summary.totalProfit}
+        />
+        <SummaryPill
+          label="Avg ROI"
+          value={summary.avgROI === null ? '--' : `${summary.avgROI.toFixed(1)}%`}
+          tone={summary.avgROI}
+        />
+      </div>
+    </div>
+  )
+}
+
+function SummaryPill({
+  label,
+  tone,
+  value,
+}: {
+  label: string
+  tone?: number | null
+  value: string
+}) {
+  return (
+    <div className="px-4 py-3">
+      <p className="text-xs font-medium uppercase text-muted">{label}</p>
+      <p className={cn('mt-1 text-lg font-semibold', metricTextClassName(tone))}>
+        {value}
+      </p>
+    </div>
+  )
+}
+
+type ReportSectionProps = {
+  allItems: Item[]
+  childrenByBundle: Map<string, Item[]>
+  expandedBundles: Set<string>
+  items: Item[]
+  label: string
+  onOpenItem: (item: Item) => void
+  onToggleBundle: (itemId: string) => void
+  thumbnailByItemId: Map<string, ItemImageThumbnail>
+}
+
+function ReportSection({
+  allItems,
+  childrenByBundle,
+  expandedBundles,
+  items,
+  label,
+  onOpenItem,
+  onToggleBundle,
+  thumbnailByItemId,
+}: ReportSectionProps) {
+  if (items.length === 0) {
+    return null
+  }
+
+  return (
+    <>
+      <tr className="border-b border-border-base bg-surface-2/70">
+        <td className="px-4 py-2 text-xs font-semibold uppercase text-muted" colSpan={columns.length}>
+          {label}
+        </td>
+      </tr>
+      {buildRows(items, childrenByBundle, expandedBundles).map(({ item, isChild }) => (
+        <ReportRow
+          key={`${label}-${item.tsid}`}
+          allItems={allItems}
+          childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
+          isChild={isChild}
+          isExpanded={expandedBundles.has(item.tsid)}
+          item={item}
+          onOpen={() => onOpenItem(item)}
+          onToggleBundle={() => onToggleBundle(item.tsid)}
+          thumbnail={thumbnailByItemId.get(item.tsid)}
+        />
+      ))}
+    </>
+  )
+}
+
+function ReportRow({
+  allItems,
+  childCount,
+  isChild,
+  isExpanded,
+  item,
+  onOpen,
+  onToggleBundle,
+  thumbnail,
+}: {
+  allItems: Item[]
+  childCount: number
+  isChild: boolean
+  isExpanded: boolean
+  item: Item
+  onOpen: () => void
+  onToggleBundle: () => void
+  thumbnail: ItemImageThumbnail | undefined
+}) {
+  const isKeeper = isKeepingItem(item)
+  const sellValue = calculateItemSellValue(item, allItems)
+  const profit = calculateItemProfit(item, allItems)
+  const roi = calculateItemROI(item, allItems)
+
+  return (
+    <tr
+      className={cn(
+        'cursor-pointer border-b border-border-base transition hover:bg-accent-soft/70',
+        isChild && 'bg-surface-2/40',
+      )}
+      onClick={onOpen}
+    >
+      <td className="px-4 py-4 font-medium text-base">
+        <NameCell
+          childCount={childCount}
+          isChild={isChild}
+          isExpanded={isExpanded}
+          item={item}
+          onToggleBundle={onToggleBundle}
+          thumbnail={thumbnail}
+        />
+      </td>
+      <td className="px-4 py-4 text-muted">{item.category || '--'}</td>
+      <td className="px-4 py-4">
+        <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
+      </td>
+      <td className="px-4 py-4 text-muted">{formatDateInputValue(item.bought_at)}</td>
+      <td className="px-4 py-4 text-muted">{formatDateInputValue(item.sold_at) || '--'}</td>
+      <td className="px-4 py-4">{formatCurrency(item.buy_price)}</td>
+      <td className={cn('px-4 py-4', isKeeper && 'text-muted')}>
+        {isKeeper ? '--' : formatCurrency(sellValue)}
+      </td>
+      <td className={cn('px-4 py-4 font-semibold', isKeeper ? 'text-muted' : metricTextClassName(profit))}>
+        {isKeeper ? '--' : formatCurrency(profit)}
+      </td>
+      <td className={cn('px-4 py-4 font-semibold', isKeeper ? 'text-muted' : metricTextClassName(roi))}>
+        {isKeeper || roi === null ? '--' : `${roi.toFixed(1)}%`}
+      </td>
+    </tr>
+  )
+}
+
+function MobileSection(props: ReportSectionProps) {
+  if (props.items.length === 0) {
+    return null
+  }
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
+        {props.label}
+      </h2>
+      {buildRows(props.items, props.childrenByBundle, props.expandedBundles).map(
+        ({ item, isChild }) => (
+          <ReportCard
+            key={`${props.label}-${item.tsid}`}
+            allItems={props.allItems}
+            childCount={props.childrenByBundle.get(item.tsid)?.length ?? 0}
+            isChild={isChild}
+            isExpanded={props.expandedBundles.has(item.tsid)}
+            item={item}
+            onOpen={() => props.onOpenItem(item)}
+            onToggleBundle={() => props.onToggleBundle(item.tsid)}
+            thumbnail={props.thumbnailByItemId.get(item.tsid)}
+          />
+        ),
+      )}
+    </section>
+  )
+}
+
+function ReportCard({
+  allItems,
+  childCount,
+  isChild,
+  isExpanded,
+  item,
+  onOpen,
+  onToggleBundle,
+  thumbnail,
+}: {
+  allItems: Item[]
+  childCount: number
+  isChild: boolean
+  isExpanded: boolean
+  item: Item
+  onOpen: () => void
+  onToggleBundle: () => void
+  thumbnail: ItemImageThumbnail | undefined
+}) {
+  const isKeeper = isKeepingItem(item)
+  const sellValue = calculateItemSellValue(item, allItems)
+  const profit = calculateItemProfit(item, allItems)
+  const roi = calculateItemROI(item, allItems)
+
+  return (
+    <button
+      type="button"
+      className={cn(
+        'rounded-lg border border-border-base bg-card p-4 text-left shadow-sm transition hover:border-accent',
+        isChild && 'ml-5 border-accent/30',
+      )}
+      onClick={onOpen}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <ItemThumbnail name={item.name} thumbnail={thumbnail} />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-base">
+              <span className="inline-flex items-center gap-2">
+                {isChild ? <Link2 className="h-4 w-4 text-accent" aria-hidden="true" /> : null}
+                {item.name}
+                {item.is_bundle_parent ? <BundleBadge count={childCount} /> : null}
+              </span>
+            </h3>
+            <p className="mt-1 text-sm text-muted">{item.category || 'Uncategorized'}</p>
+          </div>
+        </div>
+        <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
+      </div>
+      {item.is_bundle_parent ? (
+        <button
+          type="button"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-accent transition hover:bg-accent-soft"
+          onClick={(event) => {
+            event.stopPropagation()
+            onToggleBundle()
+          }}
+        >
+          {isExpanded ? 'Hide bundle items' : 'Show bundle items'}
+        </button>
+      ) : null}
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <MobileMetric label="Bought" value={formatDateInputValue(item.bought_at)} />
+        <MobileMetric label="Sold" value={formatDateInputValue(item.sold_at) || '--'} />
+        <MobileMetric label="Buy" value={formatCurrency(item.buy_price)} />
+        <MobileMetric label="Sell" value={isKeeper ? '--' : formatCurrency(sellValue)} />
+        <MobileMetric
+          label="Profit"
+          tone={isKeeper ? null : profit}
+          value={isKeeper ? '--' : formatCurrency(profit)}
+        />
+        <MobileMetric
+          label="ROI"
+          tone={isKeeper ? null : roi}
+          value={isKeeper || roi === null ? '--' : `${roi.toFixed(1)}%`}
+        />
+      </div>
+    </button>
+  )
+}
+
+function NameCell({
+  childCount,
+  isChild,
+  isExpanded,
+  item,
+  onToggleBundle,
+  thumbnail,
+}: {
+  childCount: number
+  isChild: boolean
+  isExpanded: boolean
+  item: Item
+  onToggleBundle: () => void
+  thumbnail: ItemImageThumbnail | undefined
+}) {
+  return (
+    <div className={cn('flex items-center gap-2', isChild && 'pl-8')}>
+      {item.is_bundle_parent ? (
+        <button
+          type="button"
+          className="rounded p-1 text-muted transition hover:bg-surface-2 hover:text-accent"
+          onClick={(event) => {
+            event.stopPropagation()
+            onToggleBundle()
+          }}
+          aria-label={isExpanded ? 'Collapse bundle' : 'Expand bundle'}
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          )}
+        </button>
+      ) : null}
+      {isChild ? <Link2 className="h-4 w-4 text-accent" aria-hidden="true" /> : null}
+      <ItemThumbnail name={item.name} thumbnail={thumbnail} />
+      <span>{item.name}</span>
+      {item.is_bundle_parent ? <BundleBadge count={childCount} /> : null}
+    </div>
+  )
+}
+
+function ItemThumbnail({
+  name,
+  thumbnail,
+}: {
+  name: string
+  thumbnail: ItemImageThumbnail | undefined
+}) {
+  return (
+    <ImageWithSkeleton
+      src={thumbnail?.signed_url}
+      alt={name}
+      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-border-base flex-shrink-0"
+      className="rounded-md border border-border-base"
+    />
+  )
+}
+
+function StatusBadge({ status }: { status: ItemStatus }) {
+  const className = {
+    holding: 'bg-accent/15 text-accent bg-accent/15',
+    listed: 'bg-accent-soft text-accent bg-accent/15',
+    sold: 'bg-positive/15 text-positive bg-positive/15',
+    keeper: 'bg-accent-soft text-accent bg-accent/15',
+  }[status]
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}
+    >
+      {getStatusLabel(status)}
+    </span>
+  )
+}
+
+function BundleBadge({ count }: { count: number }) {
+  return (
+    <span className="inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent bg-accent/15">
+      Bundle ({count})
+    </span>
+  )
+}
+
+function MobileMetric({
+  label,
+  tone,
+  value,
+}: {
+  label: string
+  tone?: number | null
+  value: string
+}) {
+  return (
+    <div>
+      <p className="text-xs text-muted">{label}</p>
+      <p className={tone === undefined ? 'font-medium' : metricTextClassName(tone)}>
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function SortIcon({
+  active,
+  direction,
+}: {
+  active: boolean
+  direction: SortState['direction']
+}) {
+  if (!active) {
+    return <ArrowUp className="h-3.5 w-3.5 opacity-20" aria-hidden="true" />
+  }
+
+  return direction === 'asc' ? (
+    <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
+  ) : (
+    <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="rounded-lg border border-dashed border-border-base bg-card p-10 text-center shadow-sm">
+      <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent-soft text-4xl">
+        📅
+      </div>
+      <h3 className="mt-5 text-xl font-semibold">No items found for this period</h3>
+      <p className="mt-2 text-sm text-muted">Try a different date range</p>
+    </div>
+  )
+}
+
+function LoadingState() {
+  return (
+    <div className="grid gap-4">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div
+          key={index}
+          className="h-24 animate-pulse rounded-lg border border-border-base bg-card"
+        />
+      ))}
+    </div>
+  )
+}
+
+type ReportSummary = {
+  avgROI: number | null
+  bought: number
+  itemCount: number
+  sold: number
+  totalPaid: number
+  totalProfit: number
+  totalRevenue: number
+}
+
+function buildSummary(
+  periodItems: Item[],
+  allItems: Item[],
+  range: DateRange,
+): ReportSummary {
+  const boughtItems = periodItems.filter(
+    (item) => isDateInRange(item.bought_at, range) && !isKeepingItem(item),
+  )
+  const soldItems = periodItems.filter(
+    (item) => isDateInRange(item.sold_at, range) && !isKeepingItem(item),
+  )
+  const roiValues = soldItems
+    .map((item) => calculateItemROI(item, allItems))
+    .filter((value): value is number => value !== null)
+  const totalRevenue = sumCurrency(
+    soldItems.map((item) => calculateItemSellValue(item, allItems)),
+  )
+  const soldCost = sumCurrency(soldItems.map((item) => item.buy_price))
+
+  return {
+    avgROI:
+      roiValues.length > 0
+        ? roiValues.reduce((sum, value) => sum + value, 0) / roiValues.length
+        : null,
+    bought: boughtItems.length,
+    itemCount: periodItems.length,
+    sold: soldItems.length,
+    totalPaid: sumCurrency(boughtItems.map((item) => item.buy_price)),
+    totalProfit: totalRevenue - soldCost,
+    totalRevenue,
+  }
+}
+
+type DateRange = {
+  from: Date
+  to: Date
+}
+
+function getPeriodRange(period: Exclude<Period, 'custom'>): DateRange {
+  const now = new Date()
+
+  if (period === 'this-month') {
+    return {
+      from: startOfDay(new Date(now.getFullYear(), now.getMonth(), 1)),
+      to: endOfDay(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+    }
+  }
+
+  if (period === 'last-month') {
+    return {
+      from: startOfDay(new Date(now.getFullYear(), now.getMonth() - 1, 1)),
+      to: endOfDay(new Date(now.getFullYear(), now.getMonth(), 0)),
+    }
+  }
+
+  if (period === 'this-year') {
+    return {
+      from: startOfDay(new Date(now.getFullYear(), 0, 1)),
+      to: endOfDay(new Date(now.getFullYear(), 11, 31)),
+    }
+  }
+
+  const months = period === 'last-3-months' ? 3 : 6
+  const from = new Date(now.getFullYear(), now.getMonth() - months + 1, 1)
+
+  return {
+    from: startOfDay(from),
+    to: endOfDay(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+  }
+}
+
+function getCustomRange(customFrom: string, customTo: string): DateRange {
+  const fallback = getPeriodRange('this-month')
+  const from = parseDateInput(customFrom)
+  const to = parseDateInput(customTo)
+
+  return {
+    from: from ? startOfDay(from) : fallback.from,
+    to: to ? endOfDay(to) : fallback.to,
+  }
+}
+
+function parseDateInput(value: string) {
+  const [dayText, monthText, yearText] = value.split('/')
+  const day = Number.parseInt(dayText, 10)
+  const month = Number.parseInt(monthText, 10)
+  const year = Number.parseInt(yearText, 10)
+  const date = new Date(year, month - 1, day)
+
+  if (
+    !Number.isInteger(day) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(year) ||
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null
+  }
+
+  return date
+}
+
+function startOfDay(date: Date) {
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+function endOfDay(date: Date) {
+  date.setHours(23, 59, 59, 999)
+  return date
+}
+
+function isItemActiveInRange(item: Item, range: DateRange) {
+  return isDateInRange(item.bought_at, range) || isDateInRange(item.sold_at, range)
+}
+
+function isDateInRange(value: string | null | undefined, range: DateRange) {
+  if (!value) {
+    return false
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return false
+  }
+
+  return date >= range.from && date <= range.to
+}
+
+function groupChildrenByBundle(items: Item[]) {
+  return items.reduce((map, item) => {
+    if (!item.bundle_id) {
+      return map
+    }
+
+    const children = map.get(item.bundle_id) ?? []
+    children.push(item)
+    map.set(item.bundle_id, children)
+    return map
+  }, new Map<string, Item[]>())
+}
+
+function buildRows(
+  items: Item[],
+  childrenByBundle: Map<string, Item[]>,
+  expandedBundles: Set<string>,
+) {
+  const rows: Array<{ isChild: boolean; item: Item }> = []
+
+  for (const item of items) {
+    rows.push({ isChild: false, item })
+
+    if (item.is_bundle_parent && expandedBundles.has(item.tsid)) {
+      for (const child of childrenByBundle.get(item.tsid) ?? []) {
+        rows.push({ isChild: true, item: child })
+      }
+    }
+  }
+
+  return rows
+}
+
+function sortItems(items: Item[], sort: SortState, allItems: Item[]) {
+  return [...items].sort((a, b) => {
+    const direction = sort.direction === 'asc' ? 1 : -1
+    const aValue = getSortValue(a, sort.key, allItems)
+    const bValue = getSortValue(b, sort.key, allItems)
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return (aValue - bValue) * direction
+    }
+
+    return String(aValue).localeCompare(String(bValue)) * direction
+  })
+}
+
+function getSortValue(item: Item, key: SortKey, allItems: Item[]) {
+  if (key === 'status') {
+    return getStatusLabel(getEffectiveItemStatus(item, allItems))
+  }
+
+  if (key === 'sell_price') {
+    return isKeepingItem(item) ? 0 : calculateItemSellValue(item, allItems)
+  }
+
+  if (key === 'profit') {
+    return isKeepingItem(item) ? Number.NEGATIVE_INFINITY : calculateItemProfit(item, allItems)
+  }
+
+  if (key === 'roi') {
+    return isKeepingItem(item) ? Number.NEGATIVE_INFINITY : calculateItemROI(item, allItems) ?? Number.NEGATIVE_INFINITY
+  }
+
+  if (key === 'bought_at' || key === 'sold_at') {
+    return item[key] ? new Date(item[key]).getTime() : 0
+  }
+
+  return item[key] ?? ''
+}
+
+function metricTextClassName(value?: number | null) {
+  if (value === undefined) {
+    return ''
+  }
+
+  if (value === null || value === 0) {
+    return 'font-semibold text-muted'
+  }
+
+  return value > 0 ? 'font-semibold text-positive' : 'font-semibold text-negative'
+}
+
+function getInitialPeriod(): Period {
+  if (typeof localStorage === 'undefined') {
+    return 'this-month'
+  }
+
+  const storedPeriod = localStorage.getItem('report-period')
+
+  return periodOptions.some((option) => option.value === storedPeriod)
+    ? (storedPeriod as Period)
+    : 'this-month'
+}

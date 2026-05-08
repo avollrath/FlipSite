@@ -17,6 +17,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { ImportExport } from '@/pages/ImportExport'
 import { Items } from '@/pages/Items'
 import { Login } from '@/pages/Login'
+import { PeriodReport } from '@/pages/PeriodReport'
 import { Settings } from '@/pages/Settings'
 
 const queryClient = new QueryClient()
@@ -68,7 +69,9 @@ function App() {
    <Route element={<Layout />}>
    <Route path="/" element={<Dashboard />} />
    <Route path="/items" element={<Items />} />
+   <Route path="/items/:itemId" element={<Items />} />
    <Route path="/analytics" element={<Analytics />} />
+   <Route path="/report" element={<PeriodReport />} />
    <Route path="/categories" element={<Categories />} />
    <Route path="/import-export" element={<ImportExport />} />
    <Route path="/settings" element={<Settings />} />

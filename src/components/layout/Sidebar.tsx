@@ -1,6 +1,7 @@
 import {
  ArrowRightLeft,
  BarChart3,
+ CalendarRange,
  Gauge,
  LogOut,
  Package,
@@ -17,6 +18,7 @@ const navItems = [
  { label: 'Dashboard', href: '/', icon: Gauge },
  { label: 'Items', href: '/items', icon: Package },
  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+ { label: 'Period Report', href: '/report', icon: CalendarRange },
  { label: 'Categories', href: '/categories', icon: Tags },
  { label: 'Import / Export', href: '/import-export', icon: ArrowRightLeft },
  { label: 'Settings', href: '/settings', icon: Settings },

@@ -16,7 +16,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { ImageWithSkeleton } from '@/components/ui/ImageWithSkeleton'
 import { ItemDrawer } from '@/components/items/ItemDrawer'
 import { useDeleteItem, useItems } from '@/hooks/useItems'
@@ -105,11 +105,12 @@ const gallerySortOptions: Array<{ key: SortKey; label: string }> = [
 export function Items() {
  const { data: items = [], isLoading } = useItems()
  const deleteItem = useDeleteItem()
+ const { itemId } = useParams()
  const [searchParams] = useSearchParams()
  const queryStatus = getQueryStatus(searchParams.get('status'))
  const queryBundleFilter = getQueryBundleFilter(searchParams.get('bundles'))
  const queryInventoryOnly = searchParams.get('inventory') === '1'
- const queryItemId = searchParams.get('item') ?? ''
+ const queryItemId = itemId ?? searchParams.get('item') ?? ''
  const [search, setSearch] = useState('')
  const [viewMode, setViewMode] = useState<ViewMode>(() => getInitialViewMode())
  const [statusFilter, setStatusFilter] = useState<
