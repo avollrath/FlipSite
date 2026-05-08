@@ -211,15 +211,16 @@ export function PeriodReport() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-1 rounded-lg bg-surface-2 p-1">
+        <div className="flex flex-wrap gap-2">
           {periodOptions.map((option) => (
             <button
               key={option.value}
               type="button"
               className={cn(
-                'rounded-md px-3 py-2 text-sm font-medium text-muted transition hover:text-base',
-                period === option.value &&
-                  'bg-card text-accent shadow-sm hover:text-accent',
+                'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
+                period === option.value
+                  ? 'border-accent bg-accent text-accent-fg'
+                  : 'border-border-base bg-surface-2 text-muted hover:border-accent/50 hover:text-base',
               )}
               onClick={() => setPeriod(option.value)}
             >
