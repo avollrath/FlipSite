@@ -223,17 +223,19 @@ export function Landing() {
 
         <PreviewImage
           alt="FlipSite dashboard preview"
-          className="relative z-10 mt-16 max-w-5xl"
+          className="relative z-10 mb-16 mt-16 max-w-7xl"
           src={dashboardPreview}
         />
       </section>
 
-      <section className="border-y border-white/[0.08] py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-12 px-6 text-center">
+      <section className="border-y border-white/[0.08] py-12">
+        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-14 px-6 text-center md:gap-20">
           {stats.map((stat) => (
             <div key={stat.label}>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="mt-0.5 text-base text-white/40">{stat.label}</p>
+              <p className="text-4xl font-bold tracking-tight text-white md:text-5xl">
+                {stat.value}
+              </p>
+              <p className="mt-2 text-base text-white/40">{stat.label}</p>
             </div>
           ))}
         </div>
