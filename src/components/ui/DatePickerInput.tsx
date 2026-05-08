@@ -44,6 +44,11 @@ export function DatePickerInput({
   }
 
   function normalizeValue() {
+    if (!value.trim()) {
+      onChange('')
+      return
+    }
+
     const normalizedValue = formatDateInputValue(toSupabaseTimestamp(value))
 
     if (normalizedValue) {
@@ -73,9 +78,7 @@ export function DatePickerInput({
         onChange={(event) => {
           const nextValue = formatDateInputFromNativeValue(event.target.value)
 
-          if (nextValue) {
-            onChange(nextValue)
-          }
+          onChange(nextValue)
         }}
         aria-hidden="true"
       />

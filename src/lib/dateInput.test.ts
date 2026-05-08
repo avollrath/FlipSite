@@ -16,6 +16,10 @@ describe('date input helpers', () => {
     expect(formatDateInputFromNativeValue('2026-05-01')).toBe('01/05/2026')
   })
 
+  it('keeps cleared native picker values empty', () => {
+    expect(formatDateInputFromNativeValue('')).toBe('')
+  })
+
   it('keeps native yyyy-mm-dd manual input compatible', () => {
     expect(formatNativeDateValue('2026-05-01')).toBe('2026-05-01')
     expect(formatNativeDateValue('01/05/2026')).toBe('2026-05-01')
