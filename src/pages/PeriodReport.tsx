@@ -217,10 +217,10 @@ export function PeriodReport() {
               key={option.value}
               type="button"
               className={cn(
-                'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
+                'rounded-full border border-transparent px-4 py-1.5 text-sm font-medium transition-colors',
                 period === option.value
                   ? 'border-accent bg-accent text-accent-fg'
-                  : 'border-border-base bg-surface-2 text-muted hover:border-accent/50 hover:text-base',
+                  : 'bg-surface-2 text-muted hover:border-border-base hover:text-[hsl(var(--text))]',
               )}
               onClick={() => setPeriod(option.value)}
             >
