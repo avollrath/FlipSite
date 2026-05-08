@@ -204,8 +204,15 @@ export function useUpdateItem() {
 
       return updatedItem
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: itemsQueryKey(user?.id) })
+    onSuccess: async (updatedItem) => {
+      queryClient.setQueryData<Item[]>(
+        itemsQueryKey(user?.id),
+        (currentItems = []) =>
+          currentItems.map((item) =>
+            item.tsid === updatedItem.tsid ? updatedItem : item,
+          ),
+      )
+      await queryClient.invalidateQueries({ queryKey: itemsQueryKey(user?.id) })
       toast.success('Item updated')
     },
     onError: (error) => {
