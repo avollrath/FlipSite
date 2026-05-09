@@ -2,11 +2,11 @@ import {
  ArrowRightLeft,
  BarChart3,
  CalendarRange,
+ ChevronLeft,
+ ChevronRight,
  Gauge,
  LogOut,
  Package,
- PanelLeftClose,
- PanelLeftOpen,
  Settings,
  Tags,
 } from 'lucide-react'
@@ -50,7 +50,16 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
  }
 
  return (
- <aside className={`fixed inset-y-0 left-0 flex-col hidden border-r border-[hsl(var(--sidebar-border))] bg-sidebar md:flex transition-all duration-200 ease-out ${collapsed ? 'w-16 p-3' : 'w-72 p-5'}`}>
+ <aside className={`relative overflow-visible fixed inset-y-0 left-0 flex-col hidden border-r border-[hsl(var(--sidebar-border))] bg-sidebar md:flex transition-all duration-200 ease-out ${collapsed ? 'w-16 p-3' : 'w-72 p-5'}`}>
+ <button
+  type="button"
+  className="absolute -right-3 top-1/3 -translate-y-1/2 h-6 w-6 rounded-full bg-[hsl(var(--card-bg))] border border-[hsl(var(--border))] shadow-md flex items-center justify-center text-muted transition-all duration-200 ease-out hover:scale-110 hover:border-[hsl(var(--accent))] hover:text-sidebar-accent"
+  onClick={onToggle}
+  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+ >
+  {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+ </button>
+
  <div className={`flex items-center justify-center transition-all duration-200 ease-out ${collapsed ? 'px-0 py-3' : 'px-4 py-6'}`}>
   {!collapsed && <Logo size={96} />}
   {collapsed && (
@@ -117,17 +126,6 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
     </p>
    </div>
   )}
-
-  <Tooltip content={collapsed ? 'Expand' : 'Collapse'} side="right">
-   <button
-    type="button"
-    className="flex items-center justify-center text-sidebar-text/60 transition-colors hover:text-sidebar-text/90 rounded-lg p-2 hover:bg-sidebar-accent/10 w-full"
-    onClick={onToggle}
-    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-   >
-    {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-   </button>
-  </Tooltip>
 
   <Tooltip content="Logout" side="right">
    <button
