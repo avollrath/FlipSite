@@ -42,7 +42,7 @@ export function Sidebar() {
  }
 
  return (
- <aside className="fixed inset-y-0 left-0 flex-col hidden p-5 border-r w-72 border-border-base bg-sidebar md:flex">
+ <aside className="fixed inset-y-0 left-0 flex-col hidden p-5 border-r w-72 border-[hsl(var(--sidebar-border))] bg-sidebar md:flex">
  <div className="flex items-center justify-center px-4 py-6">
         <Logo size={96} />
  </div>
@@ -57,7 +57,7 @@ export function Sidebar() {
    `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
    isActive
    ? 'bg-accent/25 font-medium text-sidebar-accent [&>svg]:opacity-100'
-   : 'font-medium text-sidebar-text/90 hover:bg-white/10 hover:text-white [&>svg]:opacity-70 hover:[&>svg]:opacity-100'
+   : 'font-medium text-sidebar-text/90 hover:bg-sidebar-accent/15 hover:text-sidebar-accent [&>svg]:opacity-70 hover:[&>svg]:opacity-100'
    }`
   }
   >
@@ -67,8 +67,8 @@ export function Sidebar() {
   ))}
  </nav>
 
- <div className="flex flex-col items-center gap-2 pt-4 pb-2 mt-auto border-t border-white/10">
-  <div className="flex items-center justify-center overflow-hidden rounded-full h-14 w-14 shrink-0 bg-accent/20 ring-2 ring-white/10">
+ <div className="flex flex-col items-center gap-2 pt-4 pb-2 mt-auto border-t border-[hsl(var(--sidebar-border))]">
+  <div className="flex items-center justify-center overflow-hidden rounded-full h-14 w-14 shrink-0 bg-sidebar-accent/20 ring-2 ring-sidebar-text/10">
    {avatarUrl ? (
    <img
     src={avatarUrl}
@@ -82,16 +82,16 @@ export function Sidebar() {
    )}
   </div>
   <div className="flex w-full flex-col items-center gap-0.5 px-2">
-   <p className="max-w-full text-sm font-semibold leading-tight text-center text-white truncate">
+   <p className="max-w-full text-sm font-semibold leading-tight text-center text-sidebar-text truncate">
    {displayName}
    </p>
-   <p className="max-w-full truncate text-center text-[11px] leading-tight text-white/40">
+   <p className="max-w-full truncate text-center text-[11px] leading-tight text-sidebar-text/50">
    {user?.email}
    </p>
   </div>
   <button
   type="button"
-  className="mt-1 flex items-center gap-1.5 text-[11px] text-white/35 transition-colors hover:text-white/70"
+  className="mt-1 flex items-center gap-1.5 text-[11px] text-sidebar-text/60 transition-colors hover:text-sidebar-text/90"
   onClick={handleSignOut}
   >
   <LogOut className="w-3 h-3" aria-hidden="true" />

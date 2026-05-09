@@ -1,10 +1,9 @@
 /* ── THEME: Midnight Indigo (default) ── */
 /*
  * SIDEBAR CONTRAST RULE:
- * --sidebar-text lightness must always be >= 65% (sidebar bg is always dark)
- * --sidebar-accent lightness must always be >= 60%
- * --sidebar-bg lightness must always be <= 12%
- * Never set sidebar colors that produce < 3:1 contrast ratio
+ * Light mode: sidebar uses surface-2 colors for light background
+ * Dark mode: sidebar uses dark colors for dark background
+ * Always maintain >= 3:1 contrast ratio on sidebar text
  */
 
 [data-theme="midnight"] {
@@ -19,9 +18,10 @@
   --positive: 158 60% 38%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 220 30% 12%;
-  --sidebar-text: 220 20% 72%;
-  --sidebar-accent: 220 70% 72%;
+  --sidebar-bg: 220 15% 92%;
+  --sidebar-text: 220 25% 12%;
+  --sidebar-accent: 220 70% 55%;
+  --sidebar-border: 220 15% 82%;
 }
 
 .dark[data-theme="midnight"] {
@@ -54,9 +54,10 @@
   --positive: 158 64% 35%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 158 35% 12%;
-  --sidebar-text: 150 18% 70%;
-  --sidebar-accent: 158 58% 62%;
+  --sidebar-bg: 150 12% 91%;
+  --sidebar-text: 150 25% 10%;
+  --sidebar-accent: 158 64% 38%;
+  --sidebar-border: 150 12% 79%;
 }
 
 .dark[data-theme="emerald"] {
@@ -89,9 +90,10 @@
   --positive: 158 60% 38%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 25 35% 12%;
-  --sidebar-text: 36 18% 70%;
-  --sidebar-accent: 38 85% 65%;
+  --sidebar-bg: 36 15% 91%;
+  --sidebar-text: 30 30% 10%;
+  --sidebar-accent: 32 95% 44%;
+  --sidebar-border: 36 15% 79%;
 }
 
 .dark[data-theme="amber"] {
@@ -124,9 +126,10 @@
   --positive: 158 60% 38%;
   --negative: 4 75% 52%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 346 30% 12%;
-  --sidebar-text: 346 18% 70%;
-  --sidebar-accent: 346 70% 68%;
+  --sidebar-bg: 346 12% 91%;
+  --sidebar-text: 346 25% 10%;
+  --sidebar-accent: 346 75% 50%;
+  --sidebar-border: 346 12% 79%;
 }
 
 .dark[data-theme="rose"] {
@@ -159,9 +162,10 @@
   --positive: 158 60% 35%;
   --negative: 4 72% 50%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 215 25% 12%;
-  --sidebar-text: 215 15% 68%;
-  --sidebar-accent: 215 45% 68%;
+  --sidebar-bg: 215 12% 90%;
+  --sidebar-text: 215 25% 10%;
+  --sidebar-accent: 215 25% 35%;
+  --sidebar-border: 215 12% 78%;
 }
 
 .dark[data-theme="slate"] {
@@ -194,9 +198,10 @@
   --positive: 122 80% 36%;
   --negative: 330 100% 50%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 270 35% 6%;
-  --sidebar-text: 174 55% 68%;
-  --sidebar-accent: 174 90% 62%;
+  --sidebar-bg: 270 12% 90%;
+  --sidebar-text: 270 20% 8%;
+  --sidebar-accent: 174 100% 40%;
+  --sidebar-border: 174 40% 73%;
 }
 
 .dark[data-theme="cyberpunk"] {
@@ -229,9 +234,10 @@
   --positive: 88 55% 38%;
   --negative: 4 75% 52%;
   --card-bg: 38 30% 98%;
-  --sidebar-bg: 20 25% 12%;
-  --sidebar-text: 38 18% 70%;
-  --sidebar-accent: 14 82% 65%;
+  --sidebar-bg: 38 20% 88%;
+  --sidebar-text: 20 30% 12%;
+  --sidebar-accent: 14 90% 52%;
+  --sidebar-border: 38 20% 73%;
 }
 
 .dark[data-theme="cassette"] {
@@ -264,9 +270,10 @@
   --positive: 160 70% 38%;
   --negative: 5 80% 55%;
   --card-bg: 0 0% 100%;
-  --sidebar-bg: 290 35% 10%;
-  --sidebar-text: 290 18% 72%;
-  --sidebar-accent: 48 90% 65%;
+  --sidebar-bg: 300 12% 91%;
+  --sidebar-text: 290 25% 10%;
+  --sidebar-accent: 290 80% 52%;
+  --sidebar-border: 290 30% 75%;
 }
 
 .dark[data-theme="eighties"] {
