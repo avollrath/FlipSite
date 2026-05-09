@@ -211,3 +211,12 @@ html:not(.dark) [class*="border-border"],
 html:not(.dark) [class*="divide-border"] > * + * {
  border-color: transparent !important;
 }
+
+html:not(.dark) .border-\[hsl\(var\(--sidebar-border\)\)\] {
+ border-color: transparent !important;
+}
+
+/* Keep sidebar divider subtle in light mode */
+html:not(.dark) aside .border-t {
+ border-color: rgba(0, 0, 0, 0.08) !important;
+}
