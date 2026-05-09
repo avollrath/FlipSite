@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { MobileNav } from '@/components/layout/MobileNav'
@@ -10,11 +11,21 @@ export function Layout() {
  const { mode, toggleMode } = useTheme()
  const location = useLocation()
  const navigate = useNavigate()
+ const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+  const stored = localStorage.getItem('flipsite-sidebar-collapsed')
+  return stored ? JSON.parse(stored) : false
+ })
+
+ useEffect(() => {
+  localStorage.setItem('flipsite-sidebar-collapsed', JSON.stringify(sidebarCollapsed))
+ }, [sidebarCollapsed])
+
+ const sidebarWidth = sidebarCollapsed ? 'md:pl-16' : 'md:pl-72'
 
  return (
  <div className="min-h-screen bg-surface text-base transition-colors">
- <Sidebar />
- <div className="min-h-screen md:pl-72">
+ <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+ <div className={`min-h-screen transition-all duration-200 ease-out ${sidebarWidth}`}>
   <header className="sticky top-0 z-30 border-b border-border-base bg-surface/85 backdrop-blur">
   <div className="flex h-16 items-center justify-between px-5 md:px-8">
           <div aria-hidden="true" />
