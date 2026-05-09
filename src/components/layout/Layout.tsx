@@ -23,7 +23,7 @@ export function Layout() {
  const sidebarWidth = sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'
 
  return (
- <div className="min-h-screen text-base transition-colors bg-surface">
+ <div className="flex min-h-screen text-base transition-colors bg-surface">
  <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
  <div className={`min-h-screen transition-all duration-200 ease-out ${sidebarWidth}`}>
   <header className="sticky top-0 z-30 border-b border-border-base bg-surface/85 backdrop-blur">
