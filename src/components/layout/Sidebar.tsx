@@ -102,7 +102,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
  </nav>
 
  <div className={`flex flex-col gap-2 mt-auto pt-4 pb-2 border-t border-[hsl(var(--sidebar-border))] transition-all duration-200 ease-out ${collapsed ? 'items-center px-0' : 'items-center px-0'}`}>
-  <div className="flex items-center justify-center overflow-hidden rounded-full h-14 w-14 shrink-0 bg-sidebar-accent/20 ring-2 ring-sidebar-text/10">
+  <div className={`flex items-center justify-center overflow-hidden rounded-full shrink-0 bg-sidebar-accent/20 ring-2 ring-sidebar-text/10 ${collapsed ? 'h-8 w-8' : 'h-14 w-14'}`}>
    {avatarUrl ? (
    <img
     src={avatarUrl}

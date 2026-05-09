@@ -12,7 +12,7 @@
   --accent-fg: 0 0% 100%;
   --surface: 220 20% 97%;
   --surface-2: 220 15% 92%;
-  --border: 220 15% 85%;
+  --border: transparent;
   --text: 220 25% 12%;
   --text-muted: 220 15% 45%;
   --positive: 158 60% 38%;
@@ -49,7 +49,7 @@
   --accent-fg: 0 0% 100%;
   --surface: 150 15% 96%;
   --surface-2: 150 12% 91%;
-  --border: 150 12% 84%;
+  --border: transparent;
   --text: 150 25% 10%;
   --text-muted: 150 10% 42%;
   --positive: 158 64% 35%;
@@ -86,7 +86,7 @@
   --accent-fg: 0 0% 100%;
   --surface: 36 20% 96%;
   --surface-2: 36 15% 91%;
-  --border: 36 15% 84%;
+  --border: transparent;
   --text: 30 30% 10%;
   --text-muted: 30 15% 42%;
   --positive: 158 60% 38%;
@@ -123,7 +123,7 @@
   --accent-fg: 0 0% 100%;
   --surface: 346 15% 96%;
   --surface-2: 346 12% 91%;
-  --border: 346 12% 84%;
+  --border: transparent;
   --text: 346 25% 10%;
   --text-muted: 346 10% 42%;
   --positive: 158 60% 38%;
@@ -160,7 +160,7 @@
   --accent-fg: 0 0% 100%;
   --surface: 215 15% 96%;
   --surface-2: 215 12% 90%;
-  --border: 215 12% 83%;
+  --border: transparent;
   --text: 215 25% 10%;
   --text-muted: 215 12% 42%;
   --positive: 158 60% 35%;
@@ -197,7 +197,7 @@
   --accent-fg: 0 0% 0%;
   --surface: 270 15% 96%;
   --surface-2: 270 12% 90%;
-  --border: 174 40% 78%;
+  --border: transparent;
   --text: 270 20% 8%;
   --text-muted: 270 10% 40%;
   --positive: 122 80% 36%;
@@ -234,7 +234,7 @@
   --accent-fg: 0 0% 100%;
   --surface: 38 25% 95%;
   --surface-2: 38 20% 88%;
-  --border: 38 20% 78%;
+  --border: transparent;
   --text: 20 30% 12%;
   --text-muted: 20 15% 45%;
   --positive: 88 55% 38%;
@@ -271,7 +271,7 @@
   --accent-fg: 0 0% 100%;
   --surface: 300 15% 97%;
   --surface-2: 300 12% 91%;
-  --border: 290 30% 80%;
+  --border: transparent;
   --text: 290 25% 10%;
   --text-muted: 290 10% 42%;
   --positive: 160 70% 38%;
