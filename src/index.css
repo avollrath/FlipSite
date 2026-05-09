@@ -228,11 +228,21 @@ html:not(.dark) aside button[aria-label="Expand sidebar"] {
 }
 
 /* Keep form input borders visible in light mode */
+html:not(.dark) input,
 html:not(.dark) select,
-html:not(.dark) input[type="text"],
-html:not(.dark) input[type="number"],
-html:not(.dark) input[type="date"],
-html:not(.dark) input[type="email"],
 html:not(.dark) textarea {
- border-color: rgba(0, 0, 0, 0.15) !important;
+ border-color: rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Restore borders on interactive sections in edit item drawer */
+html:not(.dark) .border-border-base:has(input[type="checkbox"]),
+html:not(.dark) section.border-border-base,
+html:not(.dark) .border-negative\/25 {
+ border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Restore drawer dividers in light mode */
+html:not(.dark) [role="dialog"] .border-b,
+html:not(.dark) [role="dialog"] .border-t {
+ border-color: rgba(0, 0, 0, 0.08) !important;
 }
