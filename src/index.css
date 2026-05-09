@@ -220,3 +220,19 @@ html:not(.dark) .border-\[hsl\(var\(--sidebar-border\)\)\] {
 html:not(.dark) aside .border-t {
  border-color: rgba(0, 0, 0, 0.08) !important;
 }
+
+/* Hide sidebar toggle button border in light mode */
+html:not(.dark) aside button[aria-label="Collapse sidebar"],
+html:not(.dark) aside button[aria-label="Expand sidebar"] {
+ border-color: transparent !important;
+}
+
+/* Keep form input borders visible in light mode */
+html:not(.dark) select,
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="number"],
+html:not(.dark) input[type="date"],
+html:not(.dark) input[type="email"],
+html:not(.dark) textarea {
+ border-color: rgba(0, 0, 0, 0.15) !important;
+}
