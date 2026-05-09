@@ -10,14 +10,14 @@ export function formatCurrency(value: number | null | undefined) {
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
       currency: 'EUR',
-      useGrouping: false,
+      useGrouping: true,
     }).format(0)
   }
 
   return new Intl.NumberFormat('de-DE', {
     style: 'currency',
     currency: 'EUR',
-    useGrouping: false,
+    useGrouping: true,
   }).format(value)
 }
 
