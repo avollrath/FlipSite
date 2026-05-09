@@ -23,13 +23,15 @@ export function Layout() {
     );
   }, [sidebarCollapsed]);
 
+  const sidebarWidth = sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'
+
   return (
-    <div className="flex min-h-screen text-base transition-colors bg-surface">
+    <div className="min-h-screen text-base transition-colors bg-surface">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      <div className="flex-1 min-h-screen overflow-auto transition-all duration-200 ease-out">
+      <div className={`flex-1 min-h-screen overflow-auto transition-all duration-200 ease-out ${sidebarWidth}`}>
         <header className="sticky top-0 z-30 border-b border-border-base bg-surface/85 backdrop-blur">
           <div className="flex items-center justify-between h-16 px-5 md:px-8">
             <div aria-hidden="true" />
