@@ -50,7 +50,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
  }
 
  return (
- <aside className={`overflow-visible fixed inset-y-0 left-0 flex-col hidden border-r border-[hsl(var(--sidebar-border))] bg-sidebar md:flex transition-all duration-200 ease-out ${collapsed ? 'w-16 p-3' : 'w-72 p-5'}`}>
+ <aside className={`overflow-visible fixed z-10 inset-y-0 left-0 flex-col hidden border-r border-[hsl(var(--sidebar-border))] bg-sidebar md:flex transition-all duration-200 ease-out ${collapsed ? 'w-16 p-3' : 'w-72 p-5'}`}>
  <button
   type="button"
   className="absolute -right-3 top-1/3 -translate-y-1/2 h-6 w-6 rounded-full bg-[hsl(var(--card-bg))] border border-[hsl(var(--border))] shadow-md flex items-center justify-center text-muted transition-all duration-200 ease-out hover:scale-110 hover:border-[hsl(var(--accent))] hover:text-sidebar-accent"
