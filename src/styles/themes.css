@@ -21,7 +21,7 @@
   --sidebar-bg: 220 15% 92%;
   --sidebar-text: 220 25% 12%;
   --sidebar-accent: 220 70% 55%;
-  --sidebar-border: 220 15% 82%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="midnight"] {
@@ -58,7 +58,7 @@
   --sidebar-bg: 150 12% 91%;
   --sidebar-text: 150 25% 10%;
   --sidebar-accent: 158 64% 38%;
-  --sidebar-border: 150 12% 79%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="emerald"] {
@@ -95,7 +95,7 @@
   --sidebar-bg: 36 15% 91%;
   --sidebar-text: 30 30% 10%;
   --sidebar-accent: 32 95% 44%;
-  --sidebar-border: 36 15% 79%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="amber"] {
@@ -132,7 +132,7 @@
   --sidebar-bg: 346 12% 91%;
   --sidebar-text: 346 25% 10%;
   --sidebar-accent: 346 75% 50%;
-  --sidebar-border: 346 12% 79%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="rose"] {
@@ -169,7 +169,7 @@
   --sidebar-bg: 215 12% 90%;
   --sidebar-text: 215 25% 10%;
   --sidebar-accent: 215 25% 35%;
-  --sidebar-border: 215 12% 78%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="slate"] {
@@ -206,7 +206,7 @@
   --sidebar-bg: 270 12% 90%;
   --sidebar-text: 270 20% 8%;
   --sidebar-accent: 174 100% 40%;
-  --sidebar-border: 174 40% 73%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="cyberpunk"] {
@@ -243,7 +243,7 @@
   --sidebar-bg: 38 20% 88%;
   --sidebar-text: 20 30% 12%;
   --sidebar-accent: 14 90% 52%;
-  --sidebar-border: 38 20% 73%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="cassette"] {
@@ -280,7 +280,7 @@
   --sidebar-bg: 300 12% 91%;
   --sidebar-text: 290 25% 10%;
   --sidebar-accent: 290 80% 52%;
-  --sidebar-border: 290 30% 75%;
+  --sidebar-border: transparent;
 }
 
 .dark[data-theme="eighties"] {

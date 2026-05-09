@@ -106,7 +106,7 @@ body {
 }
 
 @layer base {
- * {
+ .dark * {
  @apply border-border-base;
  }
 
@@ -204,4 +204,10 @@ body {
  .animate-fadeIn {
  animation: fadeIn 400ms ease-out forwards;
  }
+}
+
+/* Hide all borders in light mode */
+html:not(.dark) [class*="border-border"],
+html:not(.dark) [class*="divide-border"] > * + * {
+ border-color: transparent !important;
 }
