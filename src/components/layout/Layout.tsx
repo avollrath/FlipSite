@@ -20,31 +20,31 @@ export function Layout() {
   localStorage.setItem('flipsite-sidebar-collapsed', JSON.stringify(sidebarCollapsed))
  }, [sidebarCollapsed])
 
- const sidebarWidth = sidebarCollapsed ? 'md:pl-16' : 'md:pl-72'
+ const sidebarWidth = sidebarCollapsed ? 'md:ml-16' : 'md:ml-72'
 
  return (
- <div className="min-h-screen bg-surface text-base transition-colors">
+ <div className="min-h-screen text-base transition-colors bg-surface">
  <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
  <div className={`min-h-screen transition-all duration-200 ease-out ${sidebarWidth}`}>
   <header className="sticky top-0 z-30 border-b border-border-base bg-surface/85 backdrop-blur">
-  <div className="flex h-16 items-center justify-between px-5 md:px-8">
+  <div className="flex items-center justify-between h-16 px-5 md:px-8">
           <div aria-hidden="true" />
   <button
    type="button"
-   className="grid h-10 w-10 place-items-center rounded-lg border border-border-base bg-card text-muted shadow-sm transition hover:border-accent/40 hover:text-accent"
+   className="grid w-10 h-10 transition border rounded-lg shadow-sm place-items-center border-border-base bg-card text-muted hover:border-accent/40 hover:text-accent"
    onClick={toggleMode}
    aria-label="Toggle dark mode"
   >
    {mode === 'dark' ? (
-   <Sun className="h-5 w-5" aria-hidden="true" />
+   <Sun className="w-5 h-5" aria-hidden="true" />
    ) : (
-   <Moon className="h-5 w-5" aria-hidden="true" />
+   <Moon className="w-5 h-5" aria-hidden="true" />
    )}
   </button>
   </div>
   </header>
   {isDemoMode && (
-  <div className="flex w-full items-center justify-between gap-3 border-b border-accent/20 bg-accent/10 px-4 py-2 text-xs md:px-8">
+  <div className="flex items-center justify-between w-full gap-3 px-4 py-2 text-xs border-b border-accent/20 bg-accent/10 md:px-8">
   <span className="font-medium text-accent">
    You are in demo mode - data is read-only
   </span>
