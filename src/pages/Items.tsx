@@ -1,1422 +1,1436 @@
 import {
- ArrowDown,
- ArrowUp,
- ChevronDown,
- ChevronRight,
- Download,
- Edit3,
- Link2,
- LayoutGrid,
- LayoutList,
- PackageOpen,
- Plus,
- Search,
- Trash2,
-} from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { useParams, useSearchParams } from 'react-router-dom'
-import { ImageWithSkeleton } from '@/components/ui/ImageWithSkeleton'
-import { ItemDrawer } from '@/components/items/ItemDrawer'
-import { useDeleteItem, useItems } from '@/hooks/useItems'
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Edit3,
+  Link2,
+  LayoutGrid,
+  LayoutList,
+  PackageOpen,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { ImageWithSkeleton } from "@/components/ui/ImageWithSkeleton";
+import { ItemDrawer } from "@/components/items/ItemDrawer";
+import { useDeleteItem, useItems } from "@/hooks/useItems";
 import {
- getFirstItemImageThumbnails,
- type ItemImageThumbnail,
-} from '@/lib/itemFiles'
+  getFirstItemImageThumbnails,
+  type ItemImageThumbnail,
+} from "@/lib/itemFiles";
 import {
- calculateItemProfit,
- calculateItemROI,
- calculateItemSellValue,
- cn,
- formatCurrency,
- formatDate,
- getBuyPlatform,
- getEffectiveItemStatus,
- getItemPlatformSearchText,
- getSellPlatform,
- getStatusLabel,
- isKeepingItem,
-} from '@/lib/utils'
-import type { Item, ItemStatus } from '@/types'
+  calculateItemProfit,
+  calculateItemROI,
+  calculateItemSellValue,
+  cn,
+  formatCurrency,
+  formatDate,
+  getBuyPlatform,
+  getEffectiveItemStatus,
+  getItemPlatformSearchText,
+  getSellPlatform,
+  getStatusLabel,
+  isKeepingItem,
+} from "@/lib/utils";
+import type { Item, ItemStatus } from "@/types";
 
 type DrawerState =
- | { open: false; mode: 'add'; item: null }
- | { open: true; mode: 'add'; item: null }
- | { open: true; mode: 'edit'; item: Item }
+  | { open: false; mode: "add"; item: null }
+  | { open: true; mode: "add"; item: null }
+  | { open: true; mode: "edit"; item: Item };
 
 type SortKey =
- | 'name'
- | 'category'
- | 'condition'
- | 'buy_price'
- | 'sell_price'
- | 'profit'
- | 'roi'
- | 'buy_platform'
- | 'sell_platform'
- | 'status'
- | 'bought_at'
- | 'sold_at'
- | 'created_at'
+  | "name"
+  | "category"
+  | "condition"
+  | "buy_price"
+  | "sell_price"
+  | "profit"
+  | "roi"
+  | "buy_platform"
+  | "sell_platform"
+  | "status"
+  | "bought_at"
+  | "sold_at"
+  | "created_at";
 
 type SortState = {
- key: SortKey
- direction: 'asc' | 'desc'
-}
+  key: SortKey;
+  direction: "asc" | "desc";
+};
 
-type BundleFilter = 'none' | 'only' | 'active'
-type ViewMode = 'list' | 'gallery'
+type BundleFilter = "none" | "only" | "active";
+type ViewMode = "list" | "gallery";
 
-const allStatuses = ['all', 'holding', 'listed', 'sold', 'keeper'] as const
-const galleryThumbnailSize = 420
-const listThumbnailSize = 80
-const tableColumns: Array<{ key: SortKey | 'actions'; label: string }> = [
- { key: 'name', label: 'Name' },
- { key: 'category', label: 'Category' },
- { key: 'condition', label: 'Condition' },
- { key: 'buy_price', label: 'Buy Price' },
- { key: 'sell_price', label: 'Sell Price' },
- { key: 'profit', label: 'Profit' },
- { key: 'roi', label: 'ROI %' },
- { key: 'buy_platform', label: 'Bought from' },
- { key: 'sell_platform', label: 'Sold on' },
- { key: 'status', label: 'Status' },
- { key: 'bought_at', label: 'Date Bought' },
- { key: 'sold_at', label: 'Date Sold' },
- { key: 'actions', label: 'Actions' },
-]
+const allStatuses = ["all", "holding", "listed", "sold", "keeper"] as const;
+const galleryThumbnailSize = 420;
+const listThumbnailSize = 80;
+const tableColumns: Array<{ key: SortKey | "actions"; label: string }> = [
+  { key: "name", label: "Name" },
+  { key: "category", label: "Category" },
+  { key: "condition", label: "Condition" },
+  { key: "buy_price", label: "Buy Price" },
+  { key: "sell_price", label: "Sell Price" },
+  { key: "profit", label: "Profit" },
+  { key: "roi", label: "ROI %" },
+  { key: "buy_platform", label: "Bought from" },
+  { key: "sell_platform", label: "Sold on" },
+  { key: "status", label: "Status" },
+  { key: "bought_at", label: "Date Bought" },
+  { key: "sold_at", label: "Date Sold" },
+  { key: "actions", label: "Actions" },
+];
 const gallerySortOptions: Array<{ key: SortKey; label: string }> = [
- { key: 'bought_at', label: 'Bought date' },
- { key: 'sold_at', label: 'Sold date' },
- { key: 'name', label: 'Name' },
- { key: 'category', label: 'Category' },
- { key: 'condition', label: 'Condition' },
- { key: 'buy_price', label: 'Buy price' },
- { key: 'sell_price', label: 'Sell price' },
- { key: 'profit', label: 'Profit' },
- { key: 'roi', label: 'ROI %' },
- { key: 'buy_platform', label: 'Bought from' },
- { key: 'sell_platform', label: 'Sold on' },
- { key: 'status', label: 'Status' },
- { key: 'created_at', label: 'Created date' },
-]
+  { key: "bought_at", label: "Bought date" },
+  { key: "sold_at", label: "Sold date" },
+  { key: "name", label: "Name" },
+  { key: "category", label: "Category" },
+  { key: "condition", label: "Condition" },
+  { key: "buy_price", label: "Buy price" },
+  { key: "sell_price", label: "Sell price" },
+  { key: "profit", label: "Profit" },
+  { key: "roi", label: "ROI %" },
+  { key: "buy_platform", label: "Bought from" },
+  { key: "sell_platform", label: "Sold on" },
+  { key: "status", label: "Status" },
+  { key: "created_at", label: "Created date" },
+];
 
 export function Items() {
- const { data: items = [], isLoading } = useItems()
- const deleteItem = useDeleteItem()
- const { itemId } = useParams()
- const [searchParams] = useSearchParams()
- const queryStatus = getQueryStatus(searchParams.get('status'))
- const queryBundleFilter = getQueryBundleFilter(searchParams.get('bundles'))
- const queryInventoryOnly = searchParams.get('inventory') === '1'
- const queryItemId = itemId ?? searchParams.get('item') ?? ''
- const [search, setSearch] = useState('')
- const [viewMode, setViewMode] = useState<ViewMode>(() => getInitialViewMode())
- const [statusFilter, setStatusFilter] = useState<
- (typeof allStatuses)[number]
- >(
- queryStatus ?? 'all',
- )
- const [buyPlatformFilter, setBuyPlatformFilter] = useState('all')
- const [sellPlatformFilter, setSellPlatformFilter] = useState('all')
- const [categoryFilter, setCategoryFilter] = useState('all')
- const [bundleFilter, setBundleFilter] = useState<BundleFilter>(
- queryBundleFilter,
- )
- const [inventoryOnly, setInventoryOnly] = useState(queryInventoryOnly)
- const [hasImage, setHasImage] = useState(false)
- const [focusedItemId] = useState(queryItemId)
- const [expandedBundles, setExpandedBundles] = useState<Set<string>>(
- () => new Set(),
- )
- const [sort, setSort] = useState<SortState>({
- key: 'bought_at',
- direction: 'desc',
- })
- const [drawer, setDrawer] = useState<DrawerState>({
- open: false,
- mode: 'add',
- item: null,
- })
- const [deleteTarget, setDeleteTarget] = useState<Item | null>(null)
+  const { data: items = [], isLoading } = useItems();
+  const deleteItem = useDeleteItem();
+  const { itemId } = useParams();
+  const [searchParams] = useSearchParams();
+  const queryStatus = getQueryStatus(searchParams.get("status"));
+  const queryBundleFilter = getQueryBundleFilter(searchParams.get("bundles"));
+  const queryInventoryOnly = searchParams.get("inventory") === "1";
+  const queryItemId = itemId ?? searchParams.get("item") ?? "";
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    getInitialViewMode(),
+  );
+  const [statusFilter, setStatusFilter] = useState<
+    (typeof allStatuses)[number]
+  >(queryStatus ?? "all");
+  const [buyPlatformFilter, setBuyPlatformFilter] = useState("all");
+  const [sellPlatformFilter, setSellPlatformFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [bundleFilter, setBundleFilter] =
+    useState<BundleFilter>(queryBundleFilter);
+  const [inventoryOnly, setInventoryOnly] = useState(queryInventoryOnly);
+  const [hasImage, setHasImage] = useState(false);
+  const [focusedItemId] = useState(queryItemId);
+  const [expandedBundles, setExpandedBundles] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [sort, setSort] = useState<SortState>({
+    key: "bought_at",
+    direction: "desc",
+  });
+  const [drawer, setDrawer] = useState<DrawerState>({
+    open: false,
+    mode: "add",
+    item: null,
+  });
+  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
 
- const buyPlatforms = useMemo(
- () => uniqueValues(items.map((item) => getBuyPlatform(item))),
- [items],
- )
- const sellPlatforms = useMemo(
- () => uniqueValues(items.map((item) => getSellPlatform(item))),
- [items],
- )
- const categories = useMemo(
- () => uniqueValues(items.map((item) => item.category)),
- [items],
- )
- const childrenByBundle = useMemo(() => {
- return items.reduce((map, item) => {
- if (!item.bundle_id) {
-  return map
- }
+  const buyPlatforms = useMemo(
+    () => uniqueValues(items.map((item) => getBuyPlatform(item))),
+    [items],
+  );
+  const sellPlatforms = useMemo(
+    () => uniqueValues(items.map((item) => getSellPlatform(item))),
+    [items],
+  );
+  const categories = useMemo(
+    () => uniqueValues(items.map((item) => item.category)),
+    [items],
+  );
+  const childrenByBundle = useMemo(() => {
+    return items.reduce((map, item) => {
+      if (!item.bundle_id) {
+        return map;
+      }
 
- const children = map.get(item.bundle_id) ?? []
- children.push(item)
- map.set(item.bundle_id, children)
- return map
- }, new Map<string, Item[]>())
- }, [items])
- const activeBundleIds = useMemo(() => {
- const activeIds = new Set<string>()
+      const children = map.get(item.bundle_id) ?? [];
+      children.push(item);
+      map.set(item.bundle_id, children);
+      return map;
+    }, new Map<string, Item[]>());
+  }, [items]);
+  const activeBundleIds = useMemo(() => {
+    const activeIds = new Set<string>();
 
- for (const [bundleId, children] of childrenByBundle) {
- if (
-  children.some((child) => getEffectiveItemStatus(child, items) !== 'sold')
- ) {
-  activeIds.add(bundleId)
- }
- }
+    for (const [bundleId, children] of childrenByBundle) {
+      if (
+        children.some(
+          (child) => getEffectiveItemStatus(child, items) !== "sold",
+        )
+      ) {
+        activeIds.add(bundleId);
+      }
+    }
 
- return activeIds
- }, [childrenByBundle, items])
+    return activeIds;
+  }, [childrenByBundle, items]);
 
- const visibleItems = useMemo(() => {
- const normalizedSearch = search.trim().toLowerCase()
+  const visibleItems = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
 
- return items
- .filter((item) => {
-  if (focusedItemId) {
-  return item.tsid === focusedItemId
+    return items
+      .filter((item) => {
+        if (focusedItemId) {
+          return item.tsid === focusedItemId;
+        }
+
+        const effectiveStatus = getEffectiveItemStatus(item, items);
+        const matchesSearch =
+          !normalizedSearch ||
+          [
+            item.name,
+            item.category,
+            item.condition,
+            getItemPlatformSearchText(item),
+            effectiveStatus,
+            item.notes ?? "",
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(normalizedSearch);
+
+        const matchesStatus =
+          statusFilter === "all" || effectiveStatus === statusFilter;
+        const matchesInventory =
+          !inventoryOnly ||
+          ["holding", "keeper", "listed"].includes(effectiveStatus);
+        const matchesBuyPlatform =
+          buyPlatformFilter === "all" ||
+          getBuyPlatform(item) === buyPlatformFilter;
+        const matchesSellPlatform =
+          sellPlatformFilter === "all" ||
+          getSellPlatform(item) === sellPlatformFilter;
+        const matchesCategory =
+          categoryFilter === "all" || item.category === categoryFilter;
+
+        const matchesBundleFilter =
+          bundleFilter === "none" ||
+          (bundleFilter === "only" && item.is_bundle_parent) ||
+          (bundleFilter === "active" &&
+            item.is_bundle_parent &&
+            activeBundleIds.has(item.tsid));
+
+        return (
+          matchesSearch &&
+          matchesStatus &&
+          matchesInventory &&
+          matchesBuyPlatform &&
+          matchesSellPlatform &&
+          matchesCategory &&
+          matchesBundleFilter
+        );
+      })
+      .sort((a, b) => compareItems(a, b, sort, items));
+  }, [
+    activeBundleIds,
+    bundleFilter,
+    categoryFilter,
+    focusedItemId,
+    inventoryOnly,
+    items,
+    buyPlatformFilter,
+    search,
+    sellPlatformFilter,
+    sort,
+    statusFilter,
+  ]);
+
+  const visibleRows = useMemo(() => {
+    const rows: Array<{ item: Item; isChild: boolean }> = [];
+
+    if (focusedItemId) {
+      return visibleItems.map((item) => ({
+        item,
+        isChild: Boolean(item.bundle_id),
+      }));
+    }
+
+    if (
+      statusFilter !== "all" ||
+      inventoryOnly ||
+      buyPlatformFilter !== "all" ||
+      sellPlatformFilter !== "all" ||
+      categoryFilter !== "all" ||
+      search.trim()
+    ) {
+      return visibleItems.map((item) => ({
+        item,
+        isChild: Boolean(item.bundle_id),
+      }));
+    }
+
+    visibleItems
+      .filter((item) => !item.bundle_id)
+      .forEach((item) => {
+        rows.push({ item, isChild: false });
+
+        if (item.is_bundle_parent && expandedBundles.has(item.tsid)) {
+          for (const child of childrenByBundle.get(item.tsid) ?? []) {
+            rows.push({ item: child, isChild: true });
+          }
+        }
+      });
+
+    return rows;
+  }, [
+    categoryFilter,
+    childrenByBundle,
+    expandedBundles,
+    focusedItemId,
+    inventoryOnly,
+    buyPlatformFilter,
+    search,
+    sellPlatformFilter,
+    statusFilter,
+    visibleItems,
+  ]);
+  const visibleRowItemIds = useMemo(
+    () => visibleRows.map(({ item }) => item.tsid),
+    [visibleRows],
+  );
+  const thumbnailItemIds = useMemo(
+    () =>
+      viewMode === "gallery"
+        ? visibleItems.map((item) => item.tsid)
+        : visibleRowItemIds,
+    [viewMode, visibleItems, visibleRowItemIds],
+  );
+  const thumbnailSize =
+    viewMode === "gallery" ? galleryThumbnailSize : listThumbnailSize;
+  const { data: thumbnailByItemId = new Map<string, ItemImageThumbnail>() } =
+    useQuery({
+      queryKey: ["item-image-thumbnails", thumbnailSize, thumbnailItemIds],
+      enabled: thumbnailItemIds.length > 0,
+      staleTime: 1000 * 60 * 30,
+      queryFn: async () => {
+        const thumbnails = await getFirstItemImageThumbnails(thumbnailItemIds, {
+          size: thumbnailSize,
+        });
+
+        return new Map(
+          thumbnails.map((thumbnail) => [thumbnail.item_id, thumbnail]),
+        );
+      },
+    });
+
+  const displayedItems = useMemo(() => {
+    if (viewMode !== "gallery" || !hasImage) {
+      return visibleItems;
+    }
+
+    return visibleItems.filter((item) => {
+      const imageUrl = thumbnailByItemId.get(item.tsid)?.signed_url;
+      return Boolean(imageUrl?.trim());
+    });
+  }, [hasImage, thumbnailByItemId, viewMode, visibleItems]);
+
+  useEffect(() => {
+    localStorage.setItem("flipsite-items-view", viewMode);
+  }, [viewMode]);
+
+  function openAddDrawer() {
+    setDrawer({ open: true, mode: "add", item: null });
   }
 
-  const effectiveStatus = getEffectiveItemStatus(item, items)
-  const matchesSearch =
-  !normalizedSearch ||
-  [
-  item.name,
-  item.category,
-  item.condition,
-  getItemPlatformSearchText(item),
-  effectiveStatus,
-  item.notes ?? '',
-  ]
-  .join(' ')
-  .toLowerCase()
-  .includes(normalizedSearch)
+  function openEditDrawer(item: Item) {
+    setDrawer({ open: true, mode: "edit", item });
+  }
 
-  const matchesStatus =
-  statusFilter === 'all' ||
-  effectiveStatus === statusFilter
-  const matchesInventory =
-  !inventoryOnly ||
-  ['holding', 'keeper', 'listed'].includes(effectiveStatus)
-  const matchesBuyPlatform =
-  buyPlatformFilter === 'all' || getBuyPlatform(item) === buyPlatformFilter
-  const matchesSellPlatform =
-  sellPlatformFilter === 'all' || getSellPlatform(item) === sellPlatformFilter
-  const matchesCategory =
-  categoryFilter === 'all' || item.category === categoryFilter
+  function closeDrawer(open: boolean) {
+    if (!open) {
+      setDrawer({ open: false, mode: "add", item: null });
+    }
+  }
 
-  const matchesBundleFilter =
-  bundleFilter === 'none' ||
-  (bundleFilter === 'only' && item.is_bundle_parent) ||
-  (bundleFilter === 'active' &&
-  item.is_bundle_parent &&
-  activeBundleIds.has(item.tsid))
+  function updateSort(key: SortKey) {
+    setSort((currentSort) => ({
+      key,
+      direction:
+        currentSort.key === key && currentSort.direction === "asc"
+          ? "desc"
+          : "asc",
+    }));
+  }
+
+  function updateGallerySortKey(key: SortKey) {
+    setSort((currentSort) => ({
+      key,
+      direction: currentSort.key === key ? currentSort.direction : "desc",
+    }));
+  }
+
+  function updateSortDirection(direction: SortState["direction"]) {
+    setSort((currentSort) => ({
+      ...currentSort,
+      direction,
+    }));
+  }
+
+  function updateViewMode(nextViewMode: ViewMode) {
+    if (nextViewMode !== "gallery") {
+      setHasImage(false);
+    }
+
+    setViewMode(nextViewMode);
+  }
+
+  function toggleBundle(tsid: string) {
+    setExpandedBundles((current) => {
+      const next = new Set(current);
+
+      if (next.has(tsid)) {
+        next.delete(tsid);
+      } else {
+        next.add(tsid);
+      }
+
+      return next;
+    });
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    await deleteItem.mutateAsync(deleteTarget.tsid);
+    setDeleteTarget(null);
+  }
+
+  function exportVisibleItems() {
+    const rows = displayedItems.map((item) => {
+      const isKeeper = isKeepingItem(item);
+      const profit = calculateItemProfit(item, items);
+      const roi = calculateItemROI(item, items);
+
+      return {
+        Name: item.name,
+        Category: item.category,
+        Condition: item.condition,
+        "Buy Price": item.buy_price,
+        "Sell Price": isKeeper ? "" : calculateItemSellValue(item, items),
+        Profit: isKeeper ? "" : (profit ?? ""),
+        "ROI %": isKeeper || roi === null ? "" : roi.toFixed(2),
+        "Bought from": getBuyPlatform(item),
+        "Sold on": getSellPlatform(item),
+        Status: getStatusLabel(getEffectiveItemStatus(item, items)),
+        "Date Bought": formatDate(item.bought_at),
+        "Date Sold": formatDate(item.sold_at),
+        Notes: item.notes ?? "",
+      };
+    });
+
+    downloadCsv(rows, "flipsite-items.csv");
+  }
+
+  const emptyAllItems = !isLoading && items.length === 0;
 
   return (
-  matchesSearch &&
-  matchesStatus &&
-  matchesInventory &&
-  matchesBuyPlatform &&
-  matchesSellPlatform &&
-  matchesCategory &&
-  matchesBundleFilter
-  )
- })
- .sort((a, b) => compareItems(a, b, sort, items))
- }, [
- activeBundleIds,
- bundleFilter,
- categoryFilter,
- focusedItemId,
- inventoryOnly,
- items,
- buyPlatformFilter,
- search,
- sellPlatformFilter,
- sort,
- statusFilter,
- ])
+    <section>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          <div>
+            <h1 className="text-4xl font-semibold tracking-tight">My Items</h1>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm text-base font-semibold transition border rounded-lg border-border-base bg-card hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={exportVisibleItems}
+              disabled={displayedItems.length === 0}
+            >
+              <Download className="w-4 h-4" aria-hidden="true" />
+              Export CSV
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition rounded-lg shadow-lg bg-accent text-accent-fg shadow-accent/20 hover:bg-accent/90"
+              onClick={openAddDrawer}
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              Add Item
+            </button>
+          </div>
+        </div>
 
- const visibleRows = useMemo(() => {
- const rows: Array<{ item: Item; isChild: boolean }> = []
+        <div className="flex flex-wrap items-center gap-3 p-4 border rounded-lg shadow-sm border-border-base bg-card ">
+          <label className="relative block min-w-[180px] max-w-[320px] flex-[1_1_220px]">
+            <Search
+              className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3 top-1/2 text-muted"
+              aria-hidden="true"
+            />
+            <input
+              className={controlClassName + " min-w-0 truncate pl-9"}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search items"
+            />
+          </label>
+          <ViewToggle value={viewMode} onChange={updateViewMode} />
+          {viewMode === "gallery" ? (
+            <GallerySortControl
+              sort={sort}
+              onDirectionChange={updateSortDirection}
+              onKeyChange={updateGallerySortKey}
+            />
+          ) : null}
 
- if (focusedItemId) {
- return visibleItems.map((item) => ({
-  item,
-  isChild: Boolean(item.bundle_id),
- }))
- }
+          <FilterSelect
+            label="Status"
+            value={statusFilter}
+            onChange={(value) =>
+              setStatusFilter(value as (typeof allStatuses)[number])
+            }
+            options={allStatuses.map((status) => ({
+              value: status,
+              label: status === "all" ? "All Statuses" : getStatusLabel(status),
+            }))}
+            className="min-w-[150px] flex-[0_1_180px]"
+          />
+          <FilterSelect
+            label="Bought from"
+            value={buyPlatformFilter}
+            onChange={setBuyPlatformFilter}
+            options={[
+              { value: "all", label: "All Sources" },
+              ...buyPlatforms.map((platform) => ({
+                value: platform,
+                label: platform,
+              })),
+            ]}
+            className="min-w-[150px] flex-[0_1_180px]"
+          />
+          <FilterSelect
+            label="Sold on"
+            value={sellPlatformFilter}
+            onChange={setSellPlatformFilter}
+            options={[
+              { value: "all", label: "All Channels" },
+              ...sellPlatforms.map((platform) => ({
+                value: platform,
+                label: platform,
+              })),
+            ]}
+            className="min-w-[150px] flex-[0_1_180px]"
+          />
+          <FilterSelect
+            label="Category"
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            options={[
+              { value: "all", label: "All Categories" },
+              ...categories.map((category) => ({
+                value: category,
+                label: category,
+              })),
+            ]}
+            className="min-w-[160px] max-w-[240px] flex-[0_1_220px]"
+          />
+          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
+              checked={bundleFilter !== "none"}
+              onChange={(event) =>
+                setBundleFilter(event.target.checked ? "only" : "none")
+              }
+            />
+            Bundles only
+          </label>
+          {viewMode === "gallery" ? (
+            <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
+                checked={hasImage}
+                onChange={(event) => setHasImage(event.target.checked)}
+              />
+              Has image
+            </label>
+          ) : null}
+          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
+              checked={inventoryOnly}
+              onChange={(event) => setInventoryOnly(event.target.checked)}
+            />
+            Inventory
+          </label>
+        </div>
+      </div>
 
- if (
- statusFilter !== 'all' ||
- inventoryOnly ||
- buyPlatformFilter !== 'all' ||
- sellPlatformFilter !== 'all' ||
- categoryFilter !== 'all' ||
- search.trim()
- ) {
- return visibleItems.map((item) => ({
-  item,
-  isChild: Boolean(item.bundle_id),
- }))
- }
+      {isLoading ? (
+        <LoadingState />
+      ) : emptyAllItems ? (
+        <EmptyState onAdd={openAddDrawer} />
+      ) : (
+        <>
+          {viewMode === "gallery" ? (
+            <GalleryView
+              allItems={items}
+              items={displayedItems}
+              onEdit={openEditDrawer}
+              thumbnailByItemId={thumbnailByItemId}
+            />
+          ) : (
+            <>
+              <div className="hidden mt-6 overflow-hidden border rounded-lg shadow-sm border-border-base bg-card md:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1160px] text-left text-sm">
+                    <thead className="text-xs uppercase border-b border-border-base bg-surface text-muted bg-surface-2/60 ">
+                      <tr>
+                        {tableColumns.map((column) => (
+                          <th
+                            key={column.key}
+                            className="px-4 py-3 font-semibold"
+                          >
+                            {column.key === "actions" ? (
+                              column.label
+                            ) : (
+                              <button
+                                type="button"
+                                className="flex items-center gap-1 transition hover:text-accent"
+                                onClick={() =>
+                                  updateSort(column.key as SortKey)
+                                }
+                              >
+                                {column.label}
+                                <SortIcon
+                                  active={sort.key === column.key}
+                                  direction={sort.direction}
+                                />
+                              </button>
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-base">
+                      {visibleRows.map(({ item, isChild }) => (
+                        <ItemRow
+                          key={item.tsid}
+                          item={item}
+                          childCount={
+                            childrenByBundle.get(item.tsid)?.length ?? 0
+                          }
+                          isChild={isChild}
+                          isExpanded={expandedBundles.has(item.tsid)}
+                          onEdit={() => openEditDrawer(item)}
+                          onDelete={() => setDeleteTarget(item)}
+                          onToggleBundle={() => toggleBundle(item.tsid)}
+                          thumbnail={thumbnailByItemId.get(item.tsid)}
+                          allItems={items}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
- visibleItems
- .filter((item) => !item.bundle_id)
- .forEach((item) => {
-  rows.push({ item, isChild: false })
+              <div className="grid gap-4 mt-6 md:hidden">
+                {visibleRows.map(({ item, isChild }) => (
+                  <ItemCard
+                    key={item.tsid}
+                    item={item}
+                    childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
+                    isChild={isChild}
+                    isExpanded={expandedBundles.has(item.tsid)}
+                    onEdit={() => openEditDrawer(item)}
+                    onToggleBundle={() => toggleBundle(item.tsid)}
+                    thumbnail={thumbnailByItemId.get(item.tsid)}
+                    allItems={items}
+                  />
+                ))}
+              </div>
+            </>
+          )}
 
-  if (item.is_bundle_parent && expandedBundles.has(item.tsid)) {
-  for (const child of childrenByBundle.get(item.tsid) ?? []) {
-  rows.push({ item: child, isChild: true })
-  }
-  }
- })
+          {displayedItems.length === 0 ? <NoResults /> : null}
+        </>
+      )}
 
- return rows
- }, [
- categoryFilter,
- childrenByBundle,
- expandedBundles,
- focusedItemId,
- inventoryOnly,
- buyPlatformFilter,
- search,
- sellPlatformFilter,
- statusFilter,
- visibleItems,
- ])
- const visibleRowItemIds = useMemo(
- () => visibleRows.map(({ item }) => item.tsid),
- [visibleRows],
- )
- const thumbnailItemIds = useMemo(
- () =>
- viewMode === 'gallery'
-  ? visibleItems.map((item) => item.tsid)
-  : visibleRowItemIds,
- [viewMode, visibleItems, visibleRowItemIds],
- )
- const thumbnailSize =
- viewMode === 'gallery' ? galleryThumbnailSize : listThumbnailSize
- const { data: thumbnailByItemId = new Map<string, ItemImageThumbnail>() } =
- useQuery({
- queryKey: ['item-image-thumbnails', thumbnailSize, thumbnailItemIds],
- enabled: thumbnailItemIds.length > 0,
- staleTime: 1000 * 60 * 30,
- queryFn: async () => {
-  const thumbnails = await getFirstItemImageThumbnails(thumbnailItemIds, {
-  size: thumbnailSize,
-  })
-
-  return new Map(
-  thumbnails.map((thumbnail) => [thumbnail.item_id, thumbnail]),
-  )
- },
- })
-
- const displayedItems = useMemo(() => {
- if (viewMode !== 'gallery' || !hasImage) {
- return visibleItems
- }
-
- return visibleItems.filter((item) => {
- const imageUrl = thumbnailByItemId.get(item.tsid)?.signed_url
- return Boolean(imageUrl?.trim())
- })
- }, [hasImage, thumbnailByItemId, viewMode, visibleItems])
-
- useEffect(() => {
- localStorage.setItem('flipsite-items-view', viewMode)
- }, [viewMode])
-
- function openAddDrawer() {
- setDrawer({ open: true, mode: 'add', item: null })
- }
-
- function openEditDrawer(item: Item) {
- setDrawer({ open: true, mode: 'edit', item })
- }
-
- function closeDrawer(open: boolean) {
- if (!open) {
- setDrawer({ open: false, mode: 'add', item: null })
- }
- }
-
- function updateSort(key: SortKey) {
- setSort((currentSort) => ({
- key,
- direction:
-  currentSort.key === key && currentSort.direction === 'asc'
-  ? 'desc'
-  : 'asc',
- }))
- }
-
- function updateGallerySortKey(key: SortKey) {
- setSort((currentSort) => ({
- key,
- direction: currentSort.key === key ? currentSort.direction : 'desc',
- }))
- }
-
- function updateSortDirection(direction: SortState['direction']) {
- setSort((currentSort) => ({
- ...currentSort,
- direction,
- }))
- }
-
- function updateViewMode(nextViewMode: ViewMode) {
- if (nextViewMode !== 'gallery') {
- setHasImage(false)
- }
-
- setViewMode(nextViewMode)
- }
-
- function toggleBundle(tsid: string) {
- setExpandedBundles((current) => {
- const next = new Set(current)
-
- if (next.has(tsid)) {
-  next.delete(tsid)
- } else {
-  next.add(tsid)
- }
-
- return next
- })
- }
-
- async function confirmDelete() {
- if (!deleteTarget) {
- return
- }
-
- await deleteItem.mutateAsync(deleteTarget.tsid)
- setDeleteTarget(null)
- }
-
- function exportVisibleItems() {
- const rows = displayedItems.map((item) => {
- const isKeeper = isKeepingItem(item)
- const profit = calculateItemProfit(item, items)
- const roi = calculateItemROI(item, items)
-
- return {
-  Name: item.name,
-  Category: item.category,
-  Condition: item.condition,
-  'Buy Price': item.buy_price,
-  'Sell Price': isKeeper ? '' : calculateItemSellValue(item, items),
-  Profit: isKeeper ? '' : profit ?? '',
-  'ROI %': isKeeper || roi === null ? '' : roi.toFixed(2),
-  'Bought from': getBuyPlatform(item),
-  'Sold on': getSellPlatform(item),
-  Status: getStatusLabel(getEffectiveItemStatus(item, items)),
-  'Date Bought': formatDate(item.bought_at),
-  'Date Sold': formatDate(item.sold_at),
-  Notes: item.notes ?? '',
- }
- })
-
- downloadCsv(rows, 'flipsite-items.csv')
- }
-
- const emptyAllItems = !isLoading && items.length === 0
-
- return (
- <section>
- <div className="flex flex-col gap-4">
-  <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-  <div>
-  <h1 className="text-4xl font-semibold tracking-tight">My Items</h1>
-  </div>
-  <div className="flex flex-col gap-3 sm:flex-row">
-  <button
-   type="button"
-   className="inline-flex items-center justify-center gap-2 rounded-lg border border-border-base bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
-   onClick={exportVisibleItems}
-   disabled={displayedItems.length === 0}
-  >
-   <Download className="h-4 w-4" aria-hidden="true" />
-   Export CSV
-  </button>
-  <button
-   type="button"
-   className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-fg shadow-lg shadow-accent/20 transition hover:bg-accent/90"
-   onClick={openAddDrawer}
-  >
-   <Plus className="h-4 w-4" aria-hidden="true" />
-   Add Item
-  </button>
-  </div>
-  </div>
-
-  <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border-base bg-card p-4 shadow-sm ">
-  <label className="relative block min-w-[180px] max-w-[320px] flex-[1_1_220px]">
-  <Search
-   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-   aria-hidden="true"
-  />
-  <input
-   className={controlClassName + ' min-w-0 truncate pl-9'}
-   value={search}
-   onChange={(event) => setSearch(event.target.value)}
-   placeholder="Search items"
-  />
-  </label>
-  <ViewToggle value={viewMode} onChange={updateViewMode} />
-  {viewMode === 'gallery' ? (
-  <GallerySortControl
-   sort={sort}
-   onDirectionChange={updateSortDirection}
-   onKeyChange={updateGallerySortKey}
-  />
-  ) : null}
-
-  <FilterSelect
-  label="Status"
-  value={statusFilter}
-  onChange={(value) =>
-   setStatusFilter(value as (typeof allStatuses)[number])
-  }
-  options={allStatuses.map((status) => ({
-   value: status,
-   label:
-   status === 'all' ? 'All Statuses' : getStatusLabel(status),
-  }))}
-  className="min-w-[150px] flex-[0_1_180px]"
-  />
-  <FilterSelect
-  label="Bought from"
-  value={buyPlatformFilter}
-  onChange={setBuyPlatformFilter}
-  options={[
-   { value: 'all', label: 'All Sources' },
-   ...buyPlatforms.map((platform) => ({
-   value: platform,
-   label: platform,
-   })),
-  ]}
-  className="min-w-[150px] flex-[0_1_180px]"
-  />
-  <FilterSelect
-  label="Sold on"
-  value={sellPlatformFilter}
-  onChange={setSellPlatformFilter}
-  options={[
-   { value: 'all', label: 'All Channels' },
-   ...sellPlatforms.map((platform) => ({
-   value: platform,
-   label: platform,
-   })),
-  ]}
-  className="min-w-[150px] flex-[0_1_180px]"
-  />
-  <FilterSelect
-  label="Category"
-  value={categoryFilter}
-  onChange={setCategoryFilter}
-  options={[
-   { value: 'all', label: 'All Categories' },
-   ...categories.map((category) => ({
-   value: category,
-   label: category,
-   })),
-  ]}
-  className="min-w-[160px] max-w-[240px] flex-[0_1_220px]"
-  />
-  <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
-  <input
-   type="checkbox"
-   className="h-4 w-4 rounded border-border-base text-accent focus:ring-accent"
-   checked={bundleFilter !== 'none'}
-   onChange={(event) =>
-   setBundleFilter(event.target.checked ? 'only' : 'none')
-   }
-  />
-  Bundles only
-  </label>
-  {viewMode === 'gallery' ? (
-  <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
-  <input
-   type="checkbox"
-   className="h-4 w-4 rounded border-border-base text-accent focus:ring-accent"
-   checked={hasImage}
-   onChange={(event) => setHasImage(event.target.checked)}
-  />
-  Has image
-  </label>
-  ) : null}
-  <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
-  <input
-   type="checkbox"
-   className="h-4 w-4 rounded border-border-base text-accent focus:ring-accent"
-   checked={inventoryOnly}
-   onChange={(event) => setInventoryOnly(event.target.checked)}
-  />
-  Inventory
-  </label>
-  </div>
- </div>
-
- {isLoading ? (
-  <LoadingState />
- ) : emptyAllItems ? (
-  <EmptyState onAdd={openAddDrawer} />
- ) : (
-  <>
-  {viewMode === 'gallery' ? (
-  <GalleryView
-   allItems={items}
-   items={displayedItems}
-   onEdit={openEditDrawer}
-   thumbnailByItemId={thumbnailByItemId}
-  />
-  ) : (
-  <>
-   <div className="mt-6 hidden overflow-hidden rounded-lg border border-border-base bg-card shadow-sm md:block">
-   <div className="overflow-x-auto">
-   <table className="w-full min-w-[1160px] text-left text-sm">
-    <thead className="border-b border-border-base bg-surface text-xs uppercase text-muted bg-surface-2/60 ">
-    <tr>
-    {tableColumns.map((column) => (
-     <th key={column.key} className="px-4 py-3 font-semibold">
-     {column.key === 'actions' ? (
-     column.label
-     ) : (
-     <button
-      type="button"
-      className="flex items-center gap-1 transition hover:text-accent hover:text-accent"
-      onClick={() => updateSort(column.key as SortKey)}
-     >
-      {column.label}
-      <SortIcon
-      active={sort.key === column.key}
-      direction={sort.direction}
+      <ItemDrawer
+        open={drawer.open}
+        mode={drawer.mode}
+        item={drawer.item}
+        onOpenChange={closeDrawer}
       />
-     </button>
-     )}
-     </th>
-    ))}
-    </tr>
-    </thead>
-    <tbody className="divide-y divide-border-base">
-    {visibleRows.map(({ item, isChild }) => (
-    <ItemRow
-     key={item.tsid}
-     item={item}
-     childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
-     isChild={isChild}
-     isExpanded={expandedBundles.has(item.tsid)}
-     onEdit={() => openEditDrawer(item)}
-     onDelete={() => setDeleteTarget(item)}
-     onToggleBundle={() => toggleBundle(item.tsid)}
-     thumbnail={thumbnailByItemId.get(item.tsid)}
-     allItems={items}
-    />
-    ))}
-    </tbody>
-   </table>
-   </div>
-   </div>
-
-   <div className="mt-6 grid gap-4 md:hidden">
-   {visibleRows.map(({ item, isChild }) => (
-   <ItemCard
-    key={item.tsid}
-    item={item}
-    childCount={childrenByBundle.get(item.tsid)?.length ?? 0}
-    isChild={isChild}
-    isExpanded={expandedBundles.has(item.tsid)}
-    onEdit={() => openEditDrawer(item)}
-    onToggleBundle={() => toggleBundle(item.tsid)}
-    thumbnail={thumbnailByItemId.get(item.tsid)}
-    allItems={items}
-   />
-   ))}
-   </div>
-  </>
-  )}
-
-  {displayedItems.length === 0 ? <NoResults /> : null}
-  </>
- )}
-
- <ItemDrawer
-  open={drawer.open}
-  mode={drawer.mode}
-  item={drawer.item}
-  onOpenChange={closeDrawer}
- />
- <DeleteConfirmDialog
-  item={deleteTarget}
-  isDeleting={deleteItem.isPending}
-  onCancel={() => setDeleteTarget(null)}
-  onConfirm={confirmDelete}
- />
- </section>
- )
+      <DeleteConfirmDialog
+        item={deleteTarget}
+        isDeleting={deleteItem.isPending}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
+    </section>
+  );
 }
 
 function ItemRow({
- childCount,
- isChild,
- isExpanded,
- item,
- onDelete,
- onEdit,
- onToggleBundle,
- thumbnail,
- allItems,
+  childCount,
+  isChild,
+  isExpanded,
+  item,
+  onDelete,
+  onEdit,
+  onToggleBundle,
+  thumbnail,
+  allItems,
 }: {
- childCount: number
- isChild: boolean
- isExpanded: boolean
- item: Item
- onDelete: () => void
- onEdit: () => void
- onToggleBundle: () => void
- thumbnail: ItemImageThumbnail | undefined
- allItems: Item[]
+  childCount: number;
+  isChild: boolean;
+  isExpanded: boolean;
+  item: Item;
+  onDelete: () => void;
+  onEdit: () => void;
+  onToggleBundle: () => void;
+  thumbnail: ItemImageThumbnail | undefined;
+  allItems: Item[];
 }) {
- const isKeeper = isKeepingItem(item)
- const sellValue = calculateItemSellValue(item, allItems)
- const profit = calculateItemProfit(item, allItems)
- const roi = calculateItemROI(item, allItems)
+  const isKeeper = isKeepingItem(item);
+  const sellValue = calculateItemSellValue(item, allItems);
+  const profit = calculateItemProfit(item, allItems);
+  const roi = calculateItemROI(item, allItems);
 
- return (
- <tr
- className={`cursor-pointer transition hover:bg-accent-soft/70 ${
-  isChild ? 'bg-surface/70 bg-surface-2/40' : ''
- }`}
- onClick={onEdit}
- >
- <td className="px-4 py-4 font-medium text-base ">
-  <div className={`flex items-center gap-2 ${isChild ? 'pl-8' : ''}`}>
-  {item.is_bundle_parent ? (
-  <button
-   type="button"
-   className="rounded p-1 text-muted transition hover:bg-surface-2 hover:text-accent"
-   onClick={(event) => {
-   event.stopPropagation()
-   onToggleBundle()
-   }}
-   aria-label={isExpanded ? 'Collapse bundle' : 'Expand bundle'}
-  >
-   {isExpanded ? (
-   <ChevronDown className="h-4 w-4" aria-hidden="true" />
-   ) : (
-   <ChevronRight className="h-4 w-4" aria-hidden="true" />
-   )}
-  </button>
-  ) : null}
-  {isChild ? (
-  <Link2 className="h-4 w-4 text-accent" aria-hidden="true" />
-  ) : null}
-  <ItemThumbnail name={item.name} thumbnail={thumbnail} />
-  <span>{item.name}</span>
-  {item.is_bundle_parent ? (
-  <BundleBadge count={childCount} />
-  ) : null}
-  </div>
- </td>
- <td className="px-4 py-4 text-muted ">
-  {item.category || '--'}
- </td>
- <td className="px-4 py-4 text-muted ">
-  {item.condition}
- </td>
- <td className="px-4 py-4">{formatCurrency(item.buy_price)}</td>
- <td className={isKeeper ? 'px-4 py-4 text-muted' : 'px-4 py-4'}>
-  {isKeeper ? '--' : formatCurrency(sellValue)}
- </td>
- <td className={isKeeper ? 'px-4 py-4 font-semibold text-muted' : metricCellClassName(profit)}>
-  {isKeeper || profit === null ? '--' : formatCurrency(profit)}
- </td>
- <td className={isKeeper ? 'px-4 py-4 font-semibold text-muted' : metricCellClassName(roi)}>
-  {isKeeper || roi === null ? '--' : `${roi.toFixed(1)}%`}
- </td>
- <td className="px-4 py-4 text-muted ">
-  {getBuyPlatform(item) || '--'}
- </td>
- <td className="px-4 py-4 text-muted ">
-  {getSellPlatform(item) || '--'}
- </td>
- <td className="px-4 py-4">
-  <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
- </td>
- <td className="px-4 py-4 text-muted ">
-  {formatDate(item.bought_at)}
- </td>
- <td className="px-4 py-4 text-muted ">
-  {formatDate(item.sold_at) || '--'}
- </td>
- <td className="px-4 py-4">
-  <div className="flex items-center gap-1">
-  <button
-  type="button"
-  className="rounded-lg p-2 text-muted transition hover:bg-surface-2 hover:text-accent"
-  onClick={(event) => {
-  event.stopPropagation()
-  onEdit()
-  }}
-  aria-label={`Edit ${item.name}`}
-  >
-  <Edit3 className="h-4 w-4" aria-hidden="true" />
-  </button>
-  <button
-  type="button"
-  className="rounded-lg p-2 text-muted transition hover:bg-negative/10 hover:text-negative"
-  onClick={(event) => {
-  event.stopPropagation()
-  onDelete()
-  }}
-  aria-label={`Delete ${item.name}`}
-  >
-  <Trash2 className="h-4 w-4" aria-hidden="true" />
-  </button>
-  </div>
- </td>
- </tr>
- )
+  return (
+    <tr
+      className={`cursor-pointer transition hover:bg-accent-soft/70 ${
+        isChild ? "bg-surface/70 bg-surface-2/40" : ""
+      }`}
+      onClick={onEdit}
+    >
+      <td className="px-4 py-4 text-base font-medium ">
+        <div className={`flex items-center gap-2 ${isChild ? "pl-8" : ""}`}>
+          {item.is_bundle_parent ? (
+            <button
+              type="button"
+              className="p-1 transition rounded text-muted hover:bg-surface-2 hover:text-accent"
+              onClick={(event) => {
+                event.stopPropagation();
+                onToggleBundle();
+              }}
+              aria-label={isExpanded ? "Collapse bundle" : "Expand bundle"}
+            >
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
+              )}
+            </button>
+          ) : null}
+          {isChild ? (
+            <Link2 className="w-4 h-4 text-accent" aria-hidden="true" />
+          ) : null}
+          <ItemThumbnail name={item.name} thumbnail={thumbnail} />
+          <span>{item.name}</span>
+          {item.is_bundle_parent ? <BundleBadge count={childCount} /> : null}
+        </div>
+      </td>
+      <td className="px-4 py-4 text-muted ">{item.category || "--"}</td>
+      <td className="px-4 py-4 text-muted ">{item.condition}</td>
+      <td className="px-4 py-4">{formatCurrency(item.buy_price)}</td>
+      <td className={isKeeper ? "px-4 py-4 text-muted" : "px-4 py-4"}>
+        {isKeeper ? "--" : formatCurrency(sellValue)}
+      </td>
+      <td
+        className={
+          isKeeper
+            ? "px-4 py-4 font-semibold text-muted"
+            : metricCellClassName(profit)
+        }
+      >
+        {isKeeper || profit === null ? "--" : formatCurrency(profit)}
+      </td>
+      <td
+        className={
+          isKeeper
+            ? "px-4 py-4 font-semibold text-muted"
+            : metricCellClassName(roi)
+        }
+      >
+        {isKeeper || roi === null ? "--" : `${roi.toFixed(1)}%`}
+      </td>
+      <td className="px-4 py-4 text-muted ">{getBuyPlatform(item) || "--"}</td>
+      <td className="px-4 py-4 text-muted ">{getSellPlatform(item) || "--"}</td>
+      <td className="px-4 py-4">
+        <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
+      </td>
+      <td className="px-4 py-4 text-muted ">{formatDate(item.bought_at)}</td>
+      <td className="px-4 py-4 text-muted ">
+        {formatDate(item.sold_at) || "--"}
+      </td>
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className="p-2 transition rounded-lg text-muted hover:bg-surface-2 hover:text-accent"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit();
+            }}
+            aria-label={`Edit ${item.name}`}
+          >
+            <Edit3 className="w-4 h-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="p-2 transition rounded-lg text-muted hover:bg-negative/10 hover:text-negative"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete();
+            }}
+            aria-label={`Delete ${item.name}`}
+          >
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
 }
 
 function DeleteConfirmDialog({
- isDeleting,
- item,
- onCancel,
- onConfirm,
+  isDeleting,
+  item,
+  onCancel,
+  onConfirm,
 }: {
- isDeleting: boolean
- item: Item | null
- onCancel: () => void
- onConfirm: () => void
+  isDeleting: boolean;
+  item: Item | null;
+  onCancel: () => void;
+  onConfirm: () => void;
 }) {
- if (!item) {
- return null
- }
+  if (!item) {
+    return null;
+  }
 
- return createPortal(
- <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4 backdrop-blur-sm">
- <div
-  className="w-full max-w-md animate-soft-pop rounded-lg border border-border-base bg-card p-6 shadow-2xl "
-  role="alertdialog"
-  aria-modal="true"
-  aria-labelledby="delete-item-title"
- >
-  <div className="flex items-start gap-4">
-  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-negative/15 text-negative bg-negative/15 ">
-  <Trash2 className="h-5 w-5" aria-hidden="true" />
-  </div>
-  <div>
-  <h3
-   id="delete-item-title"
-   className="text-lg font-semibold text-base "
-  >
-   Delete item?
-  </h3>
-  <p className="mt-2 text-sm text-muted ">
-   This will delete "{item.name}". This action cannot be undone.
-  </p>
-  </div>
-  </div>
-  <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-  <button
-  type="button"
-  className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
-  onClick={onCancel}
-  disabled={isDeleting}
-  >
-  Cancel
-  </button>
-  <button
-  type="button"
-  className="rounded-lg bg-negative px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:bg-negative/90 disabled:cursor-not-allowed disabled:opacity-70"
-  onClick={onConfirm}
-  disabled={isDeleting}
-  >
-  {isDeleting ? 'Deleting...' : 'Delete'}
-  </button>
-  </div>
- </div>
- </div>,
- document.body,
- )
+  return createPortal(
+    <div className="fixed inset-0 z-50 grid px-4 place-items-center bg-black/60 backdrop-blur-sm">
+      <div
+        className="w-full max-w-md p-6 border rounded-lg shadow-2xl animate-soft-pop border-border-base bg-card "
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-item-title"
+      >
+        <div className="flex items-start gap-4">
+          <div className="grid rounded-lg h-11 w-11 shrink-0 place-items-center bg-negative/15 text-negative ">
+            <Trash2 className="w-5 h-5" aria-hidden="true" />
+          </div>
+          <div>
+            <h3
+              id="delete-item-title"
+              className="text-base text-lg font-semibold "
+            >
+              Delete item?
+            </h3>
+            <p className="mt-2 text-sm text-muted ">
+              This will delete "{item.name}". This action cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+            onClick={onCancel}
+            disabled={isDeleting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="rounded-lg bg-negative px-4 py-2.5 text-sm font-semibold text-accent-fg transition hover:bg-negative/90 disabled:cursor-not-allowed disabled:opacity-70"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
 }
 
 function ItemCard({
- childCount,
- isChild,
- isExpanded,
- item,
- onEdit,
- onToggleBundle,
- thumbnail,
- allItems,
+  childCount,
+  isChild,
+  isExpanded,
+  item,
+  onEdit,
+  onToggleBundle,
+  thumbnail,
+  allItems,
 }: {
- childCount: number
- isChild: boolean
- isExpanded: boolean
- item: Item
- onEdit: () => void
- onToggleBundle: () => void
- thumbnail: ItemImageThumbnail | undefined
- allItems: Item[]
+  childCount: number;
+  isChild: boolean;
+  isExpanded: boolean;
+  item: Item;
+  onEdit: () => void;
+  onToggleBundle: () => void;
+  thumbnail: ItemImageThumbnail | undefined;
+  allItems: Item[];
 }) {
- const isKeeper = isKeepingItem(item)
- const sellValue = calculateItemSellValue(item, allItems)
- const profit = calculateItemProfit(item, allItems)
- const roi = calculateItemROI(item, allItems)
+  const isKeeper = isKeepingItem(item);
+  const sellValue = calculateItemSellValue(item, allItems);
+  const profit = calculateItemProfit(item, allItems);
+  const roi = calculateItemROI(item, allItems);
 
- return (
- <button
- type="button"
-className={`rounded-lg border border-border-base bg-card p-4 text-left shadow-sm transition hover:border-accent ${
-  isChild ? 'ml-5 border-accent/30' : ''
- }`}
- onClick={onEdit}
- >
- <div className="flex items-start justify-between gap-3">
-  <div className="flex min-w-0 items-start gap-3">
-  <ItemThumbnail name={item.name} thumbnail={thumbnail} />
-  <div className="min-w-0">
-  <h3 className="font-semibold text-base ">
-  <span className="inline-flex items-center gap-2">
-   {isChild ? (
-   <Link2 className="h-4 w-4 text-accent" aria-hidden="true" />
-   ) : null}
-   {item.name}
-   {item.is_bundle_parent ? <BundleBadge count={childCount} /> : null}
-  </span>
-  </h3>
-  <p className="mt-1 text-sm text-muted ">
-  {item.category || 'Uncategorized'} - {getBuyPlatform(item) || '--'}
-  </p>
-  </div>
-  </div>
-  <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
- </div>
- {item.is_bundle_parent ? (
-  <button
-  type="button"
-  className="mt-3 inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-accent transition hover:bg-accent-soft"
-  onClick={(event) => {
-  event.stopPropagation()
-  onToggleBundle()
-  }}
-  >
-  {isExpanded ? 'Hide bundle items' : 'Show bundle items'}
-  </button>
- ) : null}
- <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-  <MobileMetric label="Buy" value={formatCurrency(item.buy_price)} />
-  <MobileMetric label="Sell" value={isKeeper ? '--' : formatCurrency(sellValue)} />
-  <MobileMetric
-  label="Profit"
-  value={isKeeper || profit === null ? '--' : formatCurrency(profit)}
-  tone={isKeeper ? null : profit}
-  />
-  <MobileMetric
-  label="ROI"
-  value={isKeeper || roi === null ? '--' : `${roi.toFixed(1)}%`}
-  tone={isKeeper ? null : roi}
-  />
-  <MobileMetric label="Bought" value={formatDate(item.bought_at)} />
-  <MobileMetric label="Sold" value={formatDate(item.sold_at) || '--'} />
- </div>
- </button>
- )
+  return (
+    <button
+      type="button"
+      className={`rounded-lg border border-border-base bg-card p-4 text-left shadow-sm transition hover:border-accent ${
+        isChild ? "ml-5 border-accent/30" : ""
+      }`}
+      onClick={onEdit}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start min-w-0 gap-3">
+          <ItemThumbnail name={item.name} thumbnail={thumbnail} />
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold ">
+              <span className="inline-flex items-center gap-2">
+                {isChild ? (
+                  <Link2 className="w-4 h-4 text-accent" aria-hidden="true" />
+                ) : null}
+                {item.name}
+                {item.is_bundle_parent ? (
+                  <BundleBadge count={childCount} />
+                ) : null}
+              </span>
+            </h3>
+            <p className="mt-1 text-sm text-muted ">
+              {item.category || "Uncategorized"} -{" "}
+              {getBuyPlatform(item) || "--"}
+            </p>
+          </div>
+        </div>
+        <StatusBadge status={getEffectiveItemStatus(item, allItems)} />
+      </div>
+      {item.is_bundle_parent ? (
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 px-2 py-1 mt-3 text-sm font-medium transition rounded-lg text-accent hover:bg-accent-soft"
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleBundle();
+          }}
+        >
+          {isExpanded ? "Hide bundle items" : "Show bundle items"}
+        </button>
+      ) : null}
+      <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
+        <MobileMetric label="Buy" value={formatCurrency(item.buy_price)} />
+        <MobileMetric
+          label="Sell"
+          value={isKeeper ? "--" : formatCurrency(sellValue)}
+        />
+        <MobileMetric
+          label="Profit"
+          value={isKeeper || profit === null ? "--" : formatCurrency(profit)}
+          tone={isKeeper ? null : profit}
+        />
+        <MobileMetric
+          label="ROI"
+          value={isKeeper || roi === null ? "--" : `${roi.toFixed(1)}%`}
+          tone={isKeeper ? null : roi}
+        />
+        <MobileMetric label="Bought" value={formatDate(item.bought_at)} />
+        <MobileMetric label="Sold" value={formatDate(item.sold_at) || "--"} />
+      </div>
+    </button>
+  );
 }
 
 function ViewToggle({
- onChange,
- value,
+  onChange,
+  value,
 }: {
- onChange: (value: ViewMode) => void
- value: ViewMode
+  onChange: (value: ViewMode) => void;
+  value: ViewMode;
 }) {
- return (
- <div className="flex flex-[0_0_auto] items-center gap-0.5 rounded-lg border border-border-base bg-surface-2 p-1">
- <button
-  type="button"
-  className={cn(
-  'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
-  value === 'list'
-   ? 'bg-card text-accent shadow-sm'
-   : 'text-muted hover:text-base',
-  )}
-  onClick={() => onChange('list')}
-  title="List view"
-  aria-label="List view"
-  aria-pressed={value === 'list'}
-  >
-  <LayoutList className="h-4 w-4" aria-hidden="true" />
-  </button>
-  <button
-  type="button"
-  className={cn(
-  'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
-  value === 'gallery'
-   ? 'bg-card text-accent shadow-sm'
-   : 'text-muted hover:text-base',
-  )}
-  onClick={() => onChange('gallery')}
-  title="Gallery view"
-  aria-label="Gallery view"
-  aria-pressed={value === 'gallery'}
-  >
-  <LayoutGrid className="h-4 w-4" aria-hidden="true" />
-  </button>
- </div>
- )
+  return (
+    <div className="flex flex-[0_0_auto] items-center gap-0.5 rounded-lg border border-border-base bg-surface-2 p-1">
+      <button
+        type="button"
+        className={cn(
+          "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+          value === "list"
+            ? "bg-card text-accent shadow-sm"
+            : "text-muted hover:text-base",
+        )}
+        onClick={() => onChange("list")}
+        title="List view"
+        aria-label="List view"
+        aria-pressed={value === "list"}
+      >
+        <LayoutList className="w-4 h-4" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className={cn(
+          "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+          value === "gallery"
+            ? "bg-card text-accent shadow-sm"
+            : "text-muted hover:text-base",
+        )}
+        onClick={() => onChange("gallery")}
+        title="Gallery view"
+        aria-label="Gallery view"
+        aria-pressed={value === "gallery"}
+      >
+        <LayoutGrid className="w-4 h-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
 }
 
 function GallerySortControl({
- onDirectionChange,
- onKeyChange,
- sort,
+  onDirectionChange,
+  onKeyChange,
+  sort,
 }: {
- onDirectionChange: (direction: SortState['direction']) => void
- onKeyChange: (key: SortKey) => void
- sort: SortState
+  onDirectionChange: (direction: SortState["direction"]) => void;
+  onKeyChange: (key: SortKey) => void;
+  sort: SortState;
 }) {
- return (
- <div className="flex min-w-[260px] flex-[0_0_auto] gap-2">
- <label className="block min-w-0 flex-1">
-  <span className="sr-only">Gallery sort field</span>
-  <select
-  className={selectControlClassName}
-  value={sort.key}
-  onChange={(event) => onKeyChange(event.target.value as SortKey)}
-  >
-  {gallerySortOptions.map((option) => (
-  <option key={option.key} value={option.key}>
-   Sort: {option.label}
-  </option>
-  ))}
-  </select>
- </label>
- <div className="grid h-11 w-28 shrink-0 grid-cols-2 rounded-lg border border-border-base bg-surface-2 p-1 ">
-  {(['asc', 'desc'] as const).map((direction) => (
-  <button
-  key={direction}
-  type="button"
-  className={`rounded-md px-2 text-xs font-semibold transition ${
-   sort.direction === direction
-   ? 'bg-card text-accent shadow-sm bg-surface-2 '
-   : 'text-muted hover:text-base hover:text-base'
-  }`}
-  onClick={() => onDirectionChange(direction)}
-  >
-  {direction === 'asc' ? 'Asc' : 'Desc'}
-  </button>
-  ))}
- </div>
- </div>
- )
+  return (
+    <div className="flex min-w-[260px] flex-[0_0_auto] gap-2">
+      <label className="flex-1 block min-w-0">
+        <span className="sr-only">Gallery sort field</span>
+        <select
+          className={selectControlClassName}
+          value={sort.key}
+          onChange={(event) => onKeyChange(event.target.value as SortKey)}
+        >
+          {gallerySortOptions.map((option) => (
+            <option key={option.key} value={option.key}>
+              Sort: {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="grid grid-cols-2 p-1 border rounded-lg h-11 w-28 shrink-0 border-border-base bg-surface-2 ">
+        {(["asc", "desc"] as const).map((direction) => (
+          <button
+            key={direction}
+            type="button"
+            className={`rounded-md px-2 text-xs font-semibold transition ${
+              sort.direction === direction
+                ? "bg-card text-accent shadow-sm bg-surface-2 "
+                : "text-muted hover:text-base hover:text-base"
+            }`}
+            onClick={() => onDirectionChange(direction)}
+          >
+            {direction === "asc" ? "Asc" : "Desc"}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function GalleryView({
- allItems,
- items,
- onEdit,
- thumbnailByItemId,
+  allItems,
+  items,
+  onEdit,
+  thumbnailByItemId,
 }: {
- allItems: Item[]
- items: Item[]
- onEdit: (item: Item) => void
- thumbnailByItemId: Map<string, ItemImageThumbnail>
+  allItems: Item[];
+  items: Item[];
+  onEdit: (item: Item) => void;
+  thumbnailByItemId: Map<string, ItemImageThumbnail>;
 }) {
- return (
- <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
- {items.map((item, index) => (
-  <GalleryCard
-  key={item.tsid}
-  allItems={allItems}
-  item={item}
-  index={index}
-  onEdit={() => onEdit(item)}
-  thumbnail={thumbnailByItemId.get(item.tsid)}
-  />
- ))}
- </div>
- )
+  return (
+    <div className="grid grid-cols-2 gap-3 mt-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+      {items.map((item, index) => (
+        <GalleryCard
+          key={item.tsid}
+          allItems={allItems}
+          item={item}
+          index={index}
+          onEdit={() => onEdit(item)}
+          thumbnail={thumbnailByItemId.get(item.tsid)}
+        />
+      ))}
+    </div>
+  );
 }
 
 function GalleryCard({
- allItems,
- item,
- index,
- onEdit,
- thumbnail,
+  allItems,
+  item,
+  index,
+  onEdit,
+  thumbnail,
 }: {
- allItems: Item[]
- item: Item
- index: number
- onEdit: () => void
- thumbnail: ItemImageThumbnail | undefined
+  allItems: Item[];
+  item: Item;
+  index: number;
+  onEdit: () => void;
+  thumbnail: ItemImageThumbnail | undefined;
 }) {
- const effectiveStatus = getEffectiveItemStatus(item, allItems)
- const price =
- effectiveStatus === 'sold'
- ? calculateItemSellValue(item, allItems)
- : item.buy_price
+  const effectiveStatus = getEffectiveItemStatus(item, allItems);
+  const price =
+    effectiveStatus === "sold"
+      ? calculateItemSellValue(item, allItems)
+      : item.buy_price;
 
- return (
- <button
- type="button"
- style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
- className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:border-accent hover:shadow-md animate-fadeIn"
- onClick={onEdit}
- >
- <ImageWithSkeleton
-  src={thumbnail?.signed_url}
-  alt={item.name}
-  skeletonClassName="aspect-square w-full"
-  className="group-hover:scale-105"
- />
- <div
-  className="absolute inset-0 rounded-lg"
-  style={{
-  // Intentional: fixed black scrim for guaranteed contrast on any image color.
-  background:
-   'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0) 65%)',
-  }}
- />
- {item.is_bundle_parent ? (
- <div className="absolute left-2 top-2">
-  <span className="rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-  Bundle
-  </span>
- </div>
- ) : null}
- <div className="absolute right-2 top-2">
-  <span className="rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-  {getStatusLabel(effectiveStatus)}
-  </span>
- </div>
- <div className="absolute inset-x-0 bottom-0 p-3">
-  <p className="line-clamp-2 text-sm font-semibold leading-tight text-white drop-shadow-sm">
-  {item.name}
-  </p>
-  <p className="mt-0.5 text-xs font-medium text-white/80">
-  {formatCurrency(price)}
-  </p>
- </div>
- </button>
- )
+  return (
+    <button
+      type="button"
+      style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
+      className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:border-accent hover:shadow-md animate-fadeIn"
+      onClick={onEdit}
+    >
+      <ImageWithSkeleton
+        src={thumbnail?.signed_url}
+        alt={item.name}
+        skeletonClassName="aspect-square w-full"
+        className="group-hover:scale-105"
+      />
+      <div
+        className="absolute inset-0 rounded-lg"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.20) 20%, rgba(0,0,0,0) 45%)",
+        }}
+      />
+      {item.is_bundle_parent ? (
+        <div className="absolute left-2 top-2">
+          <span className="rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+            Bundle
+          </span>
+        </div>
+      ) : null}
+      <div className="absolute right-2 top-2">
+        <span className="rounded-full border border-white/20 bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+          {getStatusLabel(effectiveStatus)}
+        </span>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 p-3">
+        <p className="text-sm font-semibold leading-tight text-white line-clamp-2 drop-shadow-sm">
+          {item.name}
+        </p>
+        <p className="mt-0.5 text-xs font-medium text-white/80">
+          {formatCurrency(price)}
+        </p>
+      </div>
+    </button>
+  );
 }
 
 function ItemThumbnail({
- name,
- thumbnail,
+  name,
+  thumbnail,
 }: {
- name: string
- thumbnail: ItemImageThumbnail | undefined
+  name: string;
+  thumbnail: ItemImageThumbnail | undefined;
 }) {
- return (
- <ImageWithSkeleton
-  src={thumbnail?.signed_url}
-  alt={name}
-  skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-border-base flex-shrink-0"
-  className="rounded-md border border-border-base"
- />
- )
+  return (
+    <ImageWithSkeleton
+      src={thumbnail?.signed_url}
+      alt={name}
+      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-border-base flex-shrink-0"
+      className="border rounded-md border-border-base"
+    />
+  );
 }
 
 function BundleBadge({ count }: { count: number }) {
- return (
- <span className="inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent bg-accent/15 ">
- Bundle ({count})
- </span>
- )
+  return (
+    <span className="inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent bg-accent/15 ">
+      Bundle ({count})
+    </span>
+  );
 }
 
 function MobileMetric({
- label,
- tone,
- value,
+  label,
+  tone,
+  value,
 }: {
- label: string
- tone?: number | null
- value: string
+  label: string;
+  tone?: number | null;
+  value: string;
 }) {
- return (
- <div>
- <p className="text-xs text-muted ">{label}</p>
- <p className={tone === undefined ? 'font-medium' : metricTextClassName(tone)}>
-  {value}
- </p>
- </div>
- )
+  return (
+    <div>
+      <p className="text-xs text-muted ">{label}</p>
+      <p
+        className={
+          tone === undefined ? "font-medium" : metricTextClassName(tone)
+        }
+      >
+        {value}
+      </p>
+    </div>
+  );
 }
 
 function FilterSelect({
- className = 'min-w-[150px] flex-[0_1_180px]',
- label,
- onChange,
- options,
- value,
+  className = "min-w-[150px] flex-[0_1_180px]",
+  label,
+  onChange,
+  options,
+  value,
 }: {
- className?: string
- label: string
- onChange: (value: string) => void
- options: Array<{ value: string; label: string }>
- value: string
+  className?: string;
+  label: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+  value: string;
 }) {
- return (
- <label className={`block ${className}`}>
- <span className="sr-only">{label}</span>
- <select
-  className={selectControlClassName}
-  value={value}
-  onChange={(event) => onChange(event.target.value)}
- >
-  {options.map((option) => (
-  <option key={option.value} value={option.value}>
-  {option.label}
-  </option>
-  ))}
- </select>
- </label>
- )
+  return (
+    <label className={`block ${className}`}>
+      <span className="sr-only">{label}</span>
+      <select
+        className={selectControlClassName}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 }
 
 function StatusBadge({ status }: { status: ItemStatus }) {
- const className = {
- holding:
- 'bg-accent/15 text-accent bg-accent/15 ',
- listed:
- 'bg-accent-soft text-accent bg-accent/15 ',
- sold: 'bg-positive/15 text-positive bg-positive/15 ',
- keeper:
- 'bg-accent-soft text-accent bg-accent/15 ',
- }[status]
+  const className = {
+    holding: "bg-accent/15 text-accent bg-accent/15 ",
+    listed: "bg-accent-soft text-accent bg-accent/15 ",
+    sold: "bg-positive/15 text-positive bg-positive/15 ",
+    keeper: "bg-accent-soft text-accent bg-accent/15 ",
+  }[status];
 
- return (
- <span
- className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}
- >
- {getStatusLabel(status)}
- </span>
- )
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}
+    >
+      {getStatusLabel(status)}
+    </span>
+  );
 }
 
 function SortIcon({
- active,
- direction,
+  active,
+  direction,
 }: {
- active: boolean
- direction: SortState['direction']
+  active: boolean;
+  direction: SortState["direction"];
 }) {
- if (!active) {
- return <ArrowUp className="h-3.5 w-3.5 opacity-20" aria-hidden="true" />
- }
+  if (!active) {
+    return <ArrowUp className="h-3.5 w-3.5 opacity-20" aria-hidden="true" />;
+  }
 
- return direction === 'asc' ? (
- <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
- ) : (
- <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
- )
+  return direction === "asc" ? (
+    <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
+  ) : (
+    <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+  );
 }
 
 function LoadingState() {
- return (
- <div className="mt-6 overflow-hidden rounded-lg border border-border-base bg-card shadow-sm ">
- {Array.from({ length: 6 }).map((_, index) => (
-  <div
-  key={index}
-  className="grid gap-4 border-b border-border-base p-4 last:border-0 md:grid-cols-6"
-  >
-  {Array.from({ length: 6 }).map((__, cellIndex) => (
-  <div
-   key={cellIndex}
-   className="h-4 animate-pulse rounded bg-border-base bg-surface-2"
-  />
-  ))}
-  </div>
- ))}
- </div>
- )
+  return (
+    <div className="mt-6 overflow-hidden border rounded-lg shadow-sm border-border-base bg-card ">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className="grid gap-4 p-4 border-b border-border-base last:border-0 md:grid-cols-6"
+        >
+          {Array.from({ length: 6 }).map((__, cellIndex) => (
+            <div
+              key={cellIndex}
+              className="h-4 rounded animate-pulse bg-border-base bg-surface-2"
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
- return (
- <div className="mt-6 rounded-lg border border-dashed border-border-base bg-card p-10 text-center shadow-sm ">
- <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent-soft text-accent bg-accent/15 ">
-  <PackageOpen className="h-10 w-10" aria-hidden="true" />
- </div>
- <h3 className="mt-5 text-xl font-semibold">Add your first flip</h3>
- <p className="mx-auto mt-2 max-w-md text-sm text-muted ">
-  Start tracking purchase costs, listing status, sale price, and profit in
-  one place.
- </p>
- <button
-  type="button"
-  className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-fg shadow-lg shadow-accent/20 transition hover:bg-accent/90"
-  onClick={onAdd}
- >
-  <Plus className="h-4 w-4" aria-hidden="true" />
-  Add your first flip
- </button>
- </div>
- )
+  return (
+    <div className="p-10 mt-6 text-center border border-dashed rounded-lg shadow-sm border-border-base bg-card ">
+      <div className="grid w-20 h-20 mx-auto rounded-full place-items-center bg-accent-soft text-accent bg-accent/15 ">
+        <PackageOpen className="w-10 h-10" aria-hidden="true" />
+      </div>
+      <h3 className="mt-5 text-xl font-semibold">Add your first flip</h3>
+      <p className="max-w-md mx-auto mt-2 text-sm text-muted ">
+        Start tracking purchase costs, listing status, sale price, and profit in
+        one place.
+      </p>
+      <button
+        type="button"
+        className="inline-flex items-center justify-center gap-2 px-4 py-3 mt-6 text-sm font-semibold transition rounded-lg shadow-lg bg-accent text-accent-fg shadow-accent/20 hover:bg-accent/90"
+        onClick={onAdd}
+      >
+        <Plus className="w-4 h-4" aria-hidden="true" />
+        Add your first flip
+      </button>
+    </div>
+  );
 }
 
 function NoResults() {
- return (
- <div className="mt-6 rounded-lg border border-border-base bg-card p-6 text-center text-sm text-muted ">
- No items match the current filters.
- </div>
- )
+  return (
+    <div className="p-6 mt-6 text-sm text-center border rounded-lg border-border-base bg-card text-muted ">
+      No items match the current filters.
+    </div>
+  );
 }
 
 function compareItems(a: Item, b: Item, sort: SortState, allItems: Item[]) {
- const aValue = getSortValue(a, sort.key, allItems)
- const bValue = getSortValue(b, sort.key, allItems)
- const direction = sort.direction === 'asc' ? 1 : -1
+  const aValue = getSortValue(a, sort.key, allItems);
+  const bValue = getSortValue(b, sort.key, allItems);
+  const direction = sort.direction === "asc" ? 1 : -1;
 
- if (typeof aValue === 'number' && typeof bValue === 'number') {
- return (aValue - bValue) * direction
- }
+  if (typeof aValue === "number" && typeof bValue === "number") {
+    return (aValue - bValue) * direction;
+  }
 
- return String(aValue).localeCompare(String(bValue)) * direction
+  return String(aValue).localeCompare(String(bValue)) * direction;
 }
 
 function getSortValue(item: Item, key: SortKey, allItems: Item[]) {
- if (key === 'profit') {
- if (isKeepingItem(item)) {
- return Number.NEGATIVE_INFINITY
- }
+  if (key === "profit") {
+    if (isKeepingItem(item)) {
+      return Number.NEGATIVE_INFINITY;
+    }
 
- return calculateItemProfit(item, allItems) ?? Number.NEGATIVE_INFINITY
- }
+    return calculateItemProfit(item, allItems) ?? Number.NEGATIVE_INFINITY;
+  }
 
- if (key === 'roi') {
- if (isKeepingItem(item)) {
- return Number.NEGATIVE_INFINITY
- }
+  if (key === "roi") {
+    if (isKeepingItem(item)) {
+      return Number.NEGATIVE_INFINITY;
+    }
 
- return calculateItemROI(item, allItems) ?? Number.NEGATIVE_INFINITY
- }
+    return calculateItemROI(item, allItems) ?? Number.NEGATIVE_INFINITY;
+  }
 
- if (key === 'sell_price') {
- if (isKeepingItem(item)) {
- return 0
- }
+  if (key === "sell_price") {
+    if (isKeepingItem(item)) {
+      return 0;
+    }
 
- return calculateItemSellValue(item, allItems)
- }
+    return calculateItemSellValue(item, allItems);
+  }
 
- if (key === 'status') {
- return getStatusLabel(getEffectiveItemStatus(item, allItems))
- }
+  if (key === "status") {
+    return getStatusLabel(getEffectiveItemStatus(item, allItems));
+  }
 
- if (key === 'buy_platform') {
- return getBuyPlatform(item)
- }
+  if (key === "buy_platform") {
+    return getBuyPlatform(item);
+  }
 
- if (key === 'sell_platform') {
- return getSellPlatform(item)
- }
+  if (key === "sell_platform") {
+    return getSellPlatform(item);
+  }
 
- if (key === 'bought_at' || key === 'sold_at') {
- return item[key] ? new Date(item[key]).getTime() : 0
- }
+  if (key === "bought_at" || key === "sold_at") {
+    return item[key] ? new Date(item[key]).getTime() : 0;
+  }
 
- return item[key] ?? ''
+  return item[key] ?? "";
 }
 
 function metricCellClassName(value: number | null) {
- return `px-4 py-4 font-semibold ${metricTextClassName(value)}`
+  return `px-4 py-4 font-semibold ${metricTextClassName(value)}`;
 }
 
 function metricTextClassName(value: number | null) {
- if (value === null || value === 0) {
- return 'font-semibold text-muted '
- }
+  if (value === null || value === 0) {
+    return "font-semibold text-muted ";
+  }
 
- return value > 0
- ? 'font-semibold text-positive '
- : 'font-semibold text-negative '
+  return value > 0
+    ? "font-semibold text-positive "
+    : "font-semibold text-negative ";
 }
 
 function uniqueValues(values: string[]) {
- return Array.from(new Set(values.filter(Boolean))).sort((a, b) =>
- a.localeCompare(b),
- )
+  return Array.from(new Set(values.filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b),
+  );
 }
 
 function getQueryStatus(value: string | null) {
- return allStatuses.find((status) => status === value && status !== 'all')
+  return allStatuses.find((status) => status === value && status !== "all");
 }
 
 function getQueryBundleFilter(value: string | null): BundleFilter {
- if (value === 'active') {
- return 'active'
- }
+  if (value === "active") {
+    return "active";
+  }
 
- if (value === 'only') {
- return 'only'
- }
+  if (value === "only") {
+    return "only";
+  }
 
- return 'none'
+  return "none";
 }
 
 function getInitialViewMode(): ViewMode {
- if (typeof localStorage === 'undefined') {
- return 'list'
- }
+  if (typeof localStorage === "undefined") {
+    return "list";
+  }
 
- return localStorage.getItem('flipsite-items-view') === 'gallery'
- ? 'gallery'
- : 'list'
+  return localStorage.getItem("flipsite-items-view") === "gallery"
+    ? "gallery"
+    : "list";
 }
 
-function downloadCsv(rows: Array<Record<string, string | number>>, fileName: string) {
- if (rows.length === 0) {
- return
- }
+function downloadCsv(
+  rows: Array<Record<string, string | number>>,
+  fileName: string,
+) {
+  if (rows.length === 0) {
+    return;
+  }
 
- const headers = Object.keys(rows[0])
- const csv = [
- headers.join(','),
- ...rows.map((row) =>
- headers
-  .map((header) => csvEscape(row[header]))
-  .join(','),
- ),
- ].join('\n')
- const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
- const url = URL.createObjectURL(blob)
- const link = document.createElement('a')
- link.href = url
- link.download = fileName
- link.click()
- URL.revokeObjectURL(url)
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.join(","),
+    ...rows.map((row) =>
+      headers.map((header) => csvEscape(row[header])).join(","),
+    ),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function csvEscape(value: string | number) {
- const text = String(value)
- return `"${text.replaceAll('"', '""')}"`
+  const text = String(value);
+  return `"${text.replaceAll('"', '""')}"`;
 }
 
 const controlClassName =
- 'h-11 w-full min-w-0 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
-const selectControlClassName =
- controlClassName + ' pr-10'
+  "h-11 w-full min-w-0 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 ";
+const selectControlClassName = controlClassName + " pr-10";
