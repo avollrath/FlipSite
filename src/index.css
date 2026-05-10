@@ -206,43 +206,23 @@ body {
  }
 }
 
-/* Hide all borders in light mode */
-html:not(.dark) [class*="border-border"],
-html:not(.dark) [class*="divide-border"] > * + * {
- border-color: transparent !important;
+/* Light mode: hide borders on layout and card elements only */
+html:not(.dark) article,
+html:not(.dark) .bg-card,
+html:not(.dark) aside,
+html:not(.dark) [role="dialog"] > .border-b,
+html:not(.dark) [role="dialog"] > form > .border-t {
+  border-color: transparent !important;
 }
 
-html:not(.dark) .border-\[hsl\(var\(--sidebar-border\)\)\] {
- border-color: transparent !important;
-}
-
-/* Keep sidebar divider subtle in light mode */
-html:not(.dark) aside .border-t {
- border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Hide sidebar toggle button border in light mode */
-html:not(.dark) aside button[aria-label="Collapse sidebar"],
-html:not(.dark) aside button[aria-label="Expand sidebar"] {
- border-color: transparent !important;
-}
-
-/* Keep form input borders visible in light mode */
-html:not(.dark) input,
+/* Always keep borders visible on form controls in light mode */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="date"]):not(.sr-only):not([aria-hidden="true"]),
 html:not(.dark) select,
 html:not(.dark) textarea {
- border-color: rgba(0, 0, 0, 0.18) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Restore borders on interactive sections in edit item drawer */
-html:not(.dark) .border-border-base:has(input[type="checkbox"]),
-html:not(.dark) section.border-border-base,
-html:not(.dark) .border-negative\/25 {
- border-color: rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Restore drawer dividers in light mode */
-html:not(.dark) [role="dialog"] .border-b,
-html:not(.dark) [role="dialog"] .border-t {
- border-color: rgba(0, 0, 0, 0.08) !important;
+/* Sidebar internal divider — keep subtle */
+html:not(.dark) aside .border-t {
+  border-color: rgba(0, 0, 0, 0.08) !important;
 }
