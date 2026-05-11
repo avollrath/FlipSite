@@ -1216,15 +1216,15 @@ function FilterSelect({
 
 function StatusBadge({ status }: { status: ItemStatus }) {
   const className = {
-    holding: "bg-accent/15 text-accent bg-accent/15 ",
-    listed: "bg-accent-soft text-accent bg-accent/15 ",
-    sold: "bg-positive/15 text-positive bg-positive/15 ",
-    keeper: "bg-accent-soft text-accent bg-accent/15 ",
+    holding: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+    listed: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+    sold: "bg-positive/15 text-positive",
+    keeper: "bg-accent/15 text-accent",
   }[status];
 
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}
+      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}
     >
       {getStatusLabel(status)}
     </span>
