@@ -292,7 +292,7 @@ function CategorySelect({
 }
 
 const inputClassName =
- 'h-11 w-full rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
+ 'h-11 w-full rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
 const selectClassName = `${inputClassName} truncate pr-10`
 const primaryButtonClassName =
  'h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70'

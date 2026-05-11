@@ -589,7 +589,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   />
   </Field>
 
-  <label className="flex items-center justify-between gap-4 rounded-lg border border-base bg-surface-2/60 p-4">
+  <label className="flex items-center justify-between gap-4 rounded-lg border border-border-base bg-surface-2/60 p-4">
   <span>
    <span className="block text-sm font-semibold text-base ">
    This is a bundle
@@ -600,7 +600,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   </span>
   <input
    type="checkbox"
-   className="h-5 w-5 rounded border-base text-accent focus:ring-accent"
+   className="h-5 w-5 rounded border-border-base text-accent focus:ring-accent"
    checked={isBundle}
    onChange={(event) => {
    setIsBundle(event.target.checked)
@@ -656,7 +656,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   <SheetFooter>
   <button
   type="button"
-  className="rounded-lg border border-base px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2"
+  className="rounded-lg border border-border-base px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2"
   onClick={() => onOpenChange(false)}
   >
   Cancel
@@ -1651,4 +1651,4 @@ function formatFileSize(sizeBytes: number) {
 }
 
 const inputClassName =
- 'w-full rounded-lg border border-base bg-card px-3 py-2.5 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
+ 'w-full rounded-lg border border-border-base bg-card px-3 py-2.5 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '

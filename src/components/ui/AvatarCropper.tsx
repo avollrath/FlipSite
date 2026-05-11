@@ -104,7 +104,7 @@ export function AvatarCropper({
           <div className="mt-5 flex justify-end gap-3">
             <button
               type="button"
-              className="rounded-lg border border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+              className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
               onClick={onCancel}
             >
               Cancel

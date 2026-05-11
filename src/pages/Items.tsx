@@ -450,7 +450,7 @@ export function Items() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm text-base font-semibold transition border rounded-lg border-base bg-card hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm text-base font-semibold transition border rounded-lg border-border-base bg-card hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={exportVisibleItems}
               disabled={displayedItems.length === 0}
             >
@@ -544,7 +544,7 @@ export function Items() {
           <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-layout bg-card px-3 text-sm font-medium text-base ">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-base text-accent focus:ring-accent"
+              className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
               checked={bundleFilter !== "none"}
               onChange={(event) =>
                 setBundleFilter(event.target.checked ? "only" : "none")
@@ -556,7 +556,7 @@ export function Items() {
             <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-layout bg-card px-3 text-sm font-medium text-base ">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-base text-accent focus:ring-accent"
+                className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
                 checked={hasImage}
                 onChange={(event) => setHasImage(event.target.checked)}
               />
@@ -566,7 +566,7 @@ export function Items() {
           <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-layout bg-card px-3 text-sm font-medium text-base ">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-base text-accent focus:ring-accent"
+              className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
               checked={inventoryOnly}
               onChange={(event) => setInventoryOnly(event.target.checked)}
             />
@@ -846,7 +846,7 @@ function DeleteConfirmDialog({
         <div className="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:justify-end">
           <button
             type="button"
-            className="rounded-lg border border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+            className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
             onClick={onCancel}
             disabled={isDeleting}
           >
@@ -1260,7 +1260,7 @@ function LoadingState() {
           {Array.from({ length: 6 }).map((__, cellIndex) => (
             <div
               key={cellIndex}
-              className="h-4 rounded animate-pulse bg-border-base bg-surface-2"
+              className="h-4 rounded animate-pulse bg-surface-2"
             />
           ))}
         </div>
@@ -1432,5 +1432,5 @@ function csvEscape(value: string | number) {
 }
 
 const controlClassName =
-  "h-11 w-full min-w-0 rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 ";
+  "h-11 w-full min-w-0 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 ";
 const selectControlClassName = controlClassName + " pr-10";

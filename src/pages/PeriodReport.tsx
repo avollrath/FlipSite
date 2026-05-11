@@ -76,7 +76,7 @@ const columns: Array<{ key: SortKey; label: string }> = [
 
 const thumbnailSize = 80
 const dateInputClassName =
-  'h-10 min-w-36 rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10'
+  'h-10 min-w-36 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10'
 
 export function PeriodReport() {
   const { data: items = [], isLoading } = useItems()
@@ -716,8 +716,8 @@ function ItemThumbnail({
     <ImageWithSkeleton
       src={thumbnail?.signed_url}
       alt={name}
-      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-base flex-shrink-0"
-      className="rounded-md border border-base"
+      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-border-base flex-shrink-0"
+      className="rounded-md border border-border-base"
     />
   )
 }

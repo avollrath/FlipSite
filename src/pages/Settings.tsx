@@ -220,7 +220,7 @@ export function Settings() {
     Username
     </label>
     <input
-    className="h-9 w-full rounded-md border border-base bg-surface-2 px-3 text-sm text-base outline-none transition focus:ring-1 focus:ring-accent"
+    className="h-9 w-full rounded-md border border-border-base bg-surface-2 px-3 text-sm text-base outline-none transition focus:ring-1 focus:ring-accent"
     value={username}
     maxLength={30}
     onChange={(event) => setDraftUsername(event.target.value)}
@@ -420,7 +420,7 @@ export function Settings() {
   <div className="mt-4 flex items-center gap-3">
   <button
    type="button"
-   className="rounded-lg border border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+   className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
    onClick={resetDefaults}
   >
    Reset defaults
@@ -612,7 +612,7 @@ function FontSwatch({
 }
 
 const inputClassName =
- 'h-11 w-full rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted read-only:bg-surface-2 focus:border-accent focus:ring-4 focus:ring-accent/10'
+ 'h-11 w-full rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted read-only:bg-surface-2 focus:border-accent focus:ring-4 focus:ring-accent/10'
 const selectClassName = `${inputClassName} truncate pr-10`
 
 function uniqueValues(values: Array<string | null | undefined>) {

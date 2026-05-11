@@ -1191,4 +1191,4 @@ function referenceLabel(value: string) {
 }
 
 const filterControlClassName =
-  'h-10 min-w-40 max-w-56 rounded-lg border border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10'
+  'h-10 min-w-40 max-w-56 rounded-lg border border-border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10'
