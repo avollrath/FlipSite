@@ -163,7 +163,7 @@ export function Categories() {
   </ActionPanel>
  </div>
 
- <div className="rounded-lg border border-border-base bg-card p-4 shadow-sm ">
+ <div className="rounded-lg border border-layout bg-card p-4 shadow-sm ">
   <label className="relative block max-w-md">
   <Search
   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
@@ -179,7 +179,7 @@ export function Categories() {
 
   <div className="mt-4 overflow-x-auto">
   <table className="w-full min-w-[820px] text-left text-sm">
-  <thead className="border-b border-border-base text-xs uppercase text-muted ">
+  <thead className="border-b border-subtle text-xs uppercase text-muted ">
    <tr>
    <th className="px-3 py-3">Category</th>
    <th className="px-3 py-3">Items</th>
@@ -190,7 +190,7 @@ export function Categories() {
    <th className="px-3 py-3">Profit</th>
    </tr>
   </thead>
-  <tbody className="divide-y divide-border-base">
+  <tbody className="divide-y divide-subtle">
    {isLoading ? (
    <tr>
    <td className="px-3 py-6 text-muted" colSpan={7}>
@@ -244,7 +244,7 @@ function ActionPanel({
  title: string
 }) {
  return (
- <article className="rounded-lg border border-border-base bg-card p-5 shadow-sm ">
+ <article className="rounded-lg border border-layout bg-card p-5 shadow-sm ">
  <div className="flex items-start gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent bg-accent/15 ">
   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -292,7 +292,7 @@ function CategorySelect({
 }
 
 const inputClassName =
- 'h-11 w-full rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
+ 'h-11 w-full rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
 const selectClassName = `${inputClassName} truncate pr-10`
 const primaryButtonClassName =
  'h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70'

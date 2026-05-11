@@ -18,7 +18,7 @@ export function ChartCard({
   title,
 }: ChartCardProps) {
   return (
-    <article className="rounded-xl border border-border-base bg-card p-5 shadow-sm">
+    <article className="rounded-xl border border-layout bg-card p-5 shadow-sm">
       <div className="mb-4">
         <h3 className="text-base font-semibold text-base">{title}</h3>
         {subtitle ? <p className="mt-1 text-xs text-muted">{subtitle}</p> : null}
@@ -29,7 +29,7 @@ export function ChartCard({
           {legend ? <div className="mt-3">{legend}</div> : null}
         </>
       ) : (
-        <div className="grid h-[220px] place-items-center rounded-lg border border-dashed border-border-base bg-surface-2/50 text-center">
+        <div className="grid h-[220px] place-items-center rounded-lg border border-dashed border-subtle bg-surface-2/50 text-center">
           <div>
             <p className="text-sm font-semibold text-base">No data yet</p>
             <p className="mt-1 max-w-xs text-xs text-muted">{emptyText}</p>

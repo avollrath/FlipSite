@@ -220,7 +220,7 @@ export function Settings() {
     Username
     </label>
     <input
-    className="h-9 w-full rounded-md border border-border-base bg-surface-2 px-3 text-sm text-base outline-none transition focus:ring-1 focus:ring-accent"
+    className="h-9 w-full rounded-md border border-base bg-surface-2 px-3 text-sm text-base outline-none transition focus:ring-1 focus:ring-accent"
     value={username}
     maxLength={30}
     onChange={(event) => setDraftUsername(event.target.value)}
@@ -244,7 +244,7 @@ export function Settings() {
     </button>
     {profileSaved ? <span className="text-xs text-positive">Saved</span> : null}
    </div>
-   <div className="border-t border-border-base pt-2">
+   <div className="border-t border-subtle pt-2">
     <p className="text-xs text-muted">
     Signed in as {user?.email}
     </p>
@@ -258,10 +258,10 @@ export function Settings() {
     </button>
    </div>
    </div>
-   <div className="flex shrink-0 flex-col items-center gap-3 border-l border-border-base pl-8">
+   <div className="flex shrink-0 flex-col items-center gap-3 border-l border-subtle pl-8">
    <button
    type="button"
-   className="group relative flex h-36 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-2 ring-border-base"
+   className="group relative flex h-36 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-2 ring-layout"
    onClick={() => avatarInputRef.current?.click()}
    aria-label="Upload profile image"
    disabled={isAvatarUploading}
@@ -312,7 +312,7 @@ export function Settings() {
   description="Light/dark mode and palette are saved separately."
   className="h-full"
   >
-  <div className="grid h-11 grid-cols-2 rounded-lg border border-border-base bg-surface-2 p-1">
+  <div className="grid h-11 grid-cols-2 rounded-lg border border-layout bg-surface-2 p-1">
   {(['light', 'dark'] as const).map((option) => (
    <button
    key={option}
@@ -420,7 +420,7 @@ export function Settings() {
   <div className="mt-4 flex items-center gap-3">
   <button
    type="button"
-   className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+   className="rounded-lg border border-layout px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
    onClick={resetDefaults}
   >
    Reset defaults
@@ -456,7 +456,7 @@ function Panel({
  title: string
 }) {
  return (
- <article className={`rounded-lg border border-border-base bg-card p-5 shadow-sm ${className}`}>
+ <article className={`rounded-lg border border-layout bg-card p-5 shadow-sm ${className}`}>
  <div className="mb-5 flex items-start gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent bg-accent/15 ">
   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -540,13 +540,13 @@ function ThemeSwatch({
  className={`rounded-lg border p-2 text-left transition ${
   active
   ? 'border-accent ring-4 ring-accent/15'
-  : 'border-border-base hover:border-accent/50'
+  : 'border-layout hover:border-accent/50'
  }`}
  onClick={onSelect}
  aria-pressed={active}
  >
       <span
-      className={`grid h-14 overflow-hidden rounded-md border border-border-base ${
+      className={`grid h-14 overflow-hidden rounded-md border border-layout ${
        mode === 'dark' ? 'dark' : ''
       }`}
       data-theme={theme}
@@ -583,7 +583,7 @@ function FontSwatch({
  className={`relative rounded-lg border p-3 text-left transition hover:bg-surface-2 ${
   active
   ? 'border-accent ring-2 ring-accent'
-  : 'border-border-base hover:border-accent/50'
+  : 'border-layout hover:border-accent/50'
  }`}
  onClick={onSelect}
  aria-pressed={active}
@@ -612,7 +612,7 @@ function FontSwatch({
 }
 
 const inputClassName =
- 'h-11 w-full rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted read-only:bg-surface-2 focus:border-accent focus:ring-4 focus:ring-accent/10'
+ 'h-11 w-full rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted read-only:bg-surface-2 focus:border-accent focus:ring-4 focus:ring-accent/10'
 const selectClassName = `${inputClassName} truncate pr-10`
 
 function uniqueValues(values: Array<string | null | undefined>) {

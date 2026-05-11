@@ -95,7 +95,7 @@ export function Login() {
 
  return (
  <main className="min-h-screen text-base bg-surface lg:flex">
- <section className="relative hidden w-1/2 overflow-hidden border-r lg:flex border-border-base bg-surface-2">
+ <section className="relative hidden w-1/2 overflow-hidden border-r lg:flex border-subtle bg-surface-2">
   <div
   className="absolute inset-0"
   style={{
@@ -123,7 +123,7 @@ export function Login() {
  </section>
 
  <section className="flex flex-col min-h-screen lg:w-1/2 bg-surface lg:bg-card">
-  <div className="relative overflow-hidden border-b lg:hidden border-border-base bg-surface-2">
+  <div className="relative overflow-hidden border-b lg:hidden border-subtle bg-surface-2">
   <div
    className="absolute inset-0"
    style={{
@@ -149,7 +149,7 @@ export function Login() {
    <p className="mt-2 text-sm text-muted">Sign in to your inventory</p>
    </div>
 
-   <div className="flex min-h-[36px] mb-6 border-b border-border-base">
+   <div className="flex min-h-[36px] mb-6 border-b border-subtle">
   <button
    type="button"
    className={tabClass(mode === 'login')}
@@ -178,7 +178,7 @@ export function Login() {
    id="email"
    type="email"
    autoComplete="email"
-   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
+   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
    value={email}
    onChange={(event) => setEmail(event.target.value)}
    required
@@ -198,7 +198,7 @@ export function Login() {
    autoComplete={
    mode === 'login' ? 'current-password' : 'new-password'
    }
-   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
+   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
    value={password}
    onChange={(event) => setPassword(event.target.value)}
    required

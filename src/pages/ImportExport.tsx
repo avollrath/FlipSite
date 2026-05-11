@@ -197,7 +197,7 @@ export function ImportExport() {
   title="Import CSV"
   description="Upload a CSV, review validation, then append new rows."
   >
-  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border-base bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2">
+  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-layout bg-card px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2">
   <Upload className="h-4 w-4" aria-hidden="true" />
   Choose CSV
   <input
@@ -215,7 +215,7 @@ export function ImportExport() {
   </Panel>
  </div>
 
- <div className="rounded-lg border border-border-base bg-card p-4 shadow-sm ">
+ <div className="rounded-lg border border-layout bg-card p-4 shadow-sm ">
   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
   <div>
   <h3 className="font-semibold text-base ">
@@ -237,13 +237,13 @@ export function ImportExport() {
   </div>
 
   {previewRows.length === 0 ? (
-  <div className="mt-4 rounded-lg border border-dashed border-border-base bg-surface p-8 text-center text-sm text-muted bg-surface-2/60 ">
+  <div className="mt-4 rounded-lg border border-dashed border-subtle bg-surface p-8 text-center text-sm text-muted bg-surface-2/60 ">
   Choose a CSV to see a preview before importing.
   </div>
   ) : (
   <div className="mt-4 overflow-x-auto">
   <table className="w-full min-w-[980px] text-left text-sm">
-   <thead className="border-b border-border-base text-xs uppercase text-muted ">
+   <thead className="border-b border-subtle text-xs uppercase text-muted ">
    <tr>
    <th className="px-3 py-3">Row</th>
    <th className="px-3 py-3">Name</th>
@@ -254,7 +254,7 @@ export function ImportExport() {
    <th className="px-3 py-3">Validation</th>
    </tr>
    </thead>
-   <tbody className="divide-y divide-border-base">
+   <tbody className="divide-y divide-subtle">
    {previewRows.map((preview, index) => (
    <tr key={`${preview.row.name}-${index}`}>
     <td className="px-3 py-4">{index + 1}</td>
@@ -378,7 +378,7 @@ function Panel({
  title: string
 }) {
  return (
- <article className="rounded-lg border border-border-base bg-card p-5 shadow-sm ">
+ <article className="rounded-lg border border-layout bg-card p-5 shadow-sm ">
  <div className="flex items-start gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent bg-accent/15 ">
   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -398,4 +398,4 @@ function Panel({
 const primaryButtonClassName =
  'inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-fg transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70'
 const secondaryButtonClassName =
- 'inline-flex h-11 items-center justify-center rounded-lg border border-border-base bg-card px-4 text-sm font-semibold text-base transition hover:bg-surface-2'
+ 'inline-flex h-11 items-center justify-center rounded-lg border border-layout bg-card px-4 text-sm font-semibold text-base transition hover:bg-surface-2'

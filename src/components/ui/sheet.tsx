@@ -39,7 +39,7 @@ const SheetContent = forwardRef<
  <SheetPrimitive.Content
  ref={ref}
  className={cn(
-  'fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-xl flex-col border-l border-border-base bg-card shadow-2xl outline-none transition duration-300 ease-out data-[state=closed]:translate-x-full data-[state=open]:translate-x-0 ',
+  'fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-xl flex-col border-l border-subtle bg-card shadow-2xl outline-none transition duration-300 ease-out data-[state=closed]:translate-x-full data-[state=open]:translate-x-0 ',
   className,
  )}
  {...props}
@@ -60,7 +60,7 @@ const SheetHeader = ({
 }: ComponentPropsWithoutRef<'div'>) => (
  <div
  className={cn(
- 'space-y-1.5 border-b border-border-base p-6 pr-14 ',
+ 'space-y-1.5 border-b border-subtle p-6 pr-14 ',
  className,
  )}
  {...props}
@@ -74,7 +74,7 @@ const SheetFooter = ({
 }: ComponentPropsWithoutRef<'div'>) => (
  <div
  className={cn(
- 'mt-auto flex flex-col-reverse gap-3 border-t border-border-base p-6 sm:flex-row sm:justify-end',
+ 'mt-auto flex flex-col-reverse gap-3 border-t border-subtle p-6 sm:flex-row sm:justify-end',
  className,
  )}
  {...props}

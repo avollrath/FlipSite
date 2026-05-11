@@ -50,10 +50,10 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
  }
 
  return (
- <aside className={`overflow-visible fixed z-10 inset-y-0 left-0 flex-col hidden border-r border-[hsl(var(--sidebar-border))] bg-sidebar md:flex transition-all duration-200 ease-out ${collapsed ? 'w-16 p-3' : 'w-72 p-5'}`}>
+ <aside className={`overflow-visible fixed z-10 inset-y-0 left-0 flex-col hidden border-r border-subtle bg-sidebar md:flex transition-all duration-200 ease-out ${collapsed ? 'w-16 p-3' : 'w-72 p-5'}`}>
  <button
   type="button"
-  className="absolute -right-3 top-1/3 -translate-y-1/2 h-6 w-6 rounded-md bg-[hsl(var(--card-bg))] border border-[hsl(var(--border))] shadow-md flex items-center justify-center text-muted transition-all duration-200 ease-out hover:scale-110 hover:border-[hsl(var(--accent))] hover:text-sidebar-accent"
+  className="absolute -right-3 top-1/3 -translate-y-1/2 h-6 w-6 rounded-md bg-[hsl(var(--card-bg))] border border-subtle shadow-md flex items-center justify-center text-muted transition-all duration-200 ease-out hover:scale-110 hover:border-[hsl(var(--accent))] hover:text-sidebar-accent"
   onClick={onToggle}
   aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
  >
@@ -101,7 +101,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   })}
  </nav>
 
- <div className={`flex flex-col gap-2 mt-auto pt-4 pb-2 border-t border-[hsl(var(--sidebar-border))] transition-all duration-200 ease-out ${collapsed ? 'items-center px-0' : 'items-center px-0'}`}>
+ <div className={`flex flex-col gap-2 mt-auto pt-4 pb-2 border-t border-subtle transition-all duration-200 ease-out ${collapsed ? 'items-center px-0' : 'items-center px-0'}`}>
   <div className={`flex items-center justify-center overflow-hidden rounded-full shrink-0 bg-sidebar-accent/20 ring-2 ring-sidebar-text/10 ${collapsed ? 'h-8 w-8' : 'h-14 w-14'}`}>
    {avatarUrl ? (
    <img

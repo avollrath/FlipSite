@@ -441,7 +441,7 @@ function FilterBar({
   onStatusesChange: (values: FilterStatus[]) => void
 }) {
   return (
-    <div className="sticky top-0 z-20 rounded-xl border border-border-base bg-card/95 p-3 shadow-sm backdrop-blur">
+    <div className="sticky top-0 z-20 rounded-xl border border-layout bg-card/95 p-3 shadow-sm backdrop-blur">
       <div className="flex flex-wrap items-end gap-3">
         <label className="grid gap-1 text-xs font-medium text-muted">
           Date range
@@ -557,7 +557,7 @@ function MultiSelect({
           <ChevronDown className="ml-auto h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
         </span>
       </summary>
-      <div className="absolute left-0 top-full z-30 mt-2 w-60 rounded-lg border border-border-base bg-card p-2 shadow-lg">
+      <div className="absolute left-0 top-full z-30 mt-2 w-60 rounded-lg border border-layout bg-card p-2 shadow-lg">
         <button
           type="button"
           className="mb-1 w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold text-muted transition hover:bg-surface-2"
@@ -846,7 +846,7 @@ function ChartShell({
 
 function EmptyChart() {
   return (
-    <div className="grid h-[220px] place-items-center rounded-lg border border-dashed border-border-base bg-surface-2/50 text-center">
+    <div className="grid h-[220px] place-items-center rounded-lg border border-dashed border-subtle bg-surface-2/50 text-center">
       <div>
         <PackageSearch className="mx-auto h-6 w-6 text-muted" aria-hidden="true" />
         <p className="mt-2 text-sm text-muted">No data for selected filters</p>
@@ -950,7 +950,7 @@ function CurrencyTooltip({ active, label, payload }: TooltipProps) {
   }
 
   return (
-    <div className="rounded-lg border border-border-base bg-card px-3 py-2 text-xs text-muted shadow-lg">
+    <div className="rounded-lg border border-layout bg-card px-3 py-2 text-xs text-muted shadow-lg">
       {label ? <p className="mb-1 text-xs text-muted">{formatChartLabel(label)}</p> : null}
       {payload.map((entry) => (
         <p key={entry.name} className="text-xs">
@@ -970,7 +970,7 @@ function PercentTooltip({ active, label, payload }: TooltipProps) {
   }
 
   return (
-    <div className="rounded-lg border border-border-base bg-card px-3 py-2 text-xs text-muted shadow-lg">
+    <div className="rounded-lg border border-layout bg-card px-3 py-2 text-xs text-muted shadow-lg">
       <p className="mb-1 text-xs text-muted">{label}</p>
       <p className="text-xs">
         <span style={{ color: payload[0].color }}>{payload[0].name}: </span>
@@ -988,7 +988,7 @@ function ScatterTooltip({ active, payload }: TooltipProps) {
   const datum = payload[0].payload as { days: number; name: string; profit: number }
 
   return (
-    <div className="rounded-lg border border-border-base bg-card px-3 py-2 text-xs text-muted shadow-lg">
+    <div className="rounded-lg border border-layout bg-card px-3 py-2 text-xs text-muted shadow-lg">
       <p className="mb-1 max-w-56 truncate text-xs text-base">{datum.name}</p>
       <p>
         Held {datum.days} days · earned{' '}
@@ -1020,7 +1020,7 @@ function LoadingGrid() {
       {Array.from({ length: 9 }).map((_, index) => (
         <div
           key={index}
-          className="h-36 animate-pulse rounded-lg border border-border-base bg-card"
+          className="h-36 animate-pulse rounded-lg border border-layout bg-card"
         />
       ))}
     </div>
@@ -1191,4 +1191,4 @@ function referenceLabel(value: string) {
 }
 
 const filterControlClassName =
-  'h-10 min-w-40 max-w-56 rounded-lg border border-border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10'
+  'h-10 min-w-40 max-w-56 rounded-lg border border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10'

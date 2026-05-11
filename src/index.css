@@ -106,10 +106,6 @@ body {
 }
 
 @layer base {
- .dark * {
- @apply border-border-base;
- }
-
  button,
  a,
  input,
@@ -204,41 +200,4 @@ body {
  .animate-fadeIn {
  animation: fadeIn 400ms ease-out forwards;
  }
-}
-
-/* Light mode: remove borders on layout/card elements */
-html:not(.dark) article,
-html:not(.dark) aside,
-html:not(.dark) [role="dialog"],
-html:not(.dark) .filter-bar {
-  border-color: transparent !important;
-}
-
-/* Remove border on item image cards specifically */
-html:not(.dark) article.relative.overflow-hidden,
-html:not(.dark) .aspect-square {
-  border-color: transparent !important;
-}
-
-/* Remove borders on containers that wrap filter dropdowns */
-html:not(.dark) .border-border-base:not(input):not(select):not(textarea):not(label):not(button):not([role="dialog"]) {
-  border-color: transparent !important;
-}
-
-/* Always restore visible borders on form controls */
-html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([aria-hidden="true"]):not(.sr-only),
-html:not(.dark) select,
-html:not(.dark) textarea {
-  border-color: rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Sidebar internal divider only — very subtle */
-html:not(.dark) aside .border-t {
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Drawer top/bottom dividers — very subtle */
-html:not(.dark) [role="dialog"] .border-b,
-html:not(.dark) [role="dialog"] .border-t {
-  border-color: rgba(0, 0, 0, 0.06) !important;
 }

@@ -13,6 +13,9 @@
   --surface: 220 20% 97%;
   --surface-2: 220 15% 92%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 220 25% 12%;
   --text-muted: 220 15% 45%;
   --positive: 158 60% 38%;
@@ -31,6 +34,9 @@
   --surface: 222 25% 8%;
   --surface-2: 222 22% 12%;
   --border: 222 20% 18%;
+  --border-base: 222 20% 18%;
+  --border-subtle: 222 20% 20%;
+  --border-layout: 222 20% 18%;
   --text: 220 20% 90%;
   --text-muted: 220 15% 55%;
   --positive: 158 55% 48%;
@@ -50,6 +56,9 @@
   --surface: 150 15% 96%;
   --surface-2: 150 12% 91%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 150 25% 10%;
   --text-muted: 150 10% 42%;
   --positive: 158 64% 35%;
@@ -68,6 +77,9 @@
   --surface: 160 18% 7%;
   --surface-2: 160 15% 11%;
   --border: 160 15% 16%;
+  --border-base: 160 15% 16%;
+  --border-subtle: 160 15% 18%;
+  --border-layout: 160 15% 16%;
   --text: 150 18% 88%;
   --text-muted: 150 10% 52%;
   --positive: 158 55% 48%;
@@ -87,6 +99,9 @@
   --surface: 36 20% 96%;
   --surface-2: 36 15% 91%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 30 30% 10%;
   --text-muted: 30 15% 42%;
   --positive: 158 60% 38%;
@@ -105,6 +120,9 @@
   --surface: 28 18% 7%;
   --surface-2: 28 15% 11%;
   --border: 28 15% 17%;
+  --border-base: 28 15% 17%;
+  --border-subtle: 28 15% 19%;
+  --border-layout: 28 15% 17%;
   --text: 36 18% 88%;
   --text-muted: 30 10% 52%;
   --positive: 158 55% 48%;
@@ -124,6 +142,9 @@
   --surface: 346 15% 96%;
   --surface-2: 346 12% 91%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 346 25% 10%;
   --text-muted: 346 10% 42%;
   --positive: 158 60% 38%;
@@ -142,6 +163,9 @@
   --surface: 350 18% 7%;
   --surface-2: 350 15% 11%;
   --border: 350 15% 17%;
+  --border-base: 350 15% 17%;
+  --border-subtle: 350 15% 19%;
+  --border-layout: 350 15% 17%;
   --text: 346 18% 88%;
   --text-muted: 346 10% 52%;
   --positive: 158 55% 48%;
@@ -161,6 +185,9 @@
   --surface: 215 15% 96%;
   --surface-2: 215 12% 90%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 215 25% 10%;
   --text-muted: 215 12% 42%;
   --positive: 158 60% 35%;
@@ -179,6 +206,9 @@
   --surface: 218 20% 7%;
   --surface-2: 218 18% 11%;
   --border: 218 16% 17%;
+  --border-base: 218 16% 17%;
+  --border-subtle: 218 16% 19%;
+  --border-layout: 218 16% 17%;
   --text: 215 16% 88%;
   --text-muted: 215 10% 52%;
   --positive: 158 52% 48%;
@@ -198,6 +228,9 @@
   --surface: 270 15% 96%;
   --surface-2: 270 12% 90%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 270 20% 8%;
   --text-muted: 270 10% 40%;
   --positive: 122 80% 36%;
@@ -216,6 +249,9 @@
   --surface: 270 25% 5%;
   --surface-2: 270 20% 9%;
   --border: 174 60% 22%;
+  --border-base: 174 60% 22%;
+  --border-subtle: 174 60% 24%;
+  --border-layout: 174 60% 22%;
   --text: 174 20% 92%;
   --text-muted: 270 15% 55%;
   --positive: 122 80% 50%;
@@ -235,6 +271,9 @@
   --surface: 38 25% 95%;
   --surface-2: 38 20% 88%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 20 30% 12%;
   --text-muted: 20 15% 45%;
   --positive: 88 55% 38%;
@@ -253,6 +292,9 @@
   --surface: 22 20% 7%;
   --surface-2: 22 18% 11%;
   --border: 22 18% 18%;
+  --border-base: 22 18% 18%;
+  --border-subtle: 22 18% 20%;
+  --border-layout: 22 18% 18%;
   --text: 38 18% 88%;
   --text-muted: 22 12% 52%;
   --positive: 88 50% 48%;
@@ -272,6 +314,9 @@
   --surface: 300 15% 97%;
   --surface-2: 300 12% 91%;
   --border: transparent;
+  --border-base: 0 0% 82%;
+  --border-subtle: 0 0% 91%;
+  --border-layout: 0 0% 100%;
   --text: 290 25% 10%;
   --text-muted: 290 10% 42%;
   --positive: 160 70% 38%;
@@ -290,6 +335,9 @@
   --surface: 285 22% 6%;
   --surface-2: 285 18% 10%;
   --border: 285 25% 18%;
+  --border-base: 285 25% 18%;
+  --border-subtle: 285 25% 20%;
+  --border-layout: 285 25% 18%;
   --text: 290 18% 90%;
   --text-muted: 285 12% 54%;
   --positive: 160 65% 50%;

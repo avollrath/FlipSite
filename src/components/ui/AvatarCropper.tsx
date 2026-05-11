@@ -61,7 +61,7 @@ export function AvatarCropper({
     <Dialog.Root open onOpenChange={(open) => (open ? undefined : onCancel())}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,560px)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border-base bg-card p-5 shadow-2xl outline-none">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,560px)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-layout bg-card p-5 shadow-2xl outline-none">
           <div className="flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-lg font-semibold text-base">
@@ -104,7 +104,7 @@ export function AvatarCropper({
           <div className="mt-5 flex justify-end gap-3">
             <button
               type="button"
-              className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+              className="rounded-lg border border-layout px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
               onClick={onCancel}
             >
               Cancel

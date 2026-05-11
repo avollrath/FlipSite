@@ -589,7 +589,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   />
   </Field>
 
-  <label className="flex items-center justify-between gap-4 rounded-lg border border-border-base bg-surface p-4 bg-surface-2/60">
+  <label className="flex items-center justify-between gap-4 rounded-lg border border-layout bg-surface p-4 bg-surface-2/60">
   <span>
    <span className="block text-sm font-semibold text-base ">
    This is a bundle
@@ -600,7 +600,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   </span>
   <input
    type="checkbox"
-   className="h-5 w-5 rounded border-border-base text-accent focus:ring-accent"
+   className="h-5 w-5 rounded border-base text-accent focus:ring-accent"
    checked={isBundle}
    onChange={(event) => {
    setIsBundle(event.target.checked)
@@ -656,7 +656,7 @@ function ItemDrawerForm({ mode, item, onOpenChange }: DrawerFormProps) {
   <SheetFooter>
   <button
   type="button"
-  className="rounded-lg border border-border-base px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2"
+  className="rounded-lg border border-base px-4 py-3 text-sm font-semibold text-base transition hover:bg-surface-2"
   onClick={() => onOpenChange(false)}
   >
   Cancel
@@ -723,7 +723,7 @@ function PendingItemFilesSection({
 
  return (
  <section
- className="rounded-lg border border-border-base bg-surface p-4 outline-none transition focus-within:border-accent/35 focus-within:ring-4 focus-within:ring-accent/10 focus:border-accent/35 focus:ring-4 focus:ring-accent/10 bg-surface-2/60"
+ className="rounded-lg border border-layout bg-surface p-4 outline-none transition focus-within:border-accent/35 focus-within:ring-4 focus-within:ring-accent/10 focus:border-accent/35 focus:ring-4 focus:ring-accent/10 bg-surface-2/60"
  onPaste={handlePaste}
  tabIndex={0}
  >
@@ -770,7 +770,7 @@ function PendingItemFilesSection({
 
  <div className="mt-4 space-y-3">
   {files.length === 0 ? (
-  <div className="rounded-lg border border-dashed border-border-base bg-card px-3 py-6 text-center text-sm text-muted ">
+  <div className="rounded-lg border border-dashed border-subtle bg-card px-3 py-6 text-center text-sm text-muted ">
   No files selected yet.
   </div>
   ) : (
@@ -800,7 +800,7 @@ function PendingItemFileRow({
  const isImage = file.type.startsWith('image/')
 
  return (
- <div className="flex items-center gap-3 rounded-lg border border-border-base bg-card p-3 ">
+ <div className="flex items-center gap-3 rounded-lg border border-layout bg-card p-3 ">
  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-surface-2 text-muted ">
   {isImage ? (
   <ImageIcon className="h-6 w-6" aria-hidden="true" />
@@ -979,7 +979,7 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
  return (
  <>
  <section
-  className="rounded-lg border border-border-base bg-surface p-4 outline-none transition focus-within:border-accent/35 focus-within:ring-4 focus-within:ring-accent/10 focus:border-accent/35 focus:ring-4 focus:ring-accent/10 bg-surface-2/60"
+  className="rounded-lg border border-layout bg-surface p-4 outline-none transition focus-within:border-accent/35 focus-within:ring-4 focus-within:ring-accent/10 focus:border-accent/35 focus:ring-4 focus:ring-accent/10 bg-surface-2/60"
   onPaste={handlePaste}
   tabIndex={0}
  >
@@ -1026,12 +1026,12 @@ function ItemFilesSection({ itemId }: { itemId: string }) {
 
  <div className="mt-4 space-y-3">
   {isLoading ? (
-  <div className="flex items-center gap-2 rounded-lg border border-border-base bg-card px-3 py-3 text-sm text-muted ">
+  <div className="flex items-center gap-2 rounded-lg border border-layout bg-card px-3 py-3 text-sm text-muted ">
   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
   Loading files...
   </div>
   ) : files.length === 0 ? (
-  <div className="rounded-lg border border-dashed border-border-base bg-card px-3 py-6 text-center text-sm text-muted ">
+  <div className="rounded-lg border border-dashed border-subtle bg-card px-3 py-6 text-center text-sm text-muted ">
   No files uploaded yet.
   </div>
   ) : (
@@ -1073,7 +1073,7 @@ function ItemFileRow({
  const displayName = file.original_name || getFileNameFromPath(file.file_path)
 
  return (
- <div className="flex items-center gap-3 rounded-lg border border-border-base bg-card p-3 ">
+ <div className="flex items-center gap-3 rounded-lg border border-layout bg-card p-3 ">
  {isImage ? (
   <button
   type="button"
@@ -1245,7 +1245,7 @@ function BundleItemsSection({
   {childrenForms.map((child) => (
   <div
   key={child.id}
-  className="rounded-lg border border-border-base bg-card p-3 "
+  className="rounded-lg border border-layout bg-card p-3 "
   >
   <div className="mb-3 flex items-center justify-between gap-3">
    <div className="flex items-center gap-2 text-sm font-medium text-base ">
@@ -1430,7 +1430,7 @@ function SuggestionCombobox({
   aria-label={label}
  />
  {open ? (
-  <div className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-border-base bg-card p-1 shadow-xl ">
+  <div className="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-layout bg-card p-1 shadow-xl ">
   {visibleOptions.length === 0 ? (
   <div className="px-3 py-2 text-sm text-muted ">
    No suggestions yet.
@@ -1651,4 +1651,4 @@ function formatFileSize(sizeBytes: number) {
 }
 
 const inputClassName =
- 'w-full rounded-lg border border-border-base bg-card px-3 py-2.5 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '
+ 'w-full rounded-lg border border-base bg-card px-3 py-2.5 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 '

@@ -450,7 +450,7 @@ export function Items() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm text-base font-semibold transition border rounded-lg border-border-base bg-card hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm text-base font-semibold transition border rounded-lg border-layout bg-card hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={exportVisibleItems}
               disabled={displayedItems.length === 0}
             >
@@ -468,7 +468,7 @@ export function Items() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 p-4 border rounded-lg shadow-sm border-border-base bg-card ">
+        <div className="flex flex-wrap items-center gap-3 p-4 border rounded-lg shadow-sm border-layout bg-card ">
           <label className="relative block min-w-[180px] max-w-[320px] flex-[1_1_220px]">
             <Search
               className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3 top-1/2 text-muted"
@@ -541,10 +541,10 @@ export function Items() {
             ]}
             className="min-w-[160px] max-w-[240px] flex-[0_1_220px]"
           />
-          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
+          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-layout bg-card px-3 text-sm font-medium text-base ">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
+              className="w-4 h-4 rounded border-base text-accent focus:ring-accent"
               checked={bundleFilter !== "none"}
               onChange={(event) =>
                 setBundleFilter(event.target.checked ? "only" : "none")
@@ -553,20 +553,20 @@ export function Items() {
             Bundles only
           </label>
           {viewMode === "gallery" ? (
-            <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
+            <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-layout bg-card px-3 text-sm font-medium text-base ">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
+                className="w-4 h-4 rounded border-base text-accent focus:ring-accent"
                 checked={hasImage}
                 onChange={(event) => setHasImage(event.target.checked)}
               />
               Has image
             </label>
           ) : null}
-          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-border-base bg-card px-3 text-sm font-medium text-base ">
+          <label className="flex h-11 flex-[0_0_auto] items-center gap-2 whitespace-nowrap rounded-lg border border-layout bg-card px-3 text-sm font-medium text-base ">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-border-base text-accent focus:ring-accent"
+              className="w-4 h-4 rounded border-base text-accent focus:ring-accent"
               checked={inventoryOnly}
               onChange={(event) => setInventoryOnly(event.target.checked)}
             />
@@ -590,10 +590,10 @@ export function Items() {
             />
           ) : (
             <>
-              <div className="hidden mt-6 overflow-hidden border rounded-lg shadow-sm border-border-base bg-card md:block">
+              <div className="hidden mt-6 overflow-hidden border rounded-lg shadow-sm border-layout bg-card md:block">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[1160px] text-left text-sm">
-                    <thead className="text-xs uppercase border-b border-border-base bg-surface text-muted bg-surface-2/60 ">
+                    <thead className="text-xs uppercase border-b border-subtle bg-surface text-muted bg-surface-2/60 ">
                       <tr>
                         {tableColumns.map((column) => (
                           <th
@@ -621,7 +621,7 @@ export function Items() {
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border-base">
+                    <tbody className="divide-y divide-subtle">
                       {visibleRows.map(({ item, isChild }) => (
                         <ItemRow
                           key={item.tsid}
@@ -822,7 +822,7 @@ function DeleteConfirmDialog({
   return createPortal(
     <div className="fixed inset-0 z-50 grid px-4 place-items-center bg-black/60 backdrop-blur-sm">
       <div
-        className="w-full max-w-md p-6 border rounded-lg shadow-2xl animate-soft-pop border-border-base bg-card "
+        className="w-full max-w-md p-6 border rounded-lg shadow-2xl animate-soft-pop border-layout bg-card "
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="delete-item-title"
@@ -846,7 +846,7 @@ function DeleteConfirmDialog({
         <div className="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:justify-end">
           <button
             type="button"
-            className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+            className="rounded-lg border border-layout px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
             onClick={onCancel}
             disabled={isDeleting}
           >
@@ -894,7 +894,7 @@ function ItemCard({
   return (
     <button
       type="button"
-      className={`rounded-lg border border-border-base bg-card p-4 text-left shadow-sm transition hover:border-accent ${
+      className={`rounded-lg border border-layout bg-card p-4 text-left shadow-sm transition hover:border-accent ${
         isChild ? "ml-5 border-accent/30" : ""
       }`}
       onClick={onEdit}
@@ -965,7 +965,7 @@ function ViewToggle({
   value: ViewMode;
 }) {
   return (
-    <div className="flex flex-[0_0_auto] items-center gap-0.5 rounded-lg border border-border-base bg-surface-2 p-1">
+    <div className="flex flex-[0_0_auto] items-center gap-0.5 rounded-lg border border-layout bg-surface-2 p-1">
       <button
         type="button"
         className={cn(
@@ -1025,15 +1025,15 @@ function GallerySortControl({
           ))}
         </select>
       </label>
-      <div className="grid grid-cols-2 p-1 border rounded-lg h-11 w-28 shrink-0 border-border-base bg-surface-2 ">
+      <div className="grid grid-cols-2 p-1 rounded-lg h-11 w-28 shrink-0 bg-surface-2">
         {(["asc", "desc"] as const).map((direction) => (
           <button
             key={direction}
             type="button"
             className={`rounded-md px-2 text-xs font-semibold transition ${
               sort.direction === direction
-                ? "bg-card text-accent shadow-sm bg-surface-2 "
-                : "text-muted hover:text-base hover:text-base"
+                ? "bg-card text-accent shadow-sm"
+                : "text-muted hover:text-base"
             }`}
             onClick={() => onDirectionChange(direction)}
           >
@@ -1095,7 +1095,7 @@ function GalleryCard({
     <button
       type="button"
       style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
-      className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border-base bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:border-accent hover:shadow-md animate-fadeIn"
+      className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-layout bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:border-accent hover:shadow-md animate-fadeIn"
       onClick={onEdit}
     >
       <ImageWithSkeleton
@@ -1146,8 +1146,8 @@ function ItemThumbnail({
     <ImageWithSkeleton
       src={thumbnail?.signed_url}
       alt={name}
-      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-border-base flex-shrink-0"
-      className="border rounded-md border-border-base"
+      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-layout flex-shrink-0"
+      className="border rounded-md border-layout"
     />
   );
 }
@@ -1251,11 +1251,11 @@ function SortIcon({
 
 function LoadingState() {
   return (
-    <div className="mt-6 overflow-hidden border rounded-lg shadow-sm border-border-base bg-card ">
+    <div className="mt-6 overflow-hidden border rounded-lg shadow-sm border-layout bg-card ">
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
-          className="grid gap-4 p-4 border-b border-border-base last:border-0 md:grid-cols-6"
+          className="grid gap-4 p-4 border-b border-subtle last:border-0 md:grid-cols-6"
         >
           {Array.from({ length: 6 }).map((__, cellIndex) => (
             <div
@@ -1271,7 +1271,7 @@ function LoadingState() {
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="p-10 mt-6 text-center border border-dashed rounded-lg shadow-sm border-border-base bg-card ">
+    <div className="p-10 mt-6 text-center border border-dashed rounded-lg shadow-sm border-subtle bg-card ">
       <div className="grid w-20 h-20 mx-auto rounded-full place-items-center bg-accent-soft text-accent bg-accent/15 ">
         <PackageOpen className="w-10 h-10" aria-hidden="true" />
       </div>
@@ -1294,7 +1294,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 
 function NoResults() {
   return (
-    <div className="p-6 mt-6 text-sm text-center border rounded-lg border-border-base bg-card text-muted ">
+    <div className="p-6 mt-6 text-sm text-center border rounded-lg border-layout bg-card text-muted ">
       No items match the current filters.
     </div>
   );
@@ -1432,5 +1432,5 @@ function csvEscape(value: string | number) {
 }
 
 const controlClassName =
-  "h-11 w-full min-w-0 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 ";
+  "h-11 w-full min-w-0 rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10 ";
 const selectControlClassName = controlClassName + " pr-10";

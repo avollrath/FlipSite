@@ -76,7 +76,7 @@ const columns: Array<{ key: SortKey; label: string }> = [
 
 const thumbnailSize = 80
 const dateInputClassName =
-  'h-10 min-w-36 rounded-lg border border-border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10'
+  'h-10 min-w-36 rounded-lg border border-base bg-card px-3 text-sm text-base outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10'
 
 export function PeriodReport() {
   const { data: items = [], isLoading } = useItems()
@@ -222,7 +222,7 @@ export function PeriodReport() {
               'rounded-full border border-transparent px-4 py-1.5 text-sm font-medium transition-colors',
               period === option.value
                 ? 'border-accent bg-accent text-accent-fg'
-                : 'bg-surface-2 text-muted hover:border-border-base hover:text-[hsl(var(--text))]',
+                : 'bg-surface-2 text-muted hover:border-subtle hover:text-[hsl(var(--text))]',
             )}
             onClick={() => setPeriod(option.value)}
           >
@@ -261,10 +261,10 @@ export function PeriodReport() {
         <EmptyState />
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-lg border border-border-base bg-card shadow-sm md:block">
+          <div className="hidden overflow-hidden rounded-lg border border-layout bg-card shadow-sm md:block">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1120px] text-left text-sm">
-                <thead className="border-b border-border-base bg-surface text-xs uppercase text-muted bg-surface-2/60">
+                <thead className="border-b border-subtle bg-surface text-xs uppercase text-muted bg-surface-2/60">
                   <tr>
                     {columns.map((column) => (
                       <th key={column.key} className="px-4 py-3 font-semibold">
@@ -414,7 +414,7 @@ function SummaryCard({
   valueClassName?: string
 }) {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border-base bg-card p-4">
+    <div className="relative overflow-hidden rounded-xl border border-layout bg-card p-4">
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -469,7 +469,7 @@ function ReportSection({
 
   return (
     <>
-      <tr className="border-b border-border-base bg-surface-2/70">
+      <tr className="border-b border-subtle bg-surface-2/70">
         <td className="px-4 py-2 text-xs font-semibold uppercase text-muted" colSpan={columns.length}>
           {label}
         </td>
@@ -518,7 +518,7 @@ function ReportRow({
   return (
     <tr
       className={cn(
-        'cursor-pointer border-b border-border-base transition hover:bg-accent-soft/70',
+        'cursor-pointer border-b border-subtle transition hover:bg-accent-soft/70',
         isChild && 'bg-surface-2/40',
       )}
       onClick={onOpen}
@@ -610,7 +610,7 @@ function ReportCard({
     <button
       type="button"
       className={cn(
-        'rounded-lg border border-border-base bg-card p-4 text-left shadow-sm transition hover:border-accent',
+        'rounded-lg border border-layout bg-card p-4 text-left shadow-sm transition hover:border-accent',
         isChild && 'ml-5 border-accent/30',
       )}
       onClick={onOpen}
@@ -716,8 +716,8 @@ function ItemThumbnail({
     <ImageWithSkeleton
       src={thumbnail?.signed_url}
       alt={name}
-      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-border-base flex-shrink-0"
-      className="rounded-md border border-border-base"
+      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-base flex-shrink-0"
+      className="rounded-md border border-base"
     />
   )
 }
@@ -786,7 +786,7 @@ function SortIcon({
 
 function EmptyState() {
   return (
-    <div className="rounded-lg border border-dashed border-border-base bg-card p-10 text-center shadow-sm">
+    <div className="rounded-lg border border-dashed border-subtle bg-card p-10 text-center shadow-sm">
       <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent-soft text-4xl">
         📅
       </div>
@@ -802,7 +802,7 @@ function LoadingState() {
       {Array.from({ length: 5 }).map((_, index) => (
         <div
           key={index}
-          className="h-24 animate-pulse rounded-lg border border-border-base bg-card"
+          className="h-24 animate-pulse rounded-lg border border-layout bg-card"
         />
       ))}
     </div>

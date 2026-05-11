@@ -85,7 +85,7 @@ export function Dashboard() {
         <label className="w-full sm:w-44">
           <span className="sr-only">Filter dashboard by year</span>
           <select
-            className="h-11 w-full rounded-lg border border-border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10"
+            className="h-11 w-full rounded-lg border border-base bg-card px-3 pr-10 text-sm text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10"
             value={selectedYear}
             onChange={(event) => setSelectedYear(event.target.value)}
           >
@@ -456,7 +456,7 @@ function KPILoadingGrid() {
       {Array.from({ length: 9 }).map((_, index) => (
         <div
           key={index}
-          className="h-40 animate-pulse rounded-lg border border-border-base bg-card/70 shadow-xl shadow-border-base/40"
+          className="h-40 animate-pulse rounded-lg border border-layout bg-card/70 shadow-xl shadow-border-base/40"
         />
       ))}
     </div>
@@ -469,7 +469,7 @@ function ChartLoadingGrid() {
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}
-          className="h-[300px] animate-pulse rounded-xl border border-border-base bg-card"
+          className="h-[300px] animate-pulse rounded-xl border border-layout bg-card"
         />
       ))}
     </div>
@@ -563,7 +563,7 @@ function CurrencyTooltip({ active, label, payload }: ChartTooltipProps) {
   }
 
   return (
-    <div className="rounded-lg border border-border-base bg-card px-3 py-2 text-xs text-muted shadow-lg">
+    <div className="rounded-lg border border-layout bg-card px-3 py-2 text-xs text-muted shadow-lg">
       {label ? <p className="mb-1 text-xs text-muted">{formatChartLabel(label)}</p> : null}
       {payload.map((entry) => (
         <p key={entry.name} className="text-xs">
