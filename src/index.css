@@ -106,6 +106,12 @@ body {
 }
 
 @layer base {
+ *,
+ ::before,
+ ::after {
+ border-color: hsl(var(--border-layout));
+ }
+
  button,
  a,
  input,
