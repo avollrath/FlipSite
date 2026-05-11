@@ -138,7 +138,7 @@ export function Landing() {
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
           <a href="/" aria-label="FlipSite home">
-            <Logo size={36} />
+            <Logo size={22} />
           </a>
 
           <div className="hidden items-center gap-8 text-base text-white/60 md:flex">
@@ -337,7 +337,7 @@ export function Landing() {
 
       <footer className="border-t border-white/[0.08] px-6 py-12">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
-          <Logo size={32} />
+          <Logo size={19} />
           <p className="text-base text-white/30">
             Personal inventory and resale tracker. Built by André Vollrath.
           </p>

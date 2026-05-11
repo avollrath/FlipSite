@@ -104,7 +104,7 @@ export function Login() {
   }}
   />
   <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-12 text-center">
-  <Logo size={120} />
+  <Logo size={72} />
   <h1 className="mt-10 text-2xl font-bold text-base">
    Your inventory. Your numbers.
   </h1>
@@ -132,7 +132,7 @@ export function Login() {
    }}
   />
   <div className="relative flex flex-col items-center px-6 py-8 text-center">
-   <Logo size={72} />
+   <Logo size={43} />
    <p className="mt-4 text-xl font-bold text-base">
    Your inventory. Your numbers.
    </p>
@@ -143,7 +143,7 @@ export function Login() {
   <div className="w-full max-w-[420px] animate-auth-card">
    <div className="mb-8 text-center">
    <div className="flex justify-center mb-6 lg:hidden">
-    <Logo size={48} />
+    <Logo size={29} />
    </div>
    <h2 className="text-2xl font-bold text-base">Welcome back</h2>
    <p className="mt-2 text-sm text-muted">Sign in to your inventory</p>
@@ -178,7 +178,7 @@ export function Login() {
    id="email"
    type="email"
    autoComplete="email"
-   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
+   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
    value={email}
    onChange={(event) => setEmail(event.target.value)}
    required
@@ -198,7 +198,7 @@ export function Login() {
    autoComplete={
    mode === 'login' ? 'current-password' : 'new-password'
    }
-   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
+   className="w-full h-11 px-3 mt-2 text-sm transition border rounded-lg outline-none border-border-base bg-surface focus:border-accent focus:ring-1 focus:ring-accent"
    value={password}
    onChange={(event) => setPassword(event.target.value)}
    required

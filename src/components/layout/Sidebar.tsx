@@ -61,7 +61,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
  </button>
 
  <div className={`flex items-center justify-center transition-all duration-200 ease-out ${collapsed ? 'px-0 py-3' : 'px-4 py-6'}`}>
-  {!collapsed && <Logo size={64} />}
+  {!collapsed && <Logo size={38} />}
   {collapsed && (
    <div className="grid w-10 h-10 rounded-lg place-items-center bg-sidebar-accent/20">
     <div className="w-6 h-6 rounded bg-sidebar-accent" />
