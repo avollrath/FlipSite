@@ -163,7 +163,7 @@ export function Categories() {
   </ActionPanel>
  </div>
 
- <div className="rounded-lg border border-layout bg-card p-4 shadow-sm ">
+ <div className="rounded-lg bg-card p-4 shadow-sm">
   <label className="relative block max-w-md">
   <Search
   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
@@ -244,7 +244,7 @@ function ActionPanel({
  title: string
 }) {
  return (
- <article className="rounded-lg border border-layout bg-card p-5 shadow-sm ">
+ <article className="rounded-lg bg-card p-5 shadow-sm">
  <div className="flex items-start gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent bg-accent/15 ">
   <Icon className="h-5 w-5" aria-hidden="true" />

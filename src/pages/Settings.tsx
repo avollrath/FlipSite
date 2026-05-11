@@ -261,7 +261,7 @@ export function Settings() {
    <div className="flex shrink-0 flex-col items-center gap-3 border-l border-subtle pl-8">
    <button
    type="button"
-   className="group relative flex h-36 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface-2 ring-2 ring-layout"
+   className="group relative flex h-36 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface-2"
    onClick={() => avatarInputRef.current?.click()}
    aria-label="Upload profile image"
    disabled={isAvatarUploading}
@@ -420,7 +420,7 @@ export function Settings() {
   <div className="mt-4 flex items-center gap-3">
   <button
    type="button"
-   className="rounded-lg border border-layout px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+   className="rounded-lg border border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
    onClick={resetDefaults}
   >
    Reset defaults
@@ -456,7 +456,7 @@ function Panel({
  title: string
 }) {
  return (
- <article className={`rounded-lg border border-layout bg-card p-5 shadow-sm ${className}`}>
+ <article className={`rounded-lg bg-card p-5 shadow-sm ${className}`}>
  <div className="mb-5 flex items-start gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent bg-accent/15 ">
   <Icon className="h-5 w-5" aria-hidden="true" />

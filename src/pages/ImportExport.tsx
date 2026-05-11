@@ -215,7 +215,7 @@ export function ImportExport() {
   </Panel>
  </div>
 
- <div className="rounded-lg border border-layout bg-card p-4 shadow-sm ">
+ <div className="rounded-lg bg-card p-4 shadow-sm">
   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
   <div>
   <h3 className="font-semibold text-base ">
@@ -378,7 +378,7 @@ function Panel({
  title: string
 }) {
  return (
- <article className="rounded-lg border border-layout bg-card p-5 shadow-sm ">
+ <article className="rounded-lg bg-card p-5 shadow-sm">
  <div className="flex items-start gap-3">
   <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-soft text-accent bg-accent/15 ">
   <Icon className="h-5 w-5" aria-hidden="true" />

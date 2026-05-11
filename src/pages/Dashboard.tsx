@@ -456,7 +456,7 @@ function KPILoadingGrid() {
       {Array.from({ length: 9 }).map((_, index) => (
         <div
           key={index}
-          className="h-40 animate-pulse rounded-lg border border-layout bg-card/70 shadow-xl shadow-border-base/40"
+          className="h-40 animate-pulse rounded-lg bg-card/70 shadow-xl"
         />
       ))}
     </div>
@@ -469,7 +469,7 @@ function ChartLoadingGrid() {
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}
-          className="h-[300px] animate-pulse rounded-xl border border-layout bg-card"
+          className="h-[300px] animate-pulse rounded-xl bg-card"
         />
       ))}
     </div>
@@ -563,7 +563,7 @@ function CurrencyTooltip({ active, label, payload }: ChartTooltipProps) {
   }
 
   return (
-    <div className="rounded-lg border border-layout bg-card px-3 py-2 text-xs text-muted shadow-lg">
+    <div className="rounded-lg bg-card px-3 py-2 text-xs text-muted shadow-lg">
       {label ? <p className="mb-1 text-xs text-muted">{formatChartLabel(label)}</p> : null}
       {payload.map((entry) => (
         <p key={entry.name} className="text-xs">

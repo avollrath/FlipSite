@@ -450,7 +450,7 @@ export function Items() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm text-base font-semibold transition border rounded-lg border-layout bg-card hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm text-base font-semibold transition border rounded-lg border-base bg-card hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={exportVisibleItems}
               disabled={displayedItems.length === 0}
             >
@@ -468,7 +468,7 @@ export function Items() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 p-4 border rounded-lg shadow-sm border-layout bg-card ">
+        <div className="flex flex-wrap items-center gap-3 p-4 rounded-lg shadow-sm bg-card">
           <label className="relative block min-w-[180px] max-w-[320px] flex-[1_1_220px]">
             <Search
               className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3 top-1/2 text-muted"
@@ -590,7 +590,7 @@ export function Items() {
             />
           ) : (
             <>
-              <div className="hidden mt-6 overflow-hidden border rounded-lg shadow-sm border-layout bg-card md:block">
+              <div className="hidden mt-6 overflow-hidden rounded-lg shadow-sm bg-card md:block">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[1160px] text-left text-sm">
                     <thead className="text-xs uppercase border-b border-subtle bg-surface text-muted bg-surface-2/60 ">
@@ -822,7 +822,7 @@ function DeleteConfirmDialog({
   return createPortal(
     <div className="fixed inset-0 z-50 grid px-4 place-items-center bg-black/60 backdrop-blur-sm">
       <div
-        className="w-full max-w-md p-6 border rounded-lg shadow-2xl animate-soft-pop border-layout bg-card "
+        className="w-full max-w-md p-6 rounded-lg shadow-2xl animate-soft-pop bg-card"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="delete-item-title"
@@ -846,7 +846,7 @@ function DeleteConfirmDialog({
         <div className="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:justify-end">
           <button
             type="button"
-            className="rounded-lg border border-layout px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
+            className="rounded-lg border border-base px-4 py-2.5 text-sm font-semibold text-base transition hover:bg-surface-2"
             onClick={onCancel}
             disabled={isDeleting}
           >
@@ -894,8 +894,8 @@ function ItemCard({
   return (
     <button
       type="button"
-      className={`rounded-lg border border-layout bg-card p-4 text-left shadow-sm transition hover:border-accent ${
-        isChild ? "ml-5 border-accent/30" : ""
+      className={`rounded-lg bg-card p-4 text-left shadow-sm transition hover:shadow-md ${
+        isChild ? "ml-5 border border-accent/30" : ""
       }`}
       onClick={onEdit}
     >
@@ -1095,7 +1095,7 @@ function GalleryCard({
     <button
       type="button"
       style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
-      className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-layout bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:border-accent hover:shadow-md animate-fadeIn"
+      className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-surface-2/70 text-left opacity-0 shadow-sm transition hover:shadow-md animate-fadeIn"
       onClick={onEdit}
     >
       <ImageWithSkeleton
@@ -1146,8 +1146,8 @@ function ItemThumbnail({
     <ImageWithSkeleton
       src={thumbnail?.signed_url}
       alt={name}
-      skeletonClassName="h-10 w-10 shrink-0 rounded-md border border-layout flex-shrink-0"
-      className="border rounded-md border-layout"
+      skeletonClassName="h-10 w-10 shrink-0 rounded-md flex-shrink-0"
+      className="rounded-md"
     />
   );
 }
@@ -1251,7 +1251,7 @@ function SortIcon({
 
 function LoadingState() {
   return (
-    <div className="mt-6 overflow-hidden border rounded-lg shadow-sm border-layout bg-card ">
+    <div className="mt-6 overflow-hidden rounded-lg shadow-sm bg-card">
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
@@ -1271,7 +1271,7 @@ function LoadingState() {
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="p-10 mt-6 text-center border border-dashed rounded-lg shadow-sm border-subtle bg-card ">
+    <div className="p-10 mt-6 text-center rounded-lg shadow-sm bg-card">
       <div className="grid w-20 h-20 mx-auto rounded-full place-items-center bg-accent-soft text-accent bg-accent/15 ">
         <PackageOpen className="w-10 h-10" aria-hidden="true" />
       </div>
@@ -1294,7 +1294,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 
 function NoResults() {
   return (
-    <div className="p-6 mt-6 text-sm text-center border rounded-lg border-layout bg-card text-muted ">
+    <div className="p-6 mt-6 text-sm text-center rounded-lg bg-card text-muted">
       No items match the current filters.
     </div>
   );

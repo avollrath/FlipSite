@@ -261,7 +261,7 @@ export function PeriodReport() {
         <EmptyState />
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-lg border border-layout bg-card shadow-sm md:block">
+          <div className="hidden overflow-hidden rounded-lg bg-card shadow-sm md:block">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1120px] text-left text-sm">
                 <thead className="border-b border-subtle bg-surface text-xs uppercase text-muted bg-surface-2/60">
@@ -414,7 +414,7 @@ function SummaryCard({
   valueClassName?: string
 }) {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-layout bg-card p-4">
+    <div className="relative overflow-hidden rounded-xl bg-card p-4">
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -610,8 +610,8 @@ function ReportCard({
     <button
       type="button"
       className={cn(
-        'rounded-lg border border-layout bg-card p-4 text-left shadow-sm transition hover:border-accent',
-        isChild && 'ml-5 border-accent/30',
+        'rounded-lg bg-card p-4 text-left shadow-sm transition hover:shadow-md',
+        isChild && 'ml-5 border border-accent/30',
       )}
       onClick={onOpen}
     >
@@ -802,7 +802,7 @@ function LoadingState() {
       {Array.from({ length: 5 }).map((_, index) => (
         <div
           key={index}
-          className="h-24 animate-pulse rounded-lg border border-layout bg-card"
+          className="h-24 animate-pulse rounded-lg bg-card"
         />
       ))}
     </div>

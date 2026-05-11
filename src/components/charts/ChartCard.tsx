@@ -18,7 +18,7 @@ export function ChartCard({
   title,
 }: ChartCardProps) {
   return (
-    <article className="rounded-xl border border-layout bg-card p-5 shadow-sm">
+    <article className="rounded-xl bg-card p-5 shadow-sm">
       <div className="mb-4">
         <h3 className="text-base font-semibold text-base">{title}</h3>
         {subtitle ? <p className="mt-1 text-xs text-muted">{subtitle}</p> : null}
