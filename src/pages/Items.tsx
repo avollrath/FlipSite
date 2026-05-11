@@ -1219,7 +1219,7 @@ function StatusBadge({ status }: { status: ItemStatus }) {
     holding: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
     listed: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
     sold: "bg-positive/15 text-positive",
-    keeper: "bg-accent/15 text-accent",
+    keeper: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
   }[status];
 
   return (
