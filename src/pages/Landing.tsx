@@ -11,10 +11,12 @@ import {
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import dashboardPreview from '@/assets/dashboard.jpg'
 import heroVideo from '@/assets/heroV2.mp4'
-import itemsListPreview from '@/assets/items_list.jpg'
-import appPreview from '@/assets/preview.jpg'
+
+const dashboardPreview = '/screenshots/dashboard-overview.png'
+const itemsListPreview = '/screenshots/inventory-table.png'
+const appPreview = '/screenshots/add-item-form.png'
+const profitChartPreview = '/screenshots/profit-chart.png'
 import { Logo } from '@/components/ui/Logo'
 import { useAuth } from '@/hooks/useAuth'
 import { demoAccountEmail } from '@/lib/demoMode'
@@ -88,7 +90,7 @@ const steps = [
   {
     description:
       "Your dashboard shows what you've made, what you've got in stock, and which flips are actually worth your time.",
-    image: dashboardPreview,
+    image: profitChartPreview,
     number: '03',
     title: 'See the full picture',
   },
@@ -259,7 +261,7 @@ export function Landing() {
         </div>
 
         <PreviewImage
-          alt="FlipSite dashboard preview"
+          alt="FlipSite dashboard showing total profit, inventory stats, and charts at a glance"
           className="relative z-10 mb-16 mt-16 max-w-7xl"
           src={dashboardPreview}
         />
@@ -385,7 +387,17 @@ export function Landing() {
                   {step.description}
                 </p>
               </div>
-              <PreviewImage alt={`${step.title} preview`} src={step.image} light />
+              <PreviewImage
+                alt={
+                  index === 0
+                    ? 'Add item form showing name, buy price, condition, and category fields'
+                    : index === 1
+                    ? 'Items list showing name, buy price, sell price, profit and ROI for each flip'
+                    : 'Profit over time chart showing cumulative earnings across all flips'
+                }
+                src={step.image}
+                light
+              />
             </div>
           ))}
         </div>
