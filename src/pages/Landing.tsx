@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import dashboardPreview from '@/assets/dashboard.jpg'
-import heroVideo from '@/assets/hero.webm'
+import heroVideo from '@/assets/heroV2.mp4'
 import itemsListPreview from '@/assets/items_list.jpg'
 import appPreview from '@/assets/preview.jpg'
 import { Logo } from '@/components/ui/Logo'
@@ -129,26 +129,33 @@ export function Landing() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080810] text-white">
+    <main className="lp-body min-h-screen" style={{ background: 'var(--lp-bg)', color: 'var(--lp-text)' }}>
+      {/* ── Navbar ── */}
       <nav
         className={cn(
-          'fixed left-0 right-0 top-0 z-50 border-b bg-black/40 backdrop-blur-md transition-colors',
-          navScrolled ? 'border-white/15 bg-black/55' : 'border-white/[0.08]',
+          'fixed left-0 right-0 top-0 z-50 border-b transition-all duration-300',
+          navScrolled
+            ? 'border-[var(--lp-border)] shadow-sm'
+            : 'border-transparent',
         )}
+        style={{
+          background: 'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(12px)',
+        }}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
           <a href="/" aria-label="FlipSite home">
             <Logo size={22} />
           </a>
 
-          <div className="hidden items-center gap-8 text-base text-white/60 md:flex">
-            <a href="#features" className="transition-colors hover:text-white">
+          <div className="hidden items-center gap-8 text-base md:flex" style={{ color: 'var(--lp-muted)' }}>
+            <a href="#features" className="transition-colors hover:text-[var(--lp-text)]">
               Features
             </a>
-            <a href="#how-it-works" className="transition-colors hover:text-white">
+            <a href="#how-it-works" className="transition-colors hover:text-[var(--lp-text)]">
               How it works
             </a>
-            <a href="#demo" className="transition-colors hover:text-white">
+            <a href="#demo" className="transition-colors hover:text-[var(--lp-text)]">
               Demo
             </a>
           </div>
@@ -156,13 +163,15 @@ export function Landing() {
           <div className="flex items-center gap-3">
             <a
               href="/login"
-              className="text-base text-white/60 transition-colors hover:text-white"
+              className="text-base font-medium transition-colors"
+              style={{ color: 'var(--lp-accent)' }}
             >
               Log in
             </a>
             <a
               href="/login?tab=signup"
-              className="rounded-full bg-accent px-5 py-2 text-base font-medium text-accent-fg transition-colors hover:bg-accent/90"
+              className="lp-gradient-bg rounded-full px-5 py-2 text-base font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={{ outlineColor: 'var(--lp-accent)' }}
             >
               Sign up
             </a>
@@ -170,9 +179,10 @@ export function Landing() {
         </div>
       </nav>
 
+      {/* ── Hero ── */}
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-32 text-center">
         <video
-          className="absolute inset-0 h-full w-full object-cover opacity-28"
+          className="absolute inset-0 h-full w-full object-cover"
           src={heroVideo}
           autoPlay
           loop
@@ -180,27 +190,48 @@ export function Landing() {
           playsInline
           aria-hidden="true"
         />
-        <div className="pointer-events-none absolute inset-0 bg-[#080810]/55" />
+        {/* Light semi-transparent overlay so text stays readable */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background:
-              'radial-gradient(ellipse 60% 50% at 50% 30%, hsl(var(--accent) / 0.18) 0%, transparent 70%)',
+            background: 'linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.85) 100%)',
           }}
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#080810] to-transparent" />
+        {/* Subtle grain texture */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+            backgroundRepeat: 'repeat',
+            backgroundSize: '128px',
+          }}
+        />
 
-        <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-5 py-2 text-sm font-medium text-accent">
-          Personal inventory & resale tracker
+        <div
+          className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-medium"
+          style={{
+            borderColor: 'rgba(124,58,237,0.3)',
+            background: 'rgba(124,58,237,0.07)',
+            color: 'var(--lp-accent)',
+          }}
+        >
+          Personal inventory &amp; resale tracker
         </div>
 
-        <h1 className="relative z-10 max-w-3xl text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl">
+        <h1
+          className="lp-display lp-gradient-text relative z-10 max-w-3xl font-bold leading-[1.1] tracking-tight"
+          style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
+        >
           Know what you own.
           <br />
           Know what you made.
         </h1>
 
-        <p className="relative z-10 mt-6 max-w-2xl text-xl leading-relaxed text-white/55">
+        <p
+          className="relative z-10 mt-6 max-w-2xl text-xl leading-relaxed"
+          style={{ color: 'var(--lp-muted)' }}
+        >
           FlipSite replaces the spreadsheet you've been maintaining for your
           inventory and resale activity - with actual structure, real numbers,
           and everything in one place.
@@ -209,15 +240,23 @@ export function Landing() {
         <div className="relative z-10 mt-10 flex flex-col items-center gap-4 sm:flex-row">
           <a
             href="/login?tab=signup"
-            className="rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-accent-fg transition-colors hover:bg-accent/90"
+            className="lp-gradient-bg rounded-full px-7 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{
+              outlineColor: 'var(--lp-accent)',
+              boxShadow: '0 4px 20px rgba(124,58,237,0.3)',
+            }}
           >
             Get started free
           </a>
           <a
             href="#demo"
-            className="rounded-full border border-white/15 px-7 py-3.5 text-base text-white/70 transition-colors hover:border-white/30 hover:text-white"
+            className="rounded-full border px-7 py-3.5 text-base font-medium transition-colors hover:bg-[var(--lp-tint)]"
+            style={{
+              borderColor: 'var(--lp-accent)',
+              color: 'var(--lp-accent)',
+            }}
           >
-            See a demo -&gt;
+            See a demo →
           </a>
         </div>
 
@@ -228,26 +267,47 @@ export function Landing() {
         />
       </section>
 
-      <section className="border-y border-white/[0.08] py-12">
+      {/* ── Stats bar ── */}
+      <section
+        className="border-y py-12"
+        style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-tint)' }}
+      >
         <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-14 px-6 text-center md:gap-20">
-          {stats.map((stat) => (
-            <div key={stat.label}>
-              <p className="text-4xl font-bold tracking-tight text-white md:text-5xl">
-                {stat.value}
-              </p>
-              <p className="mt-2 text-base text-white/40">{stat.label}</p>
+          {stats.map((stat, i) => (
+            <div key={stat.label} className="flex items-center gap-14">
+              <div>
+                <p
+                  className="lp-display text-4xl font-bold tracking-tight md:text-5xl"
+                  style={{ color: 'var(--lp-text)' }}
+                >
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-base" style={{ color: 'var(--lp-muted)' }}>
+                  {stat.label}
+                </p>
+              </div>
+              {i < stats.length - 1 && (
+                <div
+                  className="hidden h-10 w-px md:block"
+                  style={{ background: 'var(--lp-gradient)' }}
+                />
+              )}
             </div>
           ))}
         </div>
       </section>
 
-      <section id="features" className="px-6 py-32">
+      {/* ── Features ── */}
+      <section id="features" className="px-6 py-32" style={{ background: 'var(--lp-bg)' }}>
         <div className="mx-auto max-w-6xl">
           <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold text-white">
+            <h2
+              className="lp-display font-bold"
+              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', color: 'var(--lp-text)' }}
+            >
               Everything in one place
             </h2>
-            <p className="mt-3 text-xl text-white/40">
+            <p className="mt-3 text-xl" style={{ color: 'var(--lp-muted)' }}>
               Built for how buying and selling actually works
             </p>
           </div>
@@ -255,15 +315,31 @@ export function Landing() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 transition-colors hover:border-white/15"
+                className="group rounded-2xl border p-6 transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  background: 'var(--lp-surface)',
+                  borderColor: 'var(--lp-border)',
+                  borderRadius: '14px',
+                  boxShadow: '0 2px 12px rgba(124,58,237,0.07)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow =
+                    '0 8px 24px rgba(124,58,237,0.13)'
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow =
+                    '0 2px 12px rgba(124,58,237,0.07)'
+                }}
               >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15">
-                  <feature.icon className="h-5 w-5 text-accent" aria-hidden="true" />
+                <div
+                  className="lp-gradient-bg mb-4 flex h-10 w-10 items-center justify-center rounded-xl"
+                >
+                  <feature.icon className="h-5 w-5 text-white" aria-hidden="true" />
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-white">
+                <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--lp-text)' }}>
                   {feature.title}
                 </h3>
-                <p className="text-base leading-relaxed text-white/45">
+                <p className="text-base leading-relaxed" style={{ color: 'var(--lp-muted)' }}>
                   {feature.description}
                 </p>
               </div>
@@ -272,7 +348,8 @@ export function Landing() {
         </div>
       </section>
 
-      <section id="how-it-works" className="px-6 py-32">
+      {/* ── How it works ── */}
+      <section id="how-it-works" className="px-6 py-32" style={{ background: 'var(--lp-surface)' }}>
         <div className="mx-auto max-w-6xl space-y-32">
           {steps.map((step, index) => (
             <div
@@ -281,35 +358,43 @@ export function Landing() {
                 'flex flex-col items-center gap-16 lg:flex-row',
                 index % 2 === 1 && 'lg:flex-row-reverse',
               )}
+              style={{ background: index % 2 === 1 ? 'var(--lp-bg)' : 'var(--lp-surface)' }}
             >
               <div className="flex-1">
-                <span className="text-5xl font-bold text-accent/20">
+                <span
+                  className="lp-display text-5xl font-bold"
+                  style={{ color: '#EDE9FE' }}
+                >
                   {step.number}
                 </span>
-                <h3 className="mt-3 text-3xl font-bold text-white">
+                <h3
+                  className="lp-display mt-3 font-bold"
+                  style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', color: 'var(--lp-text)' }}
+                >
                   {step.title}
                 </h3>
-                <p className="mt-4 text-xl leading-relaxed text-white/45">
+                <p className="mt-4 text-xl leading-relaxed" style={{ color: 'var(--lp-muted)' }}>
                   {step.description}
                 </p>
               </div>
-              <PreviewImage alt={`${step.title} preview`} src={step.image} />
+              <PreviewImage alt={`${step.title} preview`} src={step.image} light />
             </div>
           ))}
         </div>
       </section>
 
+      {/* ── CTA / Demo ── */}
       <section id="demo" className="px-6 py-32">
         <div className="mx-auto max-w-2xl text-center">
           <div
-            className="rounded-3xl border border-white/10 bg-white/[0.03] px-8 py-16 sm:px-12"
-            style={{
-              background:
-                'radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--accent) / 0.12) 0%, transparent 70%)',
-            }}
+            className="lp-gradient-bg rounded-3xl px-8 py-16 sm:px-12"
           >
-            <h2 className="text-4xl font-bold text-white">See it in action</h2>
-            <p className="mt-4 text-xl text-white/45">
+            <h2
+              className="lp-display text-4xl font-bold text-white"
+            >
+              See it in action
+            </h2>
+            <p className="mt-4 text-xl text-white/80">
               Try the demo with a pre-filled inventory - no sign up needed.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -317,16 +402,17 @@ export function Landing() {
                 type="button"
                 onClick={handleDemoLogin}
                 disabled={demoLoading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-8 py-3.5 text-base font-semibold text-accent-fg transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{ color: 'var(--lp-accent)', outlineColor: 'var(--lp-accent)' }}
               >
                 {demoLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : null}
-                Try demo -&gt;
+                Try demo →
               </button>
               <a
                 href="/login?tab=signup"
-                className="w-full rounded-full border border-white/15 px-8 py-3.5 text-center text-base text-white/70 transition-colors hover:border-white/30 hover:text-white sm:w-auto"
+                className="w-full rounded-full border border-white/40 px-8 py-3.5 text-center text-base text-white transition-colors hover:border-white hover:bg-white/10 sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 Create free account
               </a>
@@ -335,19 +421,23 @@ export function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.08] px-6 py-12">
+      {/* ── Footer ── */}
+      <footer
+        className="border-t px-6 py-12"
+        style={{ background: '#1A1523', borderColor: 'rgba(255,255,255,0.08)' }}
+      >
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
           <Logo size={19} />
-          <p className="text-base text-white/30">
+          <p className="text-base" style={{ color: 'rgba(255,255,255,0.45)' }}>
             Personal inventory and resale tracker. Built by André Vollrath.
           </p>
-          <div className="flex items-center gap-6 text-base text-white/40">
-            <a href="/login" className="transition-colors hover:text-white/70">
+          <div className="flex items-center gap-6 text-base" style={{ color: 'rgba(255,255,255,0.45)' }}>
+            <a href="/login" className="transition-colors hover:text-white">
               Log in
             </a>
             <a
               href="/login?tab=signup"
-              className="transition-colors hover:text-white/70"
+              className="transition-colors hover:text-white"
             >
               Sign up
             </a>
@@ -355,7 +445,7 @@ export function Landing() {
               href="https://vollrath.dev"
               target="_blank"
               rel="noopener"
-              className="transition-colors hover:text-white/70"
+              className="transition-colors hover:text-white"
             >
               vollrath.dev
             </a>
@@ -369,23 +459,32 @@ export function Landing() {
 function PreviewImage({
   alt,
   className,
+  light,
   src,
 }: {
   alt: string
   className?: string
+  light?: boolean
   src: string
 }) {
   return (
     <div
       className={cn(
-        'w-full flex-1 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] shadow-2xl shadow-black/40',
+        'w-full flex-1 overflow-hidden',
         className,
       )}
+      style={{
+        borderRadius: '16px',
+        border: light ? '1px solid var(--lp-border)' : '1px solid rgba(255,255,255,0.1)',
+        boxShadow: light
+          ? '0 4px 24px rgba(124,58,237,0.08)'
+          : '0 20px 60px rgba(0,0,0,0.4)',
+      }}
     >
       <img
         src={src}
         alt={alt}
-        className="aspect-video h-full w-full object-cover object-top opacity-90"
+        className="aspect-video h-full w-full object-cover object-top"
       />
     </div>
   )
