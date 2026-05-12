@@ -289,6 +289,24 @@ export function Landing() {
         })
       }
 
+      // ── Pricing section ───────────────────────────────────────────
+      gsap.from('.pricing__header > *', {
+        opacity: 0,
+        y: 24,
+        stagger: 0.1,
+        duration: 0.7,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: '.pricing', start: 'top 80%', once: true },
+      })
+      gsap.from('.pricing-card', {
+        opacity: 0,
+        y: 40,
+        stagger: 0.15,
+        duration: 0.8,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: '.pricing__grid', start: 'top 80%', once: true },
+      })
+
       // ── CTA card scale-up ──────────────────────────────────────────
       const cta = document.querySelector('.lp-cta-section')
       if (cta) {
@@ -481,6 +499,95 @@ export function Landing() {
           </div>
         </div>
         <p className="lp-phone-label">Works just as well on your phone.</p>
+      </section>
+
+      {/* ── Pricing ── */}
+      <section id="pricing" className="pricing">
+        <div className="pricing__inner">
+          <div className="pricing__header">
+            <span className="lp-eyebrow">Pricing</span>
+            <h2 className="lp-features-heading">Simple, honest pricing.</h2>
+            <p className="lp-feature-body" style={{ marginBottom: 0 }}>
+              Free forever for casual flippers. Upgrade when it starts paying for itself.
+            </p>
+          </div>
+
+          <div className="pricing__grid">
+            {/* Free card */}
+            <div className="pricing-card">
+              <p className="pricing-card__name">Free</p>
+              <p className="pricing-card__price">Get started — no card needed</p>
+              <p className="pricing-card__intro">Everything you need to see if this clicks.</p>
+              <div className="pricing-card__divider" />
+              <ul className="pricing-card__features">
+                {[
+                  'Up to 100 items',
+                  'Full profit & ROI calculations',
+                  'Bundle math that actually works',
+                  'Table and gallery view',
+                  'Dashboard with 9 KPIs',
+                  'All four statuses: holding, listed, sold, keeping',
+                  '3 photos per item',
+                  'Basic filters & search',
+                  'CSV export',
+                  '3 themes',
+                ].map((f) => (
+                  <li key={f} className="pricing-card__feature">
+                    <span className="pricing-card__check" aria-hidden="true">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="/login?tab=signup" className="pricing-card__cta pricing-card__cta--outline">
+                Start for free
+              </a>
+            </div>
+
+            {/* Premium card */}
+            <div className="pricing-card pricing-card--premium">
+              <span className="pricing-card__badge">Most popular</span>
+              <p className="pricing-card__name">Premium</p>
+              <p className="pricing-card__price">€5/month or €45/year</p>
+              <p className="pricing-card__intro">For anyone doing this seriously.</p>
+              <div className="pricing-card__divider" />
+              <p className="pricing-card__also">Everything in free, plus:</p>
+              <ul className="pricing-card__features">
+                {[
+                  'Unlimited items',
+                  'Full analytics — date ranges, platform breakdowns, hold time, pace tracking',
+                  'Unlimited photos per item',
+                  'File attachments — receipts, manuals, warranties',
+                  'All 8 themes & 6 fonts',
+                  'CSV import',
+                  'Advanced filters — platform, category, date range, bundles',
+                  'Profit reports for tax season',
+                ].map((f) => (
+                  <li key={f} className="pricing-card__feature">
+                    <span className="pricing-card__check--gradient" aria-hidden="true">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <defs>
+                          <linearGradient id="check-grad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#7C3AED" />
+                            <stop offset="100%" stopColor="#C026D3" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M3 8l3.5 3.5L13 4.5" stroke="url(#check-grad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="/login?tab=signup" className="pricing-card__cta pricing-card__cta--filled">
+                Get Premium
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── CTA / Demo ── */}
