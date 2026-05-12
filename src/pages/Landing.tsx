@@ -12,37 +12,49 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import heroVideo from '@/assets/heroV2.mp4'
-
-const dashboardPreview = '/screenshots/dashboard-overview.png'
-const itemsListPreview = '/screenshots/inventory-table.png'
-const appPreview = '/screenshots/add-item-form.png'
-const profitChartPreview = '/screenshots/profit-chart.png'
 import { Logo } from '@/components/ui/Logo'
 import { useAuth } from '@/hooks/useAuth'
 import { demoAccountEmail } from '@/lib/demoMode'
 import { cn } from '@/lib/utils'
 
+const dashboardPreview = '/screenshots/dashboard-overview.png'
+const itemsListPreview = '/screenshots/inventory-table.png'
+const appPreview = '/screenshots/add-item-form.png'
+const profitChartPreview = '/screenshots/profit-chart.png'
+const inventoryGalleryPreview = '/screenshots/inventory-gallery.png'
+const categoryBreakdownPreview = '/screenshots/category-breakdown.png'
+const itemDetailPreview = '/screenshots/item-detail.png'
+const mobileDashboardPreview = '/screenshots/mobile-dashboard.png'
+
 const features: Array<{
   description: string
   icon: LucideIcon
+  preview?: string
+  previewAlt?: string
   title: string
 }> = [
   {
     description:
       'Add anything you own or plan to sell. Where you got it, what you paid, what condition it\'s in. Photos, receipts, everything — right there when you need it.',
     icon: Package,
+    preview: itemsListPreview,
+    previewAlt: 'Items list showing each flip with buy price, sell price, and profit',
     title: 'Every item, all in one place',
   },
   {
     description:
       'Selling price minus what you paid — plus fees, shipping, and splits if one buy becomes multiple sales. The number you see is the number you actually made.',
     icon: TrendingUp,
+    preview: itemDetailPreview,
+    previewAlt: 'Item detail showing buy price, sell price, profit and ROI for one flip',
     title: 'Know your real profit',
   },
   {
     description:
       'Switch to gallery view and browse your items like a visual shelf. Upload photos straight from your phone — FlipSite handles the rest.',
     icon: Images,
+    preview: inventoryGalleryPreview,
+    previewAlt: 'Gallery view showing item photos in a visual grid',
     title: 'See your inventory, don\'t just list it',
   },
   {
@@ -55,6 +67,8 @@ const features: Array<{
     description:
       'Which categories make you the most? What\'s your best month? Where are you leaving money on the table? Your dashboard shows you at a glance.',
     icon: BarChart3,
+    preview: categoryBreakdownPreview,
+    previewAlt: 'Analytics page showing profit breakdown by category',
     title: "See where your money's actually going",
   },
   {
@@ -315,7 +329,7 @@ export function Landing() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="group rounded-2xl border p-6 transition-all duration-200 hover:-translate-y-0.5"
+                className="group rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
                 style={{
                   background: 'var(--lp-surface)',
                   borderColor: 'var(--lp-border)',
@@ -331,17 +345,27 @@ export function Landing() {
                     '0 2px 12px rgba(124,58,237,0.07)'
                 }}
               >
-                <div
-                  className="lp-gradient-bg mb-4 flex h-10 w-10 items-center justify-center rounded-xl"
-                >
-                  <feature.icon className="h-5 w-5 text-white" aria-hidden="true" />
+                {feature.preview && (
+                  <div className="overflow-hidden border-b" style={{ borderColor: 'var(--lp-border)' }}>
+                    <img
+                      src={feature.preview}
+                      alt={feature.previewAlt ?? feature.title}
+                      className="h-36 w-full object-cover object-top"
+                      style={{ maxWidth: '100%' }}
+                    />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="lp-gradient-bg mb-4 flex h-10 w-10 items-center justify-center rounded-xl">
+                    <feature.icon className="h-5 w-5 text-white" aria-hidden="true" />
+                  </div>
+                  <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--lp-text)' }}>
+                    {feature.title}
+                  </h3>
+                  <p className="text-base leading-relaxed" style={{ color: 'var(--lp-muted)' }}>
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--lp-text)' }}>
-                  {feature.title}
-                </h3>
-                <p className="text-base leading-relaxed" style={{ color: 'var(--lp-muted)' }}>
-                  {feature.description}
-                </p>
               </div>
             ))}
           </div>
@@ -400,6 +424,41 @@ export function Landing() {
               />
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── Mobile callout ── */}
+      <section className="px-6 py-24 text-center" style={{ background: 'var(--lp-tint)' }}>
+        <div className="mx-auto max-w-xs">
+          <div
+            className="relative mx-auto overflow-hidden"
+            style={{
+              width: '200px',
+              borderRadius: '28px',
+              border: '6px solid var(--lp-border)',
+              boxShadow: '0 20px 60px rgba(124,58,237,0.15), 0 4px 16px rgba(0,0,0,0.08)',
+              background: 'var(--lp-surface)',
+            }}
+          >
+            {/* Notch */}
+            <div
+              className="absolute left-1/2 top-0 z-10 -translate-x-1/2"
+              style={{
+                width: '60px',
+                height: '16px',
+                background: 'var(--lp-border)',
+                borderRadius: '0 0 12px 12px',
+              }}
+            />
+            <img
+              src={mobileDashboardPreview}
+              alt="FlipSite dashboard on a phone showing inventory stats and total profit"
+              style={{ width: '100%', display: 'block', maxWidth: '100%' }}
+            />
+          </div>
+          <p className="mt-8 text-lg font-medium" style={{ color: 'var(--lp-muted)' }}>
+            Works just as well on your phone.
+          </p>
         </div>
       </section>
 
