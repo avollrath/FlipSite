@@ -27,67 +27,67 @@ const features: Array<{
 }> = [
   {
     description:
-      'Every item you own in one place - what you paid, where you bought it, condition, photos, receipts, and manuals all attached.',
+      'Add anything you own or plan to sell. Where you got it, what you paid, what condition it\'s in. Photos, receipts, everything — right there when you need it.',
     icon: Package,
-    title: 'Full inventory tracking',
+    title: 'Every item, all in one place',
   },
   {
     description:
-      'Not just sell minus buy. Bundle-aware calculations handle complex purchases where one buy splits into multiple sells.',
+      'Selling price minus what you paid — plus fees, shipping, and splits if one buy becomes multiple sales. The number you see is the number you actually made.',
     icon: TrendingUp,
-    title: 'Real profit numbers',
+    title: 'Know your real profit',
   },
   {
     description:
-      'Browse your inventory visually. Upload photos or paste screenshots directly - images are compressed automatically.',
+      'Switch to gallery view and browse your items like a visual shelf. Upload photos straight from your phone — FlipSite handles the rest.',
     icon: Images,
-    title: 'Photo gallery view',
+    title: 'See your inventory, don\'t just list it',
   },
   {
     description:
-      'Filter by status, platform, category, and search. Switch between a detailed table and a visual gallery instantly.',
+      'Filter by what\'s sold, what\'s listed, what\'s still sitting at home. Search by category, platform, or price range. No more scrolling through a spreadsheet to find one item.',
     icon: LayoutList,
-    title: 'Powerful filtering',
+    title: 'Find anything in seconds',
   },
   {
     description:
-      'Profit over time, ROI by category, top flips, monthly buy vs sell volume - all on one screen.',
+      'Which categories make you the most? What\'s your best month? Where are you leaving money on the table? Your dashboard shows you at a glance.',
     icon: BarChart3,
-    title: 'Dashboard analytics',
+    title: "See where your money's actually going",
   },
   {
     description:
-      '8 color themes, light and dark mode, 6 font options. The app should feel good to use every day.',
+      'Pick the look that feels right and use it every day. It shouldn\'t feel like work — it should feel like yours.',
     icon: Palette,
-    title: 'Built to feel like yours',
+    title: '8 themes. Light, dark, and everything between.',
   },
 ]
 
 const stats = [
-  { label: 'Items tracked', value: '100+' },
-  { label: 'Revenue logged', value: '€16k+' },
-  { label: 'Color themes', value: '8' },
-  { label: 'Spreadsheets needed', value: '0' },
+  { label: 'items tracked by real users', value: '100+' },
+  { label: 'in sales logged so far', value: '€16k+' },
+  { label: 'themes to make it yours', value: '8' },
+  { label: 'spreadsheets needed', value: '0' },
 ]
 
 const steps = [
   {
     description:
-      'Log each purchase with a photo, price, platform, and condition. Takes 30 seconds.',
+      'Takes 30 seconds. Add a photo, what you paid, where you got it, and what condition it\'s in. Done.',
     image: appPreview,
     number: '01',
-    title: 'Add what you buy',
+    title: 'Log what you buy',
   },
   {
     description:
-      'Mark items as sold, listed, or keeping. Profit and ROI calculate automatically.',
+      'Sold something? Tap sold, enter the price, and FlipSite instantly calculates your profit and ROI. That\'s it.',
     image: itemsListPreview,
     number: '02',
-    title: 'Track what you sell',
+    title: 'Mark it when it sells',
   },
   {
     description:
-      "Dashboard and analytics show what you've made, what's still sitting, and where you do best.",
+      "Your dashboard shows what you've made, what you've got in stock, and which flips are actually worth your time.",
     image: dashboardPreview,
     number: '03',
     title: 'See the full picture',
@@ -173,7 +173,7 @@ export function Landing() {
               className="lp-gradient-bg rounded-full px-5 py-2 text-base font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2"
               style={{ outlineColor: 'var(--lp-accent)' }}
             >
-              Sign up
+              Try it free
             </a>
           </div>
         </div>
@@ -216,25 +216,23 @@ export function Landing() {
             color: 'var(--lp-accent)',
           }}
         >
-          Personal inventory &amp; resale tracker
+          Built for flippers, by a flipper.
         </div>
 
         <h1
           className="lp-display lp-gradient-text relative z-10 max-w-3xl font-bold leading-[1.1] tracking-tight"
           style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}
         >
-          Know what you own.
+          You buy. You sell.
           <br />
-          Know what you made.
+          Finally know if you're actually making money.
         </h1>
 
         <p
           className="relative z-10 mt-6 max-w-2xl text-xl leading-relaxed"
           style={{ color: 'var(--lp-muted)' }}
         >
-          FlipSite replaces the spreadsheet you've been maintaining for your
-          inventory and resale activity - with actual structure, real numbers,
-          and everything in one place.
+          FlipSite tracks every item you flip — what you paid, what you sold it for, and what you actually walked away with. No spreadsheets. No guessing. Just the truth.
         </p>
 
         <div className="relative z-10 mt-10 flex flex-col items-center gap-4 sm:flex-row">
@@ -246,7 +244,7 @@ export function Landing() {
               boxShadow: '0 4px 20px rgba(124,58,237,0.3)',
             }}
           >
-            Get started free
+            Start for free
           </a>
           <a
             href="#demo"
@@ -256,7 +254,7 @@ export function Landing() {
               color: 'var(--lp-accent)',
             }}
           >
-            See a demo →
+            See how it works →
           </a>
         </div>
 
@@ -305,10 +303,10 @@ export function Landing() {
               className="lp-display font-bold"
               style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', color: 'var(--lp-text)' }}
             >
-              Everything in one place
+              Everything you need. Nothing you don't.
             </h2>
             <p className="mt-3 text-xl" style={{ color: 'var(--lp-muted)' }}>
-              Built for how buying and selling actually works
+              Built around how buying and selling actually works in real life.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -350,6 +348,16 @@ export function Landing() {
 
       {/* ── How it works ── */}
       <section id="how-it-works" className="px-6 py-32" style={{ background: 'var(--lp-surface)' }}>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-20 text-center">
+            <h2
+              className="lp-display font-bold"
+              style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', color: 'var(--lp-text)' }}
+            >
+              Simple enough to actually use.
+            </h2>
+          </div>
+        </div>
         <div className="mx-auto max-w-6xl space-y-32">
           {steps.map((step, index) => (
             <div
@@ -392,10 +400,10 @@ export function Landing() {
             <h2
               className="lp-display text-4xl font-bold text-white"
             >
-              See it in action
+              Try it before you decide.
             </h2>
             <p className="mt-4 text-xl text-white/80">
-              Try the demo with a pre-filled inventory - no sign up needed.
+              Jump into a pre-filled demo — real items, real numbers, no sign-up needed. If it clicks, make a free account in 30 seconds.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <button
@@ -408,7 +416,7 @@ export function Landing() {
                 {demoLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : null}
-                Try demo →
+                Try the demo →
               </button>
               <a
                 href="/login?tab=signup"
@@ -429,7 +437,7 @@ export function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
           <Logo size={19} />
           <p className="text-base" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Personal inventory and resale tracker. Built by André Vollrath.
+            Track your flips. Know your numbers. Keep more of what you make.
           </p>
           <div className="flex items-center gap-6 text-base" style={{ color: 'rgba(255,255,255,0.45)' }}>
             <a href="/login" className="transition-colors hover:text-white">
