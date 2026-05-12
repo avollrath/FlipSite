@@ -6,6 +6,19 @@
  --font-family: 'Inter', sans-serif;
  color: hsl(var(--text));
  background: hsl(var(--surface));
+
+ /* Landing page light-mode tokens */
+ --lp-bg: #FAFAF9;
+ --lp-surface: #FFFFFF;
+ --lp-border: #E5E2F0;
+ --lp-text: #1A1523;
+ --lp-muted: #6B6380;
+ --lp-tint: #F5F3FF;
+ --lp-accent: #7C3AED;
+ --lp-accent-hover: #6D28D9;
+ --lp-gradient: linear-gradient(135deg, #7C3AED 0%, #C026D3 100%);
+ --lp-display-font: 'Fraunces', serif;
+ --lp-body-font: 'DM Sans', sans-serif;
 }
 
 html {
@@ -205,5 +218,25 @@ body {
 
  .animate-fadeIn {
  animation: fadeIn 400ms ease-out forwards;
+ }
+
+ /* Landing page utilities */
+ .lp-gradient-text {
+ background: var(--lp-gradient);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ background-clip: text;
+ }
+
+ .lp-gradient-bg {
+ background: var(--lp-gradient);
+ }
+
+ .lp-display {
+ font-family: var(--lp-display-font);
+ }
+
+ .lp-body {
+ font-family: var(--lp-body-font);
  }
 }
