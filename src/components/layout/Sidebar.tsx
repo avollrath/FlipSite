@@ -7,6 +7,7 @@ import {
  Gauge,
  LogOut,
  Package,
+ RefreshCw,
  Settings,
  Tags,
 } from 'lucide-react'
@@ -64,7 +65,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   {!collapsed && <Logo size={38} />}
   {collapsed && (
    <div className="grid w-10 h-10 rounded-lg place-items-center bg-sidebar-accent/20">
-    <div className="w-6 h-6 rounded bg-sidebar-accent" />
+    <RefreshCw className="w-6 h-6 text-sidebar-accent" strokeWidth={3} />
    </div>
   )}
  </div>
