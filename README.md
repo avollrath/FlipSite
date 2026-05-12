@@ -1,94 +1,77 @@
 # FlipSite
 
-I built this because I got tired of maintaining a spreadsheet. It started as a way to track what I buy and sell, but turned into something broader — a personal inventory tracker where I always know what I own, what I paid, where I bought it, and where the receipt is.
+**Personal inventory and resale tracker** — built for people who buy and sell things and want to know if they're actually making money.
 
-**Live:** https://flipsite-three.vercel.app/
+[**Live demo →**](https://flipsite-three.vercel.app/) &nbsp;·&nbsp; Demo login: `demo@flipsite.app` / `demo1234`
 
-![FlipSite Dashboard](src/assets/dashboard.jpg)
+![FlipSite landing page](src/assets/landing.jpg)
 
----
+I built this because I was maintaining a spreadsheet to track my flips and it kept breaking in ways spreadsheets break — bundle math fell apart, receipts lived in email, photos were nowhere, and the profit numbers were always slightly wrong. FlipSite replaced the spreadsheet. Now I use it every day.
 
-## What it's for
+![Dashboard](src/assets/dashboard.jpg)
+*Nine KPI cards, four charts. Keeper items are tracked separately so they don't pollute resale numbers.*
 
-Two things I actually use it for every day:
+<table>
+<tr>
+<td width="50%" valign="top">
 
-**Keeping track of my stuff.** I want to know what I own, when I bought it, what it cost, and where to find the receipt or manual. Every item can have photos and files attached to it, so everything related to a purchase lives in one place. No more digging through email for a warranty document or trying to remember if I paid 200 or 250 for something.
+**Track what you own**
 
-**Tracking what I sell.** When I flip something, I want to see the actual profit — not just sell minus buy, but across bundles too. If I buy a camera kit, sell the lenses separately, and keep the body, the numbers need to understand that. That's the part spreadsheets handle badly.
+Every item you keep — electronics, gear, furniture, anything — can have photos, receipts, manuals, and a purchase date attached. You always know what you paid, where you bought it, and where the documentation is. No more digging through email for a warranty or trying to remember if that lens cost 200 or 250.
 
----
+</td>
+<td width="50%" valign="top">
+
+**Track what you flip**
+
+Profit is sell price minus buy price, minus fees, minus shipping — and it handles bundles correctly. If you buy a camera kit for one price and sell the pieces separately, the math still works. You get the actual number you walked away with, and your ROI per flip.
+
+</td>
+</tr>
+</table>
 
 ## Items
 
-Everything lives in the items list. You can switch between a table view with all the metrics laid out, or a gallery view that shows your actual photos.
+Everything lives in the items list. Table view lays out the metrics — sortable columns, profit and ROI per row, bundle relationships inline, status badges at a glance. Gallery view lets you browse by photo, which is how you actually think about physical inventory.
 
-![Items gallery view](src/assets/items_gallery.jpg)
+<table>
+<tr>
+<td width="50%">
 
-The table view is where things get useful for serious tracking — sortable columns, profit and ROI calculated per row, bundle relationships visible inline, and status badges that tell you at a glance what's sold, what's sitting, and what you're keeping.
+![Gallery view](src/assets/items_gallery.jpg)
+*Gallery — browse by photo*
 
-![Items list view](src/assets/items_list.jpg)
+</td>
+<td width="50%">
 
-Each item has:
-- Name, category, condition, buy and sell price, buy and sell platform, status, dates bought and sold, notes
-- Four statuses: **holding**, **listed**, **sold**, **keeping** — keeping items are tracked separately so they don't mess up your resale numbers
-- Attached photos, receipts, manuals, or any other file
-- Clipboard paste support — take a photo on your phone, paste the screenshot, it goes straight into the upload pipeline
+![List view](src/assets/items_list.jpg)
+*Table — sortable, with profit and ROI per row*
 
-Filters cover status, buy platform, sell platform, category, text search, bundles only, has-image, and inventory-only. The gallery view adds its own sort controls since you're often browsing visually there.
+</td>
+</tr>
+</table>
 
-### Item detail page
+Each item stores: name, category, condition, buy and sell price, buy and sell platform, status, dates bought and sold, notes, and any attached files.
 
-Every item has its own page at `/items/:id` — useful when an item has a lot of photos, attached files, or is a bundle with several children. Left side shows the image gallery, attached files, and notes. Right side shows the financial summary, all the metadata, and how long you've held it.
+Four statuses: **holding**, **listed**, **sold**, **keeping**. Keeping items are excluded from resale calculations — they show up in their own cards on the dashboard but don't skew your flip numbers.
 
-### Bundles
-
-When you buy a collection of things for one price, you can mark it as a bundle and add child items underneath it. Each child can be sold, listed, or kept separately. Profit math works correctly — selling a child contributes to the bundle's total without double-counting the original purchase.
-
----
-
-## Dashboard
-
-Nine KPI cards at the top, four charts below. The cards cover flipping capital, total revenue, total profit, average ROI, best flip, inventory count, keeper count, keeping value, and active bundles. Active bundles means bundle parents that still have unsold children — useful to know at a glance.
-
-Charts: cumulative profit over time, profit by category, top 8 flips by profit, and monthly buy vs sell volume.
-
-Everything excludes keeper items from profit and revenue calculations — they show up in their own cards but don't pollute the resale numbers.
-
----
+Bundles let you buy a collection for one price and sell the pieces separately. Each child item tracks its own sale while the bundle correctly accounts for what the original purchase cost. The math that spreadsheets handle badly.
 
 ## Analytics
 
-A more detailed view with date range and multi-select filters that affect every number on the page. Useful for looking at a specific period or platform.
+A deeper look at a specific period or platform. Date range and multi-select filters affect every number on the page — useful for asking things like "how did I do on camera gear last quarter" or "which platform is actually worth the fees." The hold time vs profit scatter shows whether flipping fast or sitting on things is working better for you. Cumulative profit vs a linear pace line makes it immediately obvious if your returns are accelerating or leveling off.
 
-Charts: monthly revenue, monthly profit, profit by category, profit by platform, ROI by category, hold time vs profit, and cumulative profit vs a linear pace line.
-
----
+![Analytics](src/assets/analytics.jpg)
 
 ## Settings
 
-Profile with avatar upload and username. Then the part that took longer than expected to get right:
+Eight color themes, each working in both light and dark mode: Midnight Drop, Forest Glass, Golden Hour, Cold Brew, Neon Petal, Cyberpunk, Cassette Futurism, Colorful 80s. Light and dark toggle independently from the theme. Six font options: Inter, DM Sans, Plus Jakarta Sans, JetBrains Mono, Michroma, Electrolize.
 
-![Settings page](src/assets/settings.jpg)
+![Settings](src/assets/settings.jpg)
 
-Eight color themes, each working in both light and dark mode — Midnight Drop, Forest Glass, Golden Hour, Cold Brew, Neon Petal, Cyberpunk, Cassette Futurism, Colorful 80s. Light and dark mode toggle independently from the theme. Six font options: Inter, DM Sans, Plus Jakarta Sans, JetBrains Mono, Michroma, Electrolize.
+## Stack
 
-Defaults let you set a starting buy platform, category, condition, and status so new items don't start from scratch every time.
-
----
-
-## Other bits
-
-**Categories** — rename or merge categories across all items at once, useful after you realize you've been inconsistent with naming.
-
-**Import / Export** — export your full inventory as CSV, import from CSV with a validation preview before anything gets saved.
-
----
-
-## Tech stack
-
-React, TypeScript, Vite, Tailwind CSS, Supabase (Postgres, Auth, Storage, RLS), TanStack Query, Recharts, Vercel.
-
----
+React and TypeScript on the frontend, Vite for the build, Tailwind for styling. Supabase handles auth, Postgres, file storage, and row-level security — the schema includes a bundle ownership trigger that keeps profit math consistent when items are reparented. TanStack Query for data fetching, Recharts for the charts, GSAP for landing page animations, deployed on Vercel.
 
 ## Running locally
 
@@ -98,26 +81,17 @@ cp .env.example .env
 npm run dev
 ```
 
-Add Supabase credentials to `.env`:
-
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the SQL editor. The schema includes all tables, RLS policies, storage setup, and the bundle ownership trigger.
+Create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the SQL editor.
 
-## Demo mode
+## Demo
 
-The public demo account is:
+The live demo runs at [flipsite-three.vercel.app](https://flipsite-three.vercel.app/) with a read-only demo account:
 
-```text
-Email: demo@flipsite.app
-Password: demo1234
-```
+`demo@flipsite.app` / `demo1234`
 
-Demo mode is read-only, so visitors can explore the app without changing data. The demo inventory is seeded with realistic Finnish and European marketplace items, bundle examples, believable buy/sell prices, and local demo images from `public/demo-items/`.
-
-## Deploying
-
-Vercel. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables. `vercel.json` handles the SPA rewrite for React Router.
+The demo inventory is seeded with realistic Finnish and European marketplace items — bundle examples, believable prices, local photos.
