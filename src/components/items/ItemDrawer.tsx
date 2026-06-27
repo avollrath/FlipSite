@@ -328,7 +328,6 @@ function ItemDrawerForm({ mode, item, onEditItem, onOpenChange }: DrawerFormProp
   await updateItem.mutateAsync({
   tsid: child.tsid,
   updates: child.updates,
-  syncBundleParent: false,
   })
  }
 

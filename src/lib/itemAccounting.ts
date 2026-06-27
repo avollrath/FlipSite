@@ -3,7 +3,8 @@ import type { Item } from '@/types'
 // FlipSite accounting model:
 // - Standalone resale items own their buy price and sell price.
 // - Bundle parents own the purchase cost for the whole bundle.
-// - Bundle children are revenue allocation/detail records only.
+// - Sold bundle children are revenue allocation/detail records only.
+// - Bundle parent status is user-controlled; child sales never auto-sell the parent.
 // - Aggregate reporting uses bundle parents and standalone rows, never bundle children.
 // - Keeper/keeping items are excluded from resale profit and ROI.
 
@@ -14,7 +15,7 @@ export function calculateItemSellValue(item: Item, allItems: Item[]) {
 
   if (item.is_bundle_parent) {
     const childrenSell = getBundleChildren(item, allItems)
-      .filter((child) => !isKeepingItem(child))
+      .filter((child) => child.status === 'sold' && !isKeepingItem(child))
       .reduce((sum, child) => sum + (child.sell_price ?? 0), 0)
 
     return (item.sell_price ?? 0) + childrenSell
@@ -73,19 +74,15 @@ export function isKeepingItem(item: Item) {
   )
 }
 
-export function getEffectiveItemStatus(item: Item, allItems: Item[]) {
+export function getEffectiveItemStatus(item: Item, allItems?: Item[]) {
+  void allItems
+
   if (!item.is_bundle_parent) {
     return isKeepingItem(item) ? 'keeper' : item.status
   }
 
   if (isKeepingItem(item)) {
     return 'keeper'
-  }
-
-  const children = getBundleChildren(item, allItems)
-
-  if (children.length > 0 && children.every((child) => child.status === 'sold')) {
-    return 'sold'
   }
 
   return item.status

@@ -17,7 +17,6 @@ export type NewItem = Omit<Item, 'tsid' | 'created_at' | 'user_id'> & {
 
 export type ItemUpdate = Partial<Omit<Item, 'tsid' | 'user_id' | 'created_at'>>
 type UpdateItemMutation = {
-  syncBundleParent?: boolean
   tsid: string
   updates: ItemUpdate
 }
@@ -88,10 +87,6 @@ export function useAddItem() {
       }
 
       const createdItem = normalizeItem(data)
-
-      if (createdItem.bundle_id) {
-        await markBundleParentSoldIfComplete(createdItem.bundle_id, user.id)
-      }
 
       return createdItem
     },
@@ -183,7 +178,6 @@ export function useUpdateItem() {
 
   return useMutation({
     mutationFn: async ({
-      syncBundleParent = true,
       tsid,
       updates,
     }: UpdateItemMutation) => {
@@ -208,10 +202,6 @@ export function useUpdateItem() {
       }
 
       const updatedItem = normalizeItem(data)
-
-      if (syncBundleParent && updatedItem.bundle_id) {
-        await markBundleParentSoldIfComplete(updatedItem.bundle_id, user.id)
-      }
 
       return updatedItem
     },
@@ -279,58 +269,5 @@ export function useDeleteItem() {
 function logError(error: unknown) {
   if (import.meta.env.DEV) {
     console.error(error)
-  }
-}
-
-async function markBundleParentSoldIfComplete(
-  bundleParentTsid: string,
-  userId: string,
-) {
-  const { data: parent, error: parentLookupError } = await supabase
-    .from('items')
-    .select('status')
-    .eq('tsid', bundleParentTsid)
-    .eq('user_id', userId)
-    .eq('is_bundle_parent', true)
-    .single()
-
-  if (parentLookupError) {
-    throw parentLookupError
-  }
-
-  if (parent?.status === 'keeper') {
-    return
-  }
-
-  const { data: children, error: childrenError } = await supabase
-    .from('items')
-    .select('tsid,status,sold_at')
-    .eq('bundle_id', bundleParentTsid)
-    .eq('user_id', userId)
-
-  if (childrenError) {
-    throw childrenError
-  }
-
-  if (!children?.length || children.some((child) => child.status !== 'sold')) {
-    return
-  }
-
-  const latestSoldAt =
-    children
-      .map((child) => child.sold_at)
-      .filter((value): value is string => Boolean(value))
-      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ??
-    new Date().toISOString()
-
-  const { error: parentError } = await supabase
-    .from('items')
-    .update({ sold_at: latestSoldAt, status: 'sold' })
-    .eq('tsid', bundleParentTsid)
-    .eq('user_id', userId)
-    .eq('is_bundle_parent', true)
-
-  if (parentError) {
-    throw parentError
   }
 }

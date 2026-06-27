@@ -111,13 +111,14 @@ describe('item accounting helpers', () => {
     ])
   })
 
-  it('calculates bundle parent totals from parent cost and child sell values', () => {
+  it('calculates sold bundle parent totals from parent cost and sold child sell values', () => {
     const parent = item({
       buy_price: 100,
       is_bundle_parent: true,
       name: 'Bundle',
       sell_price: null,
-      status: 'holding',
+      sold_at: '2026-05-12T00:00:00.000Z',
+      status: 'sold',
       tsid: 'bundle-1',
     })
     const childA = item({
@@ -145,6 +146,62 @@ describe('item accounting helpers', () => {
     expect(calculateItemROI(parent, items)).toBe(20)
     expect(getEffectiveItemStatus(parent, items)).toBe('sold')
     expect(getSoldAggregateItems(items)).toEqual([parent])
+  })
+
+  it('does not mark bundle parent sold when all children are sold', () => {
+    const parent = item({
+      buy_price: 100,
+      is_bundle_parent: true,
+      name: 'Bundle',
+      status: 'holding',
+      tsid: 'bundle-1',
+    })
+    const childA = item({
+      bundle_id: parent.tsid,
+      name: 'Child A',
+      sell_price: 70,
+      status: 'sold',
+      tsid: 'child-a',
+    })
+    const childB = item({
+      bundle_id: parent.tsid,
+      name: 'Child B',
+      sell_price: 50,
+      status: 'sold',
+      tsid: 'child-b',
+    })
+    const items = [parent, childA, childB]
+
+    expect(getEffectiveItemStatus(parent, items)).toBe('holding')
+    expect(calculateItemSellValue(parent, items)).toBe(120)
+    expect(getSoldAggregateItems(items)).toEqual([])
+    expect(getUnsoldResaleItems(items)).toEqual([parent])
+  })
+
+  it('excludes unsold bundle child sell prices from parent revenue', () => {
+    const parent = item({
+      buy_price: 100,
+      is_bundle_parent: true,
+      name: 'Bundle',
+      status: 'sold',
+      tsid: 'bundle-1',
+    })
+    const soldChild = item({
+      bundle_id: parent.tsid,
+      name: 'Sold child',
+      sell_price: 70,
+      status: 'sold',
+      tsid: 'sold-child',
+    })
+    const listedChild = item({
+      bundle_id: parent.tsid,
+      name: 'Listed child',
+      sell_price: 50,
+      status: 'listed',
+      tsid: 'listed-child',
+    })
+
+    expect(calculateItemSellValue(parent, [parent, soldChild, listedChild])).toBe(70)
   })
 
   it('treats bundle children as revenue detail, not standalone profit centers', () => {
@@ -201,7 +258,7 @@ describe('item accounting helpers', () => {
       buy_price: 100,
       is_bundle_parent: true,
       name: 'Bundle',
-      status: 'holding',
+      status: 'sold',
       tsid: 'bundle-1',
     })
     const childA = item({

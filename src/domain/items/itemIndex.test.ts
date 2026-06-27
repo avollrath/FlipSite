@@ -108,11 +108,11 @@ describe('item index', () => {
  ])
  expect(index.soldAggregateItems.map((entry) => entry.tsid)).toEqual([
   'standalone-sold',
-  'bundle-parent',
  ])
  expect(index.keeperItems.map((entry) => entry.tsid)).toEqual(['keeper'])
  expect(index.unsoldResaleItems.map((entry) => entry.tsid)).toEqual([
   'standalone-unsold',
+  'bundle-parent',
  ])
  })
 

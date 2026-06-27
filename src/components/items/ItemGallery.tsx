@@ -62,10 +62,7 @@ function GalleryCard({
  thumbnail: ItemImageThumbnail | undefined
 }) {
  const effectiveStatus = getEffectiveItemStatus(item, allItems)
- const price =
- effectiveStatus === 'sold'
-  ? calculateItemSellValue(item, allItems)
-  : item.buy_price
+ const sellValue = calculateItemSellValue(item, allItems)
 
  return (
  <button
@@ -117,9 +114,16 @@ function GalleryCard({
   <p className="text-sm font-semibold leading-tight text-white line-clamp-2 drop-shadow-sm">
    {item.name}
   </p>
+  {effectiveStatus === 'sold' ? (
+  <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-xs font-medium text-white/85">
+   <span>Buy {formatCurrency(item.buy_price)}</span>
+   <span>Sell {formatCurrency(sellValue)}</span>
+  </div>
+  ) : (
   <p className="mt-0.5 text-xs font-medium text-white/80">
-   {formatCurrency(price)}
+   {formatCurrency(item.buy_price)}
   </p>
+  )}
   </div>
  </button>
  )
