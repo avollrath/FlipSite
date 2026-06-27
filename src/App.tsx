@@ -15,6 +15,8 @@ import { ThemeProvider } from '@/lib/theme'
 import { Login } from '@/pages/Login'
 
 const queryClient = new QueryClient()
+const routerBasename =
+ import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.BASE_URL
 const Analytics = lazy(() =>
  import('@/pages/Analytics').then((module) => ({ default: module.Analytics })),
 )
@@ -102,7 +104,7 @@ function App() {
  <QueryClientProvider client={queryClient}>
  <ThemeProvider>
   <AuthProvider>
-  <BrowserRouter>
+  <BrowserRouter basename={routerBasename}>
   <Toaster richColors position="top-right" theme="system" />
   <Suspense fallback={<RouteLoader />}>
   <Routes>
