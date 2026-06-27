@@ -1,4 +1,13 @@
-const API_BASE = '/api'
+const appBasePath = import.meta.env.BASE_URL.replace(/\/$/, '')
+const API_BASE = `${appBasePath}/api`
+
+export function apiAssetUrl(url: string | null | undefined) {
+  if (!url || !url.startsWith('/api/')) {
+    return url ?? null
+  }
+
+  return `${appBasePath}${url}`
+}
 
 export class ApiError extends Error {
   status: number

@@ -1,5 +1,5 @@
 import { compressImage } from '@/lib/compressImage'
-import { apiRequest } from '@/lib/api'
+import { apiAssetUrl, apiRequest } from '@/lib/api'
 
 const DEFAULT_THUMBNAIL_SIZE_PX = 80
 const DEMO_IMAGE_PATH_PREFIX = '/demo-items/'
@@ -80,7 +80,7 @@ export async function getSignedItemFileUrl(filePath: string) {
     if (!url) {
       throw new Error('File URL not found')
     }
-    return url
+    return apiAssetUrl(url) ?? url
   } catch (error) {
     throwSafeFileError(error, 'Unable to open file. Please try again.')
   }
@@ -101,13 +101,17 @@ export async function getFirstItemImageThumbnails(
   }
 
   try {
-    return await apiRequest<ItemImageThumbnail[]>('/files/thumbnails', {
+    const thumbnails = await apiRequest<ItemImageThumbnail[]>('/files/thumbnails', {
       body: {
         cover_images: Object.fromEntries(options.coverImageByItemId ?? []),
         item_ids: uniqueItemIds,
       },
       method: 'POST',
     })
+    return thumbnails.map((thumbnail) => ({
+      ...thumbnail,
+      signed_url: apiAssetUrl(thumbnail.signed_url) ?? thumbnail.signed_url,
+    }))
   } catch (error) {
     throwSafeFileError(error, 'Unable to load item thumbnail. Please try again.')
   }

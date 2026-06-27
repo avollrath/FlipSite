@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { blockDemoMode } from '@/lib/demoMode'
-import { apiRequest } from '@/lib/api'
+import { apiAssetUrl, apiRequest } from '@/lib/api'
 
 export type Profile = {
   id: string
@@ -31,7 +31,7 @@ export function useProfile() {
         return null
       }
 
-      return apiRequest<Profile>('/profile')
+      return normalizeProfile(await apiRequest<Profile>('/profile'))
     },
   })
 
@@ -45,10 +45,10 @@ export function useProfile() {
         blockDemoMode()
       }
 
-      return apiRequest<Profile>('/profile', {
+      return normalizeProfile(await apiRequest<Profile>('/profile', {
         body: data,
         method: 'PUT',
-      })
+      }))
     },
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(queryKey, updatedProfile)
@@ -76,7 +76,7 @@ export function useProfile() {
         method: 'POST',
       })
 
-      return updatedProfile.avatar_url
+      return apiAssetUrl(updatedProfile.avatar_url) ?? updatedProfile.avatar_url
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey })
@@ -90,5 +90,12 @@ export function useProfile() {
     profile: profileQuery.data ?? null,
     updateProfile: updateProfileMutation.mutateAsync,
     uploadAvatar: uploadAvatarMutation.mutateAsync,
+  }
+}
+
+function normalizeProfile(profile: Profile): Profile {
+  return {
+    ...profile,
+    avatar_url: apiAssetUrl(profile.avatar_url),
   }
 }

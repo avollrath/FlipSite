@@ -24,6 +24,21 @@ app.config.update(
 )
 
 
+class FlipsitePrefixMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        if path == "/flipsite/api" or path.startswith("/flipsite/api/"):
+            environ["SCRIPT_NAME"] = "/flipsite"
+            environ["PATH_INFO"] = path.removeprefix("/flipsite")
+        return self.app(environ, start_response)
+
+
+app.wsgi_app = FlipsitePrefixMiddleware(app.wsgi_app)
+
+
 def utc_now():
     return datetime.now(timezone.utc).isoformat()
 
