@@ -2,7 +2,7 @@ import { normalizeItemCondition } from '@/lib/conditions'
 import {
  formatDateInputValue,
  formatTodayDateInputValue,
- toSupabaseTimestamp,
+ toStorageTimestamp,
 } from '@/lib/dateInput'
 import {
  getBuyPlatform,
@@ -70,9 +70,9 @@ export function buildItemPayload(form: ItemFormState): BuildItemPayloadResult {
  return { ok: false, message: 'Date bought is required' }
  }
 
- const boughtAt = toSupabaseTimestamp(form.bought_at)
+ const boughtAt = toStorageTimestamp(form.bought_at)
  const soldAt =
- showSellFields && form.sold_at ? toSupabaseTimestamp(form.sold_at) : null
+ showSellFields && form.sold_at ? toStorageTimestamp(form.sold_at) : null
 
  if (!boughtAt) {
  return { ok: false, message: 'Use date format dd/MM/yyyy for date bought' }

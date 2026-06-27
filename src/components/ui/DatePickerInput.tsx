@@ -3,7 +3,7 @@ import {
   formatDateInputFromNativeValue,
   formatDateInputValue,
   formatNativeDateValue,
-  toSupabaseTimestamp,
+  toStorageTimestamp,
 } from '@/lib/dateInput'
 
 type DatePickerInputProps = {
@@ -49,7 +49,7 @@ export function DatePickerInput({
       return
     }
 
-    const normalizedValue = formatDateInputValue(toSupabaseTimestamp(value))
+    const normalizedValue = formatDateInputValue(toStorageTimestamp(value))
 
     if (normalizedValue) {
       onChange(normalizedValue)

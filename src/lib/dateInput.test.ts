@@ -4,7 +4,7 @@ import {
   formatDateInputValue,
   formatNativeDateValue,
   isValidDateInputValue,
-  toSupabaseTimestamp,
+  toStorageTimestamp,
 } from '@/lib/dateInput'
 
 describe('date input helpers', () => {
@@ -27,11 +27,11 @@ describe('date input helpers', () => {
 
   it('rejects invalid dates clearly', () => {
     expect(isValidDateInputValue('31/02/2026')).toBe(false)
-    expect(toSupabaseTimestamp('31/02/2026')).toBeNull()
+    expect(toStorageTimestamp('31/02/2026')).toBeNull()
   })
 
-  it('converts German input to an ISO timestamp for Supabase', () => {
-    expect(toSupabaseTimestamp('01/05/2026')).toMatch(
+  it('converts German input to an ISO timestamp for storage', () => {
+    expect(toStorageTimestamp('01/05/2026')).toMatch(
       /^2026-04-30T|^2026-05-01T/,
     )
   })

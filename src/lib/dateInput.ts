@@ -53,7 +53,7 @@ export function formatDateInputFromNativeValue(value: string) {
   return formatDateParts(year, month, day)
 }
 
-export function toSupabaseTimestamp(value: string) {
+export function toStorageTimestamp(value: string) {
   const dateParts = parseDateInputValue(value)
 
   if (!dateParts) {

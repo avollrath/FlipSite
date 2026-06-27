@@ -11,7 +11,7 @@
 - **Routing:** React Router DOM 7.14.2
 - **UI Component Library:** shadcn/ui with Radix UI
 - **State Management:** React Context API + TanStack React Query 5.100.6
-- **Backend/Database:** Supabase (Auth, PostgreSQL, Storage)
+- **Backend/Database:** Local Flask API with SQLite and filesystem storage
 - **Styling:** Tailwind CSS 3.4.17
 - **Key Libraries:** Recharts 3.8.1 (charts), Lucide React 1.14.0 (icons), Sonner 2.0.7 (toasts), date-fns 4.1.0, react-image-crop 11.0.10
 
@@ -204,19 +204,18 @@ Multiple themes available. Here are the Midnight Indigo (default) light mode val
 
 **State management architecture:**
 - **Local component state:** React `useState` hook
-- **Global auth state:** AuthContext (custom) – manages user login/signup/logout, demo mode detection
+- **Global auth state:** AuthContext (custom) – manages the local user session and demo mode detection
 - **Theme state:** ThemeContext (custom) – manages theme, dark mode, font selection; persisted to localStorage
 - **Server state:** TanStack React Query (react-query) – manages API data caching, synchronization, refetching
 - **Query client:** Configured as singleton in App.tsx root
 
 **Data fetching:**
-- **Backend:** Supabase (PostgreSQL database + Auth service)
-- **Supabase client:** Initialized in [lib/supabase.ts](src/lib/supabase.ts)
+- **Backend:** Local Flask API under `/api`
+- **API client:** Lightweight fetch wrapper in [api.ts](src/lib/api.ts)
 - **Auth flow:**
-  - Uses `supabase.auth.signInWithPassword()` for login
-  - Uses `supabase.auth.signUp()` for registration
-  - Uses `supabase.auth.getUser()` and `supabase.auth.onAuthStateChange()` for session management
-  - Demo mode detected via email pattern matching (`isDemoModeEmail()`)
+  - Uses a local fixed user for the single-user deployment
+  - Login/signup screens remain for route compatibility, but no external auth provider is used
+  - Demo mode detection still exists as compatibility logic
 - **Custom hooks for data:**
   - `useAuth()` – User authentication state
   - `useProfile()` – User profile data
@@ -267,7 +266,7 @@ type Item = {
 - **Props:** camelCase (TypeScript interfaces)
 
 **Notable patterns:**
-- **Protected Routes:** `ProtectedRoute` component in App.tsx wraps authenticated pages; redirects to login if user not authenticated
+- **Protected Routes:** `ProtectedRoute` component in App.tsx wraps app pages and uses the local auth context
 - **Theme Context Provider:** `ThemeProvider` wraps entire app, exposes `useTheme()` hook
 - **Auth Context Provider:** `AuthProvider` wraps entire app, exposes `useAuth()` hook
 - **Query Client Provider:** TanStack React Query provider at root for server state
@@ -275,8 +274,8 @@ type Item = {
 - **Render props pattern:** Some components use render props for flexible content rendering
 - **Custom hooks:** Encapsulate auth, theme, data fetching logic; composable across pages
 - **Page components:** Located in [src/pages/](src/pages/), correspond to routes
-- **Supabase RLS:** Row-level security policies on database (inferred from migrations)
-- **Demo mode:** Special email pattern for demo accounts with read-only access
+- **Local API boundary:** Flask owns SQLite writes and file serving
+- **Demo mode:** Compatibility guard for demo accounts with read-only access
 - **Keyboard event handling:** Transition effects on active/focus states (slight scale/translateY)
 
 **CSS transitions:**
@@ -306,7 +305,7 @@ src/
   hooks/            → useAuth, useProfile, useItems, useDemoGuard
   lib/
     theme.ts        → ThemeProvider, useTheme, theme options
-    supabase.ts     → Supabase client config
+    api.ts          → Local API fetch wrapper
     chartUtils.ts   → getChartColors, formatCompactCurrency
     analytics.ts    → Data aggregations and KPI calculations
     dateUtils.ts    → Date formatting and parsing

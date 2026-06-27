@@ -5,7 +5,7 @@ import {
  getInitialItemFormState,
  shouldShowSellFields,
 } from '@/components/items/itemPayload'
-import { toSupabaseTimestamp } from '@/lib/dateInput'
+import { toStorageTimestamp } from '@/lib/dateInput'
 import type { Item } from '@/types'
 
 const baseItem: Item = {
@@ -107,7 +107,7 @@ describe('item drawer payload helpers', () => {
   buy_platform: 'Market',
   sell_platform: null,
   status: 'holding',
-  bought_at: toSupabaseTimestamp('01/05/2026'),
+  bought_at: toStorageTimestamp('01/05/2026'),
   sold_at: null,
   notes: 'clean lens',
   },
@@ -136,7 +136,7 @@ describe('item drawer payload helpers', () => {
   buy_platform: null,
   sell_platform: 'Kleinanzeigen',
   status: 'sold',
-  sold_at: toSupabaseTimestamp('05/05/2026'),
+  sold_at: toStorageTimestamp('05/05/2026'),
   notes: null,
   }),
  })

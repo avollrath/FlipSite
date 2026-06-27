@@ -31,7 +31,7 @@ import {
   getEffectiveSoldAt,
 } from '@/lib/analytics'
 import { formatCompactCurrency, getChartColors } from '@/lib/chartUtils'
-import { toSupabaseTimestamp } from '@/lib/dateInput'
+import { toStorageTimestamp } from '@/lib/dateInput'
 import { formatMonthKey } from '@/lib/dateUtils'
 import {
   getEffectiveItemStatus,
@@ -985,7 +985,7 @@ function endOfDay(date: Date) {
 }
 
 function parseDateRangeInput(value: string, boundary: (date: Date) => Date) {
-  const timestamp = toSupabaseTimestamp(value)
+  const timestamp = toStorageTimestamp(value)
 
   return timestamp ? boundary(new Date(timestamp)) : null
 }

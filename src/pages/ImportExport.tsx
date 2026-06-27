@@ -6,8 +6,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDemoGuard } from '@/hooks/useDemoGuard'
 import { itemsQueryKey, useItems } from '@/hooks/useItems'
 import { downloadCsv, parseCsv, toCsv, type CsvRow } from '@/lib/csv'
-import { toSupabaseTimestamp } from '@/lib/dateInput'
-import { supabase } from '@/lib/supabase'
+import { toStorageTimestamp } from '@/lib/dateInput'
+import { apiRequest } from '@/lib/api'
 import { getBuyPlatform, getSellPlatform, parseMoneyInput } from '@/lib/utils'
 import { normalizeItemCondition } from '@/lib/conditions'
 import type { Item, ItemStatus } from '@/types'
@@ -139,11 +139,10 @@ export function ImportExport() {
 
  try {
  const rows = validRows.map(({ row }) => toInsertRow(row, user.id))
- const { error } = await supabase.from('items').insert(rows)
-
- if (error) {
-  throw error
- }
+ await apiRequest('/items', {
+  body: rows,
+  method: 'POST',
+ })
 
  await queryClient.invalidateQueries({ queryKey: itemsQueryKey(user.id) })
  toast.success(`${rows.length} items imported`)
@@ -352,7 +351,7 @@ function toInsertRow(row: CsvRow, userId: string): Omit<Item, 'tsid' | 'created_
 }
 
 function parseImportDate(value: string) {
- const formDate = toSupabaseTimestamp(value)
+ const formDate = toStorageTimestamp(value)
 
  if (formDate) {
  return formDate

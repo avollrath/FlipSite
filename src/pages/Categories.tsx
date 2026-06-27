@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDemoGuard } from '@/hooks/useDemoGuard'
 import { itemsQueryKey, useItems } from '@/hooks/useItems'
 import { buildCategoryStats } from '@/lib/analytics'
-import { supabase } from '@/lib/supabase'
+import { apiRequest } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
 
 export function Categories() {
@@ -73,15 +73,13 @@ export function Categories() {
  setIsSaving(true)
 
  try {
- const { error } = await supabase
-  .from('items')
-  .update({ category: trimmedTarget })
-  .eq('user_id', user.id)
-  .eq('category', trimmedSource)
-
- if (error) {
-  throw error
- }
+ await apiRequest('/categories', {
+  body: {
+   source: trimmedSource,
+   target: trimmedTarget,
+  },
+  method: 'PATCH',
+ })
 
  await refreshItems()
  toast.success('Category updated')

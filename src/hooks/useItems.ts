@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { blockDemoMode, isDemoModeBlockedError } from '@/lib/demoMode'
-import { supabase } from '@/lib/supabase'
+import { apiRequest } from '@/lib/api'
 import { normalizeItemCondition } from '@/lib/conditions'
 import type { Item } from '@/types'
 
@@ -40,16 +40,7 @@ export function useItems() {
         return []
       }
 
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        throw error
-      }
-
+      const data = await apiRequest<Item[]>('/items')
       return data.map(normalizeItem)
     },
   })
@@ -76,16 +67,10 @@ export function useAddItem() {
         blockDemoMode()
       }
 
-      const { data, error } = await supabase
-        .from('items')
-        .insert({ ...item, user_id: user.id })
-        .select()
-        .single()
-
-      if (error) {
-        throw error
-      }
-
+      const data = await apiRequest<Item>('/items', {
+        body: { ...item, user_id: user.id },
+        method: 'POST',
+      })
       const createdItem = normalizeItem(data)
 
       return createdItem
@@ -124,38 +109,11 @@ export function useAddBundle() {
         blockDemoMode()
       }
 
-      const { data: parentItem, error: parentError } = await supabase
-        .from('items')
-        .insert({ ...parent, user_id: user.id, is_bundle_parent: true })
-        .select()
-        .single()
-
-      if (parentError) {
-        throw parentError
-      }
-
+      const parentItem = await apiRequest<Item>('/bundles', {
+        body: { children, parent: { ...parent, user_id: user.id } },
+        method: 'POST',
+      })
       const typedParent = normalizeItem(parentItem)
-
-      if (children.length > 0) {
-        const childRows = children.map((child) => ({
-          ...child,
-          buy_price: child.buy_price ?? 0,
-          bundle_id: typedParent.tsid,
-          bought_at: parent.bought_at,
-          buy_platform: parent.buy_platform ?? null,
-          is_bundle_parent: false,
-          sell_platform: null,
-          sell_price: null,
-          sold_at: null,
-          user_id: user.id,
-        }))
-        const { error: childError } = await supabase.from('items').insert(childRows)
-
-        if (childError) {
-          throw childError
-        }
-      }
-
       return typedParent
     },
     onSuccess: () => {
@@ -189,18 +147,10 @@ export function useUpdateItem() {
         blockDemoMode()
       }
 
-      const { data, error } = await supabase
-        .from('items')
-        .update(updates)
-        .eq('tsid', tsid)
-        .eq('user_id', user.id)
-        .select()
-        .single()
-
-      if (error) {
-        throw error
-      }
-
+      const data = await apiRequest<Item>(`/items/${tsid}`, {
+        body: updates,
+        method: 'PATCH',
+      })
       const updatedItem = normalizeItem(data)
 
       return updatedItem
@@ -240,15 +190,7 @@ export function useDeleteItem() {
         blockDemoMode()
       }
 
-      const { error } = await supabase
-        .from('items')
-        .delete()
-        .eq('tsid', tsid)
-        .eq('user_id', user.id)
-
-      if (error) {
-        throw error
-      }
+      await apiRequest<void>(`/items/${tsid}`, { method: 'DELETE' })
 
       return tsid
     },

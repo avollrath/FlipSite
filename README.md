@@ -71,22 +71,22 @@ Eight color themes, each working in both light and dark mode: Midnight Drop, For
 
 ## Stack
 
-React and TypeScript on the frontend, Vite for the build, Tailwind for styling. Supabase handles auth, Postgres, file storage, and row-level security — the schema includes a bundle ownership trigger that keeps profit math consistent when items are reparented. TanStack Query for data fetching, Recharts for the charts, GSAP for landing page animations, deployed on Vercel.
+React and TypeScript on the frontend, Vite for the build, Tailwind for styling. A small Flask backend stores items, profiles, and files in a local SQLite database, with uploaded files kept on the local data volume. TanStack Query handles data fetching, Recharts powers the charts, and GSAP drives landing page animation.
 
 ## Running locally
 
 ```bash
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+For the full local app with SQLite and file uploads, run the Docker stack:
+
+```bash
+docker compose up --build
 ```
 
-Create a Supabase project, enable Email/Password auth, and run `supabase/schema.sql` in the SQL editor.
+The app is served on port `5001` and stores data in the mounted `/data` volume.
 
 Useful checks:
 
